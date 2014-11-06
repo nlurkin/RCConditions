@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/usr/bin/env python
 
 '''
 Created on Nov 5, 2014
@@ -66,13 +66,13 @@ if __name__ == '__main__':
     
     print "#################################  Detectors ################################"
     printTable(myconn, "enableddetectors")
-    
+   
+    printTable(myconn, "viewnim") 
     print "#################################  Website display ################################"
-    
     
     headers = ['Run#', 'RunType', 'Start', 'Stop', 'PeriodicTrigger', 'NimTrigger', 'EnabledDetectors']
     res = myconn.executeGet("""
-    SELECT run.number, runtype.runtypename, run.timestart, run.timestop, T1.periodstring, T2.nimstring, GROUP_CONCAT(DISTINCT enableddetectors.detectorname ORDER BY enableddetectors.detectorname SEPARATOR '+') 
+    SELECT run.number, runtype.runtypename, run.timestart, run.timestop, CONCAT_WS('+', T1.periodstring, GROUP_CONCAT(DISTINCT T2.nimstring SEPARATOR '+')), GROUP_CONCAT(DISTINCT enableddetectors.detectorname ORDER BY enableddetectors.detectorname SEPARATOR '+') 
     FROM run 
     LEFT JOIN runtype ON (runtype.id = run.runtype_id)
     LEFT JOIN enableddetectors ON enableddetectors.run_id = run.id
