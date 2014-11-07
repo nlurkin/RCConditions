@@ -25,13 +25,19 @@ def record2Table(sqlRec):
     return table
     
     
-def printTable(myconn, table, order="", colwdth=0):
+def printTable(myconn, table, order="", where=""):
     headers = getColName(myconn, table)
     if order!="":
         strOrder = "ORDER BY " + order
     else:
         strOrder = ""
-    sqlres = myconn.executeGet("SELECT * FROM %s %s" % (table, strOrder))
+    if where!="":
+        strWhere = "WHERE " + where
+    else:
+        strWhere = ""
+    
+    print "SELECT * FROM %s %s %s" % (table, strOrder, strWhere)
+    sqlres = myconn.executeGet("SELECT * FROM %s %s %s" % (table, strOrder, strWhere))
     
     #table = [headers]
     #table = record2Table(sqlres)
@@ -44,5 +50,26 @@ if __name__ == '__main__':
     myconn = DBConnector()
     myconn.connectDB()
     
-    print "#################################  Run Info  ################################"
-    printTable(myconn, sys.argv[1])
+    
+    res = myconn.executeGet("SELECT table_name FROM information_schema.tables WHERE table_schema='testRC' AND table_type='BASE TABLE'")
+    tableList = record2Table(res)
+    res = myconn.executeGet("SELECT table_name FROM information_schema.tables WHERE table_schema='testRC' AND table_type='VIEW'")
+    viewList = record2Table(res)
+    
+    while True:
+        req = raw_input("Select (T)able or (V)iew: ")
+        if req.lower() == "t":
+            print "### Tables"
+            for i,t in enumerate(tableList):
+                print "---> (%i) %s" % (i,t[0])
+            req = int(raw_input("Select a number: "))
+            if req>=0 and req<len(tableList):
+                printTable(myconn, tableList[req][0])
+        elif req.lower() == "v":
+            print "### Views"
+            for i,t in enumerate(viewList):
+                print "---> (%i) %s" % (i,t[0])
+            req = int(raw_input("Select a number: "))
+            if req>=0 and req<len(viewList):
+                printTable(myconn, viewList[req][0])
+            
