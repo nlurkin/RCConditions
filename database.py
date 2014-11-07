@@ -269,9 +269,9 @@ class DBConnector(object):
             self.executeInsert("INSERT INTO run (number, timestart, timestop, startcomment, endcomment, runtype_id) VALUES (%s, %s, %s, %s, %s, %s)", 
                             [int(runInfo["RunNumber"]), runInfo["RunStartTime"], runInfo["RunStopTime"], 
                             runInfo["StartRunComment"], runInfo["EndRunComment"], runTypeID])
-        #else:
-        #    self.executeInsert("UPDATE run SET timestart=%s, timestop=%s, startcomment=%s, endcomment=%s, runtype_id=%s WHERE id=%s", [runInfo["RunStartTime"], runInfo["RunStopTime"], 
-        #                    runInfo["StartRunComment"], runInfo["EndRunComment"], runTypeID, runID])
+        else:
+            self.executeInsert("UPDATE run SET timestart=%s, timestop=%s, startcomment=%s, endcomment=%s, runtype_id=%s WHERE id=%s", [runInfo["RunStartTime"], runInfo["RunStopTime"], 
+                            runInfo["StartRunComment"], runInfo["EndRunComment"], runTypeID, runID])
             
         
     def setPeriodicTriggerList(self, trigger, runNumber):
