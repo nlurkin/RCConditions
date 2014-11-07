@@ -192,6 +192,10 @@ def retrieveAllRunInfos(nodeList, runNumber):
     goodInfo = False
     for node in nodeList:
         runNumberNode = node.getElementsByTagName("RunNumber")
+        if goodInfo==False:
+            runTypeNode = node.getElementsByTagName("RunType")
+            if runTypeNode.length > 0:
+                runInfoMap['RunType'] = getValue(runTypeNode[0].childNodes)
         if runNumberNode.length > 0:
             rid = getValue(runNumberNode[0].childNodes)
             if int(rid)==runNumber:
@@ -200,9 +204,10 @@ def retrieveAllRunInfos(nodeList, runNumber):
                 goodInfo = False
         if goodInfo:
             for cnode in node.childNodes:
-                val = getValue(cnode.childNodes)
-                if val!="":
-                    runInfoMap[cnode.nodeName] = val
+                if cnode.nodeName != 'RunType':
+                    val = getValue(cnode.childNodes)
+                    if val!="":
+                        runInfoMap[cnode.nodeName] = val
     return runInfoMap
 
 def getTriggerEnabled(listNodes):
@@ -277,7 +282,7 @@ def setDetectorID(detList, detID):
     for el in detList:
         detList[el][1] = detID
 
-def exportFile(filePath):
+def exportFile(myconn, filePath):
     global param
     ## Import config file
     doc = importFile(filePath)
@@ -299,6 +304,7 @@ def exportFile(filePath):
     l0tpFileList = doc.getElementsByTagName("na62L0TP_Torino")
     triggerProp = getTriggerProperties(l0tpFileList)
     
+    
     ## Process triggers into a coherent timeline
     mergeTriggers(triggerDict['Periodic'], triggerProp['Periodic'], startTS, endTS)
     mergeTriggers(triggerDict['NIM'], triggerProp['NIM'], startTS, endTS)
@@ -319,10 +325,6 @@ def exportFile(filePath):
         setDetectorID(detEnabled[det], getDetectorID(doc.getElementsByTagName(det)))
         removeAllAfterTS(detEnabled[det], endTS)
         
-    ## Create DB connection
-    myconn = DBConnector()
-    myconn.connectDB()
-    
     ## Insert runinfo into DB
     myconn.setRunInfo(runInfo)
     
@@ -337,10 +339,14 @@ def exportFile(filePath):
     myconn.setEnabledDetectorList(detEnabled, runNumber)
     
 if __name__ == '__main__':
+    if len(sys.argv)<3:
+        print "Please provide path and database password"
+        sys.exit()
+
+
     myconn = DBConnector()
-    myconn.connectDB()
+    myconn.connectDB(passwd=sys.argv[2])
     myconn.setNIMNames(1409529600, None, [[0,'Q1'], [1,'NHOD'], [2,'MUV2'], [3,'MUV3'], [4,'']])
-    myconn.close()
 
 
     if len(sys.argv)>1:
@@ -356,4 +362,6 @@ if __name__ == '__main__':
     for f in fileList:
         if os.path.isfile(f):
             print "\nImport " + f + "\n---------------------"
-            exportFile(f)
+            exportFile(myconn, f)
+    
+    myconn.close()
