@@ -41,8 +41,12 @@ def printTable(myconn, table, order="", colwdth=0):
     print ""
 
 if __name__ == '__main__':
+    if len(sys.argv)<2:
+        print "Please provide database password"
+        sys.exit()
+    
     myconn = DBConnector()
-    myconn.connectDB()
+    myconn.connectDB(passwd=sys.argv[1])
     
     print "#################################  Run Info  ################################"
     printTable(myconn, "run", "number")
@@ -70,18 +74,14 @@ if __name__ == '__main__':
     printTable(myconn, "viewnim") 
     print "#################################  Website display ################################"
     
-    headers = ['Run#', 'RunType', 'Start', 'Stop', 'PeriodicTrigger', 'NimTrigger', 'EnabledDetectors', 'StartComment', 'EndComment']
+    headers = ['Run#', 'RunType', 'Start', 'Stop', 'Trigger', 'EnabledDetectors', 'StartComment', 'EndComment']
     res = myconn.executeGet("""
-    SELECT run.number, runtype.runtypename, run.timestart, run.timestop, CONCAT_WS('+', T1.periodstring, GROUP_CONCAT(DISTINCT T2.nimstring SEPARATOR '+')), 
-           GROUP_CONCAT(DISTINCT enableddetectors.detectorname ORDER BY enableddetectors.detectorname SEPARATOR '+'),
-           run.startcomment, run.endcomment 
+    SELECT run.number, runtype.runtypename, run.timestart, run.timestop, viewtrigger.triggerstring, 
+           viewenableddet.enabledstring, run.startcomment, run.endcomment 
     FROM run 
     LEFT JOIN runtype ON (runtype.id = run.runtype_id)
-    LEFT JOIN enableddetectors ON enableddetectors.run_id = run.id
-    LEFT JOIN (SELECT viewperiodic.runid AS periodrunid, CONCAT('Period:', GROUP_CONCAT(DISTINCT viewperiodic.periods SEPARATOR ',')) AS periodstring
-        FROM viewperiodic GROUP BY viewperiodic.runid) AS T1 ON run.id = T1.periodrunid 
-    LEFT JOIN (SELECT viewnim.runid AS nimrunid, viewnim.triggerstring AS nimstring
-        FROM viewnim) AS T2 ON run.id = T2.nimrunid 
+    LEFT JOIN viewenableddet ON (viewenableddet.run_id = run.id)
+    LEFT JOIN viewtrigger ON (run.id = viewtrigger.run_id)
     GROUP BY run.id
     ORDER BY run.number
     """)
