@@ -5,6 +5,7 @@ Created on Nov 5, 2014
 '''
 
 import datetime
+import sys
 import textwrap
 
 import MySQLdb
@@ -20,19 +21,28 @@ class DBConnector(object):
         self.db = None
         self.cursor = None
     
+    def close(self):
+        if self.db and self.db.open:
+            self.db.close()
+        
+    def __del__(self):
+        self.close()
+        
     def indent(self, txt, stops=1):
         return self.wrapper.fill(txt)
     ##---------------------------------------
     #    Utility functions for DB actions
     ##---------------------------------------
-    def connectDB(self):
+    def connectDB(self, host="127.0.0.1", user="root", passwd="", db="testRC"):
         '''Create Database connection and cursor for SQL requests'''
         
-        self.db = MySQLdb.connect(host="127.0.0.1", # your host, usually localhost
-                             user="root", # your username
-                             passwd="xxx", # your password
-                             db="testRC") # name of the data base
-        self.cursor = self.db.cursor()
+        try:
+            self.db = MySQLdb.connect(host=host, user=user, passwd=passwd, db=db)
+            self.cursor = self.db.cursor()
+        except MySQLdb.Error, e:
+            print "Unable to initiate connection with database " + db + " at " + user + "@" + host
+            print e
+            sys.exit()
     
     def executeInsert(self, sqlCommand, params=[]):
         print self.indent(sqlCommand % tuple(params))
@@ -41,11 +51,10 @@ class DBConnector(object):
             self.db.commit()
             return self.cursor.lastrowid
         except MySQLdb.Error, e:
-            print sqlCommand % tuple(params)
-            print ""
+            print "Unable to execute insert statement: " + (sqlCommand % tuple(params))
             print e
             self.db.rollback()
-            raise e
+            sys.exit()
     
     def executeGet(self, sqlCommand, params=[]):
         res = ()
@@ -53,9 +62,9 @@ class DBConnector(object):
             self.cursor.execute(sqlCommand, params)
             res = self.cursor.fetchall()
         except MySQLdb.Error, e:
-            print sqlCommand % tuple(params)
-            print ""
-            raise e
+            print "Unable to execute select statement: " + (sqlCommand % tuple(params))
+            print e
+            sys.exit()
         return res
     
     def getResultSingle(self, sqlCommand, params=[]):
@@ -359,9 +368,3 @@ class DBConnector(object):
         for det in detNames:
             self._setNIMDetName(startTS, endTS, det)
             
-    def close(self):
-        if self.db.open:
-            self.db.close()
-        
-    def __del__(self):
-        self.close()
