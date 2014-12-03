@@ -152,7 +152,15 @@ class DBConnector(object):
             return self.getResultSingle("SELECT id FROM nimdetname WHERE detnumber=%s AND validitystart=%s AND validityend IS NULL", [detNumber, startT])
         else:
             return self.getResultSingle("SELECT id FROM nimdetname WHERE detnumber=%s AND validitystart=%s AND validityend=%s", [detNumber, startT, endT])
+    
+    def _getPrimitiveDetNameID(self, startTS, endTS, detNumber):
+        startT = self.toSQLTime(startTS)
+        endT = self.toSQLTime(endTS)
         
+        if endTS==None:
+            return self.getResultSingle("SELECT id FROM primitivedetname WHERE detnumber=%s AND validitystart=%s AND validityend IS NULL", [detNumber, startT])
+        else:
+            return self.getResultSingle("SELECT id FROM primitivedetname WHERE detnumber=%s AND validitystart=%s AND validityend=%s", [detNumber, startT, endT])  
     ##---------------------------------------
     #    Get INDEX ID from database table, create the entry if does not exist
     ##---------------------------------------
@@ -184,11 +192,11 @@ class DBConnector(object):
             return self.executeInsert("INSERT INTO triggernimtype (mask) VALUES (%s)", [mask])
         return typeID 
 
-    def _setNIMTrigger(self, triggerID, nimTypeID):
+    def _setNIMTrigger(self, triggerID, nimTypeID, downscaling):
         nimID = self._getNIMTriggerID(triggerID, nimTypeID)
         
         if nimID==False:
-            return self.executeInsert("INSERT INTO triggernim (runtrigger_id, triggernimtype_id) VALUES (%s, %s)", [triggerID, nimTypeID])
+            return self.executeInsert("INSERT INTO triggernim (runtrigger_id, triggernimtype_id, triggernimdownscaling) VALUES (%s, %s, %s)", [triggerID, nimTypeID, downscaling])
         return nimID 
 
     def _setPrimitiveTriggerType(self, mask):
@@ -198,11 +206,11 @@ class DBConnector(object):
             return self.executeInsert("INSERT INTO triggerprimitivetype (mask) VALUES (%s)", [mask])
         return typeID 
     
-    def _setPrimitiveTrigger(self, triggerID, primitiveTypeID):
+    def _setPrimitiveTrigger(self, triggerID, primitiveTypeID, downscaling):
         primitiveID = self._getPrimitiveTriggerID(triggerID, primitiveTypeID)
         
         if primitiveID==False:
-            return self.executeInsert("INSERT INTO triggerprimitive (runtrigger_id, triggerprimitivetype_id) VALUES (%s, %s)", [triggerID, primitiveTypeID])
+            return self.executeInsert("INSERT INTO triggerprimitive (runtrigger_id, triggerprimitivetype_id, triggerprimitivedownscaling) VALUES (%s, %s, %s)", [triggerID, primitiveTypeID, downscaling])
         return primitiveID 
 
     def _setSyncTrigger(self, triggerID):
@@ -222,6 +230,10 @@ class DBConnector(object):
     def _setTrigger(self, runID, startTS, endTS, trigger):
         triggerID = self._getTriggerID(runID, startTS, endTS)
         
+        Down = "NULL"
+        if len(trigger)==3:
+            Down = trigger[2]
+        
         if triggerID==False:
             if endTS==None:
                 triggerID = self.executeInsert("INSERT INTO runtrigger (run_id, validitystart) VALUES (%s, %s)", [runID, self.toSQLTime(startTS)])
@@ -233,10 +245,10 @@ class DBConnector(object):
             self._setPeriodicTrigger(triggerID, periodicType)
         if trigger[0]=='NIM':
             nimType = self._setNIMTriggerType(trigger[1])
-            self._setNIMTrigger(triggerID, nimType)
+            self._setNIMTrigger(triggerID, nimType, Down)
         if trigger[0]=='Primitive':
             primitiveType = self._setPrimitiveTriggerType(trigger[1])
-            self._setPrimitiveTrigger(triggerID, primitiveType)
+            self._setPrimitiveTrigger(triggerID, primitiveType, Down)
         if trigger[0]=='Sync':
             self._setSyncTrigger(triggerID)
         if trigger[0]=='Calib':
@@ -267,6 +279,17 @@ class DBConnector(object):
                                           [detector[0], detector[1], self.toSQLTime(startTS), self.toSQLTime(endTS)])
         return detID
     
+    def _setPrimitiveDetName(self, startTS, endTS, detector):
+        detID = self._getPrimitiveDetNameID(startTS, endTS, detector[0])
+        if detID==False:
+            if endTS==None:
+                return self.executeInsert("INSERT INTO primitivedetname (detnumber, detname, validitystart) VALUES (%s, %s, %s)", 
+                                          [detector[0], detector[1], self.toSQLTime(startTS)])                
+            else:
+                return self.executeInsert("INSERT INTO primitivedetname (detnumber, detname, validitystart, validityend) VALUES (%s, %s, %s, %s)",
+                                          [detector[0], detector[1], self.toSQLTime(startTS), self.toSQLTime(endTS)])
+        return detID
+        
     ##---------------------------------------
     #    Create new run entries in database
     ##---------------------------------------
@@ -308,7 +331,12 @@ class DBConnector(object):
                 else:
                     endTS = None
                 for mask in trigger[trigg][1]:
-                    self._setTrigger(runID, startTS, endTS, ['NIM', mask])
+                    down = None
+                    m = mask.split(":")
+                    if len(m)==2:
+                        down = m[1]
+                    m = m[0]
+                    self._setTrigger(runID, startTS, endTS, ['NIM', m, down])
                     
     def setPrimitiveTriggerList(self, trigger, runNumber):
         runID = self._getRunID(runNumber)
@@ -322,7 +350,12 @@ class DBConnector(object):
                 else:
                     endTS = None
                 for mask in trigger[trigg][1]:
-                    self._setTrigger(runID, startTS, endTS, ['Primitive', mask])
+                    down = None
+                    m = mask.split(":")
+                    if len(m)==2:
+                        down = m[1]
+                    m = m[0]
+                    self._setTrigger(runID, startTS, endTS, ['Primitive', m, down])
     
     def setSyncTriggerList(self, trigger, runNumber):
         runID = self._getRunID(runNumber)
@@ -367,4 +400,8 @@ class DBConnector(object):
     def setNIMNames(self, startTS, endTS, detNames):
         for det in detNames:
             self._setNIMDetName(startTS, endTS, det)
+            
+    def setPrimitivesNames(self, startTS, endTS, detNames):
+        for det in detNames:
+            self._setPrimitivesDetName(startTS, endTS, det)
             

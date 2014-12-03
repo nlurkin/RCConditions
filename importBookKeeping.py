@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/usr/bin/python
 
 '''
 Created on Nov 4, 2014
@@ -9,10 +9,11 @@ Created on Nov 4, 2014
 import os
 import sys
 
-from config import ConfigFile
+from config import ConfigFile, BadConfigException
 from database import DBConnector
 from runConfig import runParam
 import xml.dom.minidom as xmld
+import shutil
 
 
 param = None
@@ -55,7 +56,7 @@ def findPreviousInList(varList, val):
 
     ## Val is greater than all elements in the list, return the last one
     if val>varList[-1]:
-        return len(varList), varList[-1]
+        return len(varList)-1, varList[-1]
     
     ## Go through the list. When an element is greater than val, we just passed the one we were searching
     for i,el in enumerate(varList[1:]):
@@ -88,15 +89,27 @@ def buildNIMMask(fd):
         fd: ConfigFile instance
     """
     l = []
-    for i in range(0, 7):
-        if int(fd.getPropertie("lut%i_nim_detEmask" % (i))) != 1:
-            row = []
-            row.append(fd.getPropertie("lut%i_nim_detAmask" % (i)))
-            row.append(fd.getPropertie("lut%i_nim_detBmask" % (i)))
-            row.append(fd.getPropertie("lut%i_nim_detCmask" % (i)))
-            row.append(fd.getPropertie("lut%i_nim_detDmask" % (i)))
-            row.append(fd.getPropertie("lut%i_nim_detEmask" % (i)))
-            l.append(''.join(row))
+    if not param.l0tpFileNew:
+        for i in range(0, 7):
+            try:
+                if int(fd.getPropertie("lut%i_nim_detEmask" % (i))) != 1:
+                    row = []
+                    row.append(fd.getPropertie("lut%i_nim_detAmask" % (i)))
+                    row.append(fd.getPropertie("lut%i_nim_detBmask" % (i)))
+                    row.append(fd.getPropertie("lut%i_nim_detCmask" % (i)))
+                    row.append(fd.getPropertie("lut%i_nim_detDmask" % (i)))
+                    row.append(fd.getPropertie("lut%i_nim_detEmask" % (i)))
+                    l.append(''.join(row) + ":" + fd.getPropertie("downScal_mask%i_nim" % (i)))
+            except BadConfigException as e:
+                print e
+    else:
+        for i in range(0, 7):
+            try:
+                nimEnabled = int(fd.getPropertie("enableMask_NIM"))
+                if (nimEnabled & (1<<i)) == 1:
+                    l.append(fd.findNIMMask(i))
+            except BadConfigException as e:
+                print e
 
     return l
 
@@ -108,12 +121,22 @@ def buildPrimitiveMask(fd):
         fd: ConfigFile instance
     """
     l = []
-    for i in range(0, 7):
-        row = []
-        row.append(fd.getPropertie("lut%i_detAmask" % (i)))
-        row.append(fd.getPropertie("lut%i_detBmask" % (i)))
-        row.append(fd.getPropertie("lut%i_detCmask" % (i)))
-        l.append(''.join(row))
+    if not param.l0tpFileNew:
+        for i in range(0, 7):
+            try:
+                row = []
+                row.append(fd.getPropertie("lut%i_detAmask" % (i)).zfill(2))
+                row.append(fd.getPropertie("lut%i_detBmask" % (i)).zfill(2))
+                row.append(fd.getPropertie("lut%i_detCmask" % (i)).zfill(2))
+                l.append(''.join(row) + ":" + fd.getPropertie("downScal_mask%i" % (i)))
+            except BadConfigException as e:
+                print e
+    else:
+        for i in range(0, 7):
+            try:
+                l.append(fd.findPrimMask(i))
+            except BadConfigException as e:
+                print e
 
     return l
 
@@ -157,7 +180,7 @@ def mergeTriggers(trigg, prop, startTS, endTS):
         i,closest = findPreviousInList(lProp, t)
         if closest:
             ## If found, delete it because used and assign it to the current enabled
-            del lProp[i]
+            #del lProp[i]
             trigg[t][1] = prop[closest][1]
 
     ## Go through the remaining properties list
@@ -175,7 +198,6 @@ def mergeTriggers(trigg, prop, startTS, endTS):
     i,_ = findPreviousInList(lTrigg, startTS)
     for t in lTrigg[:i]:
         del trigg[t]
-
     simplifyTrigger(trigg, None)
 
 ##---------------------------------------
@@ -252,7 +274,10 @@ def getTriggerProperties(listNode):
             fileContentNode = fileContentNodeList[0]
             val = getValue(fileContentNode.childNodes)
             fc = ConfigFile(val)
-            events['Periodic'][timestamp] = [None, int(fc.getPropertie("periodicTrgTime"))]
+            try:
+    		    events['Periodic'][timestamp] = [None, int(fc.getPropertie("periodicTrgTime"))]
+            except BadConfigException as e:
+    		    print e
             events['NIM'][timestamp] = [None, [x for x in buildNIMMask(fc)]]
             events['Primitive'][timestamp] = [None, buildPrimitiveMask(fc)]
     
@@ -345,23 +370,26 @@ if __name__ == '__main__':
 
 
     myconn = DBConnector()
-    myconn.connectDB(passwd=sys.argv[2])
+    myconn.connectDB(passwd=sys.argv[-1:][0])
     myconn.setNIMNames(1409529600, None, [[0,'Q1'], [1,'NHOD'], [2,'MUV2'], [3,'MUV3'], [4,'']])
-
+    #myconn.setPrimitivesNames(1409529600, None, [[0,'Q1'], [1,'NHOD'], [2,'MUV2'], [3,'MUV3'], [4,'']])
 
     if len(sys.argv)>1:
-        filePath = sys.argv[1]
+        filePath = sys.argv[1:-1]
     else:
-        filePath = "/home/ncl/sampleExportConfig.xml"
+        filePath = ["/home/ncl/sampleExportConfig.xml"]
     
-    if os.path.isdir(filePath):
-        fileList = [filePath+"/"+f for f in sorted(os.listdir(filePath))]
-    else:
-        fileList = [filePath]
+    fileList = []
+    for path in filePath:
+        if os.path.isdir(path):
+            fileList.append([path+"/"+f for f in sorted(os.listdir(path))])
+        else:
+            fileList.append(path)
     
     for f in fileList:
         if os.path.isfile(f):
             print "\nImport " + f + "\n---------------------"
             exportFile(myconn, f)
+            shutil.move(f, "/home/lkrpn0/XMLProcessed/" + os.path.basename(f))
     
     myconn.close()
