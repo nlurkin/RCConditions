@@ -208,7 +208,7 @@ def retrieveAllRunInfos(nodeList, runNumber):
         nodeList: list of <RunInfo> nodes
         runNumber: the run number for which the info should be extracted
     """
-    runInfoMap = {'RunType':'', 'RunNumber':'', 'RunStartTime':None, 'RunStopTime':None, 'StartRunComment':'', 'EndRunComment':''};
+    runInfoMap = {'RunType':'', 'RunNumber':'', 'RunStartTime':None, 'RunStopTime':None, 'StartRunComment':'', 'EndRunComment':'', 'TotalBurst':'', 'totalL0':'', 'totalL1':'', 'totalL2':''};
     goodInfo = False
     for node in nodeList:
         runNumberNode = node.getElementsByTagName("RunNumber")
@@ -316,9 +316,19 @@ def exportFile(myconn, filePath):
     param = runParam(runNumber)
     startTS = int(getAttribute(rootNode, "startTime"))
     endTS = int(getAttribute(rootNode, "endTime"))
+    totalBurst = getAttribute(rootNode, "totalBurst")
+    totalL0 = getAttribute(rootNode, "totalL0")
+    totalL1 = getAttribute(rootNode, "totalL1")
+    totalL2 = getAttribute(rootNode, "totalL2")
     runInfoList = doc.getElementsByTagName("RunInfo")
     
     runInfo = retrieveAllRunInfos(runInfoList, int(runNumber))
+    
+    runInfo['TotalBurst'] = None if totalBurst==None else int(totalBurst)
+    runInfo['TotalL0'] = None if totalL0==None else int(totalL0)
+    runInfo['TotalL1'] = None if totalL1==None else int(totalL1)
+    runInfo['TotalL2'] = None if totalL2==None else int(totalL2)
+    
     
     ## Get Trigger info
     l0tpList = doc.getElementsByTagName("L0TP")
