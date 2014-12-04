@@ -106,11 +106,10 @@ def buildNIMMask(fd):
         for i in range(0, 7):
             try:
                 nimEnabled = int(fd.getPropertie("enableMask_NIM"))
-                if (nimEnabled & (1<<i)) == 1:
+                if (nimEnabled & (1<<i)) != 0:
                     l.append(fd.findNIMMask(i))
             except BadConfigException as e:
                 print e
-
     return l
 
 def buildPrimitiveMask(fd):
@@ -137,7 +136,6 @@ def buildPrimitiveMask(fd):
                 l.append(fd.findPrimMask(i))
             except BadConfigException as e:
                 print e
-
     return l
 
 def simplifyTrigger(trigg, reject):
@@ -210,7 +208,7 @@ def retrieveAllRunInfos(nodeList, runNumber):
         nodeList: list of <RunInfo> nodes
         runNumber: the run number for which the info should be extracted
     """
-    runInfoMap = {'RunType':'', 'RunNumber':'', 'RunStartTime':'', 'RunStopTime':'', 'StartRunComment':'', 'EndRunComment':''};
+    runInfoMap = {'RunType':'', 'RunNumber':'', 'RunStartTime':None, 'RunStopTime':None, 'StartRunComment':'', 'EndRunComment':''};
     goodInfo = False
     for node in nodeList:
         runNumberNode = node.getElementsByTagName("RunNumber")
@@ -328,7 +326,6 @@ def exportFile(myconn, filePath):
     
     l0tpFileList = doc.getElementsByTagName("na62L0TP_Torino")
     triggerProp = getTriggerProperties(l0tpFileList)
-    
     
     ## Process triggers into a coherent timeline
     mergeTriggers(triggerDict['Periodic'], triggerProp['Periodic'], startTS, endTS)

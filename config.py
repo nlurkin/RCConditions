@@ -47,13 +47,16 @@ class ConfigFile(object):
             raise BadConfigException("Unable to parse for NIM " + str(address))
         rootNode = doc.getElementsByTagName("LUT_parameters_NIM")[0]
         itemNodes = rootNode.getElementsByTagName("item")[address]
+        globalNode = doc.getElementsByTagName("global_parameters")[0]
+        downscalNode = globalNode.getElementsByTagName("downScal_mask")[0]
+        downscalList = downscalNode.getElementsByTagName("item")[address]
         row = []
         row.append(self.getValue(itemNodes.getElementsByTagName("lut_detAmask")[0].childNodes))
         row.append(self.getValue(itemNodes.getElementsByTagName("lut_detBmask")[0].childNodes))
         row.append(self.getValue(itemNodes.getElementsByTagName("lut_detCmask")[0].childNodes))
         row.append(self.getValue(itemNodes.getElementsByTagName("lut_detDmask")[0].childNodes))
         row.append(self.getValue(itemNodes.getElementsByTagName("lut_detEmask")[0].childNodes))
-        return ''.join(row)
+        return ''.join(row) + ":" + str(self.getValue(downscalList.childNodes))
     
     def findPrimMask(self, address):
         try:

@@ -110,14 +110,14 @@ class DBConnector(object):
     def _getNIMTriggerTypeID(self, mask):
         return self.getResultSingle("SELECT id FROM triggernimtype WHERE mask=%s",[mask])
     
-    def _getNIMTriggerID(self, triggerID, typeID):
-        return self.getResultSingle("SELECT id FROM triggernim WHERE runtrigger_id=%s AND triggernimtype_id=%s", [triggerID, typeID])
+    def _getNIMTriggerID(self, triggerID, typeID, downscaling):
+        return self.getResultSingle("SELECT id FROM triggernim WHERE runtrigger_id=%s AND triggernimtype_id=%s AND triggernimdownscaling=%s", [triggerID, typeID, downscaling])
 
     def _getPrimitiveTriggerTypeID(self, mask):
         return self.getResultSingle("SELECT id FROM triggerprimitivetype WHERE mask=%s", [mask])
     
-    def _getPrimitiveTriggerID(self, triggerID, typeID):
-        return self.getResultSingle("SELECT id FROM triggerprimitive WHERE runtrigger_id=%s AND triggerprimitivetype_id=%s", [triggerID, typeID])
+    def _getPrimitiveTriggerID(self, triggerID, typeID, downscaling):
+        return self.getResultSingle("SELECT id FROM triggerprimitive WHERE runtrigger_id=%s AND triggerprimitivetype_id=%s AND triggerprimitivedownscaling=%s", [triggerID, typeID, downscaling])
 
     def _getSyncTriggerID(self, triggerID):
         return self.getResultSingle("SELECT id FROM triggersync WHERE runtrigger_id=%s", [triggerID])
@@ -193,7 +193,7 @@ class DBConnector(object):
         return typeID 
 
     def _setNIMTrigger(self, triggerID, nimTypeID, downscaling):
-        nimID = self._getNIMTriggerID(triggerID, nimTypeID)
+        nimID = self._getNIMTriggerID(triggerID, nimTypeID, downscaling)
         
         if nimID==False:
             return self.executeInsert("INSERT INTO triggernim (runtrigger_id, triggernimtype_id, triggernimdownscaling) VALUES (%s, %s, %s)", [triggerID, nimTypeID, downscaling])
@@ -207,7 +207,7 @@ class DBConnector(object):
         return typeID 
     
     def _setPrimitiveTrigger(self, triggerID, primitiveTypeID, downscaling):
-        primitiveID = self._getPrimitiveTriggerID(triggerID, primitiveTypeID)
+        primitiveID = self._getPrimitiveTriggerID(triggerID, primitiveTypeID, downscaling)
         
         if primitiveID==False:
             return self.executeInsert("INSERT INTO triggerprimitive (runtrigger_id, triggerprimitivetype_id, triggerprimitivedownscaling) VALUES (%s, %s, %s)", [triggerID, primitiveTypeID, downscaling])
