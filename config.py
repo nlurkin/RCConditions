@@ -48,7 +48,7 @@ class ConfigFile(object):
         rootNode = doc.getElementsByTagName("LUT_parameters_NIM")[0]
         itemNodes = rootNode.getElementsByTagName("item")[address]
         globalNode = doc.getElementsByTagName("global_parameters")[0]
-        downscalNode = globalNode.getElementsByTagName("downScal_mask")[0]
+        downscalNode = globalNode.getElementsByTagName("downScal_NIM_mask")[0]
         downscalList = downscalNode.getElementsByTagName("item")[address]
         row = []
         row.append(self.getValue(itemNodes.getElementsByTagName("lut_detAmask")[0].childNodes))

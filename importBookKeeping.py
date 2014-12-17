@@ -14,7 +14,19 @@ from database import DBConnector
 from runConfig import runParam
 import xml.dom.minidom as xmld
 import shutil
+import re
 
+def tryint(s):
+    try:
+        return int(s)
+    except:
+        return s
+
+def alphanum_key(s):
+    """ Turn a string into a list of string and number chunks.
+        "z23a" -> ["z", 23, "a"]
+    """
+    return [ tryint(c) for c in re.split('([0-9]+)', s) ]
 
 param = None
 ##---------------------------------------
@@ -378,7 +390,7 @@ if __name__ == '__main__':
 
     myconn = DBConnector()
     myconn.connectDB(passwd=sys.argv[-1:][0])
-    myconn.setNIMNames(1409529600, None, [[0,'Q1'], [1,'NHOD'], [2,'MUV2'], [3,'MUV3'], [4,'']])
+    #myconn.setNIMNames(1409529600, None, [[0,'Q1'], [1,'NHOD'], [2,'MUV2'], [3,'MUV3'], [4,'']])
     #myconn.setPrimitivesNames(1409529600, None, [[0,'Q1'], [1,'NHOD'], [2,'MUV2'], [3,'MUV3'], [4,'']])
 
     if len(sys.argv)>1:
@@ -393,6 +405,7 @@ if __name__ == '__main__':
         else:
             fileList.append(path)
     
+    fileList.sort(key=alphanum_key)
     for f in fileList:
         if os.path.isfile(f):
             print "\nImport " + f + "\n---------------------"
