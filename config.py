@@ -75,15 +75,21 @@ class ConfigFile(object):
 	def getRefDetNim(self):
 		try:
 			doc = self.importFile()
+			referenceDet = self.getValue(doc.getElementsByTagName("referenceDet_NIM")[0].childNodes)
 		except:
-			raise BadConfigException("Unable to parse for referenceDet_NIM")
-		referenceDet = self.getValue(doc.getElementsByTagName("referenceDet_NIM")[0].childNodes)
+			try:
+				referenceDet = self.getPropertie("referenceDet_NIM")
+			except:
+				raise BadConfigException("Unable to parse for referenceDet_NIM")
 		return int(referenceDet)
 	
 	def getRefDetPrim(self):
 		try:
 			doc = self.importFile()
+			referenceDet = self.getValue(doc.getElementsByTagName("referenceDet")[0].childNodes)
 		except:
-			raise BadConfigException("Unable to parse for referenceDet")
-		referenceDet = self.getValue(doc.getElementsByTagName("referenceDet")[0].childNodes)
+			try:
+				referenceDet = self.getPropertie("referenceDet")
+			except:
+				raise BadConfigException("Unable to parse for referenceDet")
 		return int(referenceDet)
