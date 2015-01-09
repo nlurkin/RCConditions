@@ -1,0 +1,62 @@
+<html>
+<head>
+	<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=ISO-8859-1">
+	<title>NA62 Slideshow</title> 
+	<style type="text/css">
+		<!--
+		.tdtitle {
+			padding:5px;
+			background-color:#486090;
+			color:white;
+			border:2px solid #000040;
+			border-top:2px solid #E0E0E0;
+			border-bottom:2px solid #000040;
+			border-left:2px solid #000080;
+		}
+		-->
+	</style>
+
+<script type="text/javascript">
+<!--
+var image1=new Image()
+image1.src="bigScreen.png"
+var image2=new Image()
+image2.src="Environment.png"
+var image3=new Image()
+image3.src="MainDCS.png"
+//-->
+</script>
+</head>
+<body>
+
+      <table width=100% border=0 cellpadding=3 cellspacing=0> 
+        <tr style="position:relative"> 
+          <td class="tdtitle" align=center>  
+            <span style="font-size:52px">NA62 Slideshow</span><img border=0 align=right src="NA62logo.gif" alt="NA62 logo">  
+          </td> 
+        </tr>
+        </table>
+	<img border=0 align=center src="bigScreen.png" name="slide" width="1500" height="690" />
+	<script>
+	<!--
+		//variable that will increment through the images
+		var step=1
+		function slideit(){
+			//if browser does not support the image object, exit.
+			if (!document.images)
+			return
+			document.images.slide.src=eval("image"+step+".src")
+			if (step<3)
+			step++
+			else
+			step=1
+			//call function "slideit()" every 30 seconds
+			setTimeout("slideit()",30000)
+			}
+		slideit()
+	//-->
+	</script>
+
+
+</body>
+</html>

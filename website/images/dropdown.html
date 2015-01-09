@@ -1,0 +1,350 @@
+ 
+<html> 
+  <head> 
+    <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=ISO-8859-1">
+    <title>NA62 Panel List</title> 
+    <style type="text/css"> 
+      <!--
+      a:link { color:#0000FF; text-decoration:none }
+      a:visited { color:#800080; text-decoration:none }
+      a:hover { color:#0000FF; text-decoration:none }
+      a:active { color:#0000FF; text-decoration:none }
+      a:focus { color:#0000FF; text-decoration:none }
+
+      body {
+        font-family:verdana,tahome,sans-serif;
+        font-size:16px;
+        margin: 0px;
+      }
+      
+      .tdtitle {
+        padding:5px;
+        background-color:#486090;
+        color:white;
+        border:2px solid #000040;
+        border-top:2px solid #E0E0E0;
+        border-bottom:2px solid #000040;
+        border-left:2px solid #000080;
+      }
+
+      .tddate {
+        padding:15px;
+        background-color:#489060;
+        font-size:24px;
+        color:white;
+        border:2px solid #004000;
+        border-top:2px solid #E0E0E0;
+        border-bottom:2px solid #004000;
+        border-left:2px solid #008000;
+      }
+
+      .tdhead {
+        padding:5px;
+        background-color:#DDEEBB;
+        color:black;
+        border:2px solid #000040;
+        border-top:2px solid #E0E0E0;
+        border-bottom:2px solid #000040;
+        border-left:2px solid #000080;
+      }
+
+      .tdcheck {
+        padding:5px;
+        background-color:#FFFFB0;
+        color:black;
+        border:2px solid #000040;
+        border-top:2px solid #E0E0E0;
+        border-bottom:2px solid #000040;
+        border-left:2px solid #000080;
+      }
+
+      .head {
+        font-size:32px;
+      }
+      
+      .subtitle {
+        font-size:28px;
+        margin-left:15px;
+        
+      }
+      
+      .subsubtitle {
+        font-size:20px;
+        padding-left:25px;
+      }
+      
+      
+      .item {
+        font-size:20px;
+        padding:10px;
+        text-indent:-2em;
+        padding-left:15em;
+      }
+      
+      .check{
+        font-size:20px;
+        padding-right:500px;
+        text-align:left;
+      }
+            
+      select {
+        height:30px;
+        font-size:24px;
+      }
+      
+      input {
+        height:30px;
+        width:70px;
+        font-size:20px;
+      }
+      
+      button {
+        padding:5px;
+        font-size:24px;
+      }
+      -->
+    </style> 
+  <script type="text/javascript"> 
+  
+  var imgUp;
+  var imgDown;
+  var cmd;
+  var mid;
+  var author;
+  
+  function XMLHttpRequestGeneric()
+  {
+    var request;
+    try {
+      request = new XMLHttpRequest(); // Firefox, Opera 8.0+, Safari
+    }
+    catch (e) {
+      try {
+        request = new ActiveXObject('Msxml2.XMLHTTP'); // Internet Explorer
+      }
+      catch (e) {
+        try {
+          request = new ActiveXObject('Microsoft.XMLHTTP');
+        }
+        catch (e) {
+         alert('Your browser does not support AJAX!');
+         return undefined;
+        }
+      }
+    }
+
+    return request;
+  } 
+
+  function get_cookie(cookie_name)
+  {
+     var results = document.cookie.match('(^|;) ?' + cookie_name + '=([^;]*)(;|$)');
+
+     if (results)
+       return (unescape(results[2]));
+     else
+       return null;
+  }
+  
+  function find_attr(list, name)
+  {
+    for (var i=0 ; i<list.length ; i++) {
+      if (list[i].substr(0, list[i].indexOf(':')) == name)
+        return list[i].substr(list[i].indexOf(':')+2);
+    }
+    return undefined;
+  }
+
+
+  
+  function retrieve_data(mid)
+  {
+    // make synchronous AJAX request
+    var req = XMLHttpRequestGeneric();
+    req.open('GET', url.substr(0, url.lastIndexOf('/')+1)+mid+"?cmd=Download", false);
+    req.send(null);
+    var line = req.responseText.split('\n');
+    
+    
+    // set all data fields with the values from the logbook
+    for (var i=0; i<document.form1.elements.length; i++) {
+      var val = find_attr(line, document.form1.elements[i].name);
+      if (val != undefined) {
+        if (document.form1.elements[i].type == 'checkbox')
+          document.form1.elements[i].checked = (val == 'on');
+        else  
+          document.form1.elements[i].value = val;
+      }
+    }
+  }
+
+  function checklist_init() 
+  {
+    var e;
+    imgUp = new Image();
+    imgUp.src = 'sc_up.png';
+    imgDown = new Image();
+    imgDown.src = 'sc_down.png';
+
+    url = document.location.href;
+    if (url.indexOf('?cmd=') > -1) {
+      cmd = url.substr(url.indexOf('?cmd=')+5);
+      if (cmd.indexOf('&') > 0)
+        cmd = cmd.substr(0, cmd.indexOf('&'));
+    }
+     
+    mid = url.substring(url.lastIndexOf('/')+1);
+    if (mid.indexOf('?') > -1)
+      mid = mid.substring(0, mid.indexOf('?'));
+      
+    if (cmd == undefined) {
+      // make back button visible
+      e = document.getElementById('back_edit');
+      e.style.visibility = 'visible'; 
+      
+      retrieve_data(mid);
+    }
+    
+      if (cmd == 'New') {
+      // preset form data from cookies   
+      document.getElementById('ufnm').value = get_cookie('ufnm');
+      document.getElementById('unm').value = get_cookie('unm');
+      document.getElementById('upwd').value = get_cookie('upwd');
+      setTimeout("set_author('"+get_cookie('ufnm')+"')", 10);
+    
+      retrieve_data(mid);
+  
+      // set edit_id
+      e = document.getElementById('eid');
+      e.value = mid; 
+
+      // collapse all sections
+      for (i=1 ; i<=3 ; i++)
+        tv(i);
+           
+      // preset form data from cookies   
+      document.getElementById('ufnm').value = get_cookie('ufnm');
+      document.getElementById('unm').value = get_cookie('unm');
+      document.getElementById('upwd').value = get_cookie('upwd');
+      setTimeout("set_author('" + get_cookie('ufnm') + "')", 10);
+          
+    }
+  } 
+  
+  function tv(id)
+  {
+    var e = document.getElementById('ch'+id);
+    if (e.style.display == 'none')
+      e.style.display = 'table-row';
+    else
+      e.style.display = 'none';
+        
+    e = document.getElementById('i'+id);
+    if (e.src == imgUp.src)
+      e.src = imgDown.src;
+    else   
+      e.src = imgUp.src;
+  }
+
+  </script> 
+  </head> 
+  <body onload="checklist_init();"> 
+    <form name="form1" method="GET" action="./">
+      
+      <input type="hidden" name="cmd" value="Submit"> <!-- cmd = Submit -->
+      <input type="hidden" name="suppress" value="1"> <!-- suppress email notification -->
+      <input type="hidden" name="unm" id="unm">       <!-- filled with ufnm cookie -->
+      <input type="hidden" name="upwd" id="upwd">     <!-- filled with ufnm cookie -->
+      <input type="hidden" name="Author" id="ufnm">   <!-- filled with ufnm cookie -->
+      <input type="hidden" name="edit_id" id="eid">   <!-- message ID for editing -->
+      
+      <table width=100% border=0 cellpadding=3 cellspacing=0> 
+        <tr style="position:relative"> 
+          <td class="tdtitle" align=center> 
+            <span id="back_edit" style="visibility:hidden;position:absolute;left:10px;top:20px;">
+              <button type="button" name="back" value="" onClick="document.location.href='./';">Back</button>&nbsp;
+              <button type="button" name="edit" value="" onClick="document.location.href='?cmd=Edit';">Edit</button>
+            </span> 
+            <span style="font-size:52px">NA62 Panel List</span><img border=0 align=right src="NA62logo.gif" alt="NA62 logo">  
+          </td> 
+        </tr> 
+       
+        
+        <!---- Panel 1 -------------------------------->
+
+        <tr>
+          <td class="tdhead">
+             <table width=100% cellpadding=0 cellspacing=0>
+               <tr>
+                 <td onClick="tv('1')" class="head">
+                   <img id="i1" width="30" height="30" src="sc_up.png" alt="Expand section" title="Expand section"> Panel 1
+                 </td>
+               </tr>
+             </table>  
+          </td>
+        </tr>
+          
+        <tr id="ch1">
+          <td class="tdcheck">
+            <table width=100% cellpadding=0 cellspacing=0>        
+              <tr>
+              	<img border=0 align=center src="bigScreen.png" alt="Run Control" width="1500" height="800">                
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+              
+        <!---- Panel 2 -------------------------------->
+
+
+        <tr>
+          <td class="tdhead">
+             <table width=100% cellpadding=0 cellspacing=0>
+               <tr>
+                 <td onClick="tv('2')" class="head">
+                   <img id="i2" width="30" height="30" src="sc_up.png" alt="Expand section" title="Expand section"> Panel 2
+                 </td>
+               </tr>
+             </table>  
+          </td>
+        </tr>
+        
+        <tr id="ch2">
+          <td class="tdcheck">
+            <table width=100% cellpadding=0 cellspacing=0>        
+              <tr>
+              	<img border=0 align=center src="MainDCS.png" alt="Main DCS" width="1500" height="800">                
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+
+        <!---- Panel 3 -------------------------------->
+
+        <tr>
+          <td class="tdhead">
+             <table width=100% cellpadding=0 cellspacing=0>
+               <tr>
+                 <td onClick="tv('3')" class="head">
+                   <img id="i3" width="30" height="30" src="sc_up.png" alt="Expand section" title="Expand section"> Panel 3
+                 </td>
+               </tr>
+             </table>  
+          </td>
+        </tr>
+        <tr id="ch3">
+          <td class="tdcheck">
+            <table width=100% cellpadding=0 cellspacing=0>        
+              <tr>
+              	<img border=0 align=center src="Environment.png" alt="Environment" width="1500" height="800">                
+              </tr>
+            </table>
+          </td>
+        </tr>  
+        
+      </table>
+    </form> 
+  </body> 
+</html> 

@@ -1,0 +1,87 @@
+<head> 
+	<title>NA62 Panel List</title>
+	<style type="text/css"> 
+	#Tabs ul {
+	padding: 0px;
+	margin: 0px;
+	margin-left: 10px;
+	list-style-type: none;
+	}
+	
+	#Tabs ul li {
+	display: inline-block;
+	clear: none;
+	float: left;
+	height: 24px;
+	}
+	
+	#Tabs ul li a {
+	position: relative;
+	margin-top: 16px;
+	display: block;
+	margin-left: 6px;
+	line-height: 24px;
+	padding-left: 10px;
+	background: #f6f6f6;
+	z-index: 9999;
+	border: 1px solid #ccc;
+	border-bottom: 0px;
+	
+	/* The following four lines are to make the top left and top right corners of each tab rounded. */
+	-moz-border-radius-topleft: 4px;
+	border-top-left-radius: 4px;
+	-moz-border-radius-topright: 4px;
+	border-top-right-radius: 4px;
+	/* end of rounded borders */
+	
+	width: 130px;
+	color: #000000;
+	text-decoration: none;
+	font-weight: bold;
+	}
+	
+	#Tabs ul li a:hover {
+	text-decoration: underline; // a very simple effect when hovering the mouse on tab
+	}
+	
+	#Tabs #Content_Area { // this is the css class for the content displayed in each tab
+	padding: 0 15px;
+	clear:both;
+	overflow:visible;
+	line-height:19px;
+	position: relative;
+	top: 20px;
+	z-index: 5;
+	height: 150px;
+	overflow: visible;
+	}
+	
+	p { padding-left: 15px; }
+	</style>
+	<div id="Tabs">
+		<ul>
+			<li id="li_tab1" onclick="tab('tab1')" ><a>Panel 1</a></li>
+			<li id="li_tab2" onclick="tab('tab2')" ><a>Panel 2</a></li>
+			<li id="li_tab3" onclick="tab('tab3')" ><a>Panel 3</a></li>
+		</ul>
+		<div id="Content_Area">
+			<div id='tab1'> <img border=0 align=center src="bigScreen.png" alt="bigScreen Panel" width="1500" height="800" ><p> Panel 1 </p></div>
+			<div id='tab2' style="display: none;"> <img border=0 align=center src="Environment.png" alt="Environment panel" width="1500" height="800"><p> Panel 2 </p></div>
+			<div id='tab3' style="display: none;"> <img border=0 align=center src="MainDCS.png" alt="Main DCS Panel" width="1500" height="800"><p> Panel 3 </p></div>
+		</div> <!– End of Content_Area Div –>
+	</div> <!– End of Tabs Div –>
+	<script type="text/javascript">
+		function tab(tab) {
+		document.getElementById('tab1').style.display = 'none';
+		document.getElementById('tab2').style.display = 'none';
+		document.getElementById('tab3').style.display = 'none';
+		document.getElementById('li_tab1').setAttribute("class", "");
+		document.getElementById('li_tab2').setAttribute("class", "");
+		document.getElementById('li_tab3').setAttribute("class", "");
+		document.getElementById(tab).style.display = 'block';
+		document.getElementById('li_'+tab).setAttribute("class", "active");
+		}
+	</script>
+</head>	
+
+
