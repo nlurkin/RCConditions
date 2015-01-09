@@ -75,7 +75,7 @@ else if($_GET['view']=="submitcomment"){
     if(!$sql->execute()){
         echo "Execute failed: (" . $sql->errno . ") ".$sql->error;
     }
-    header("Location:na62_runlist.php");
+    header("Location:na62_runlist.php?view=details&run_id=".$run_id);
     die();
 }
 else{
@@ -165,7 +165,7 @@ else{
 					<tr><td>End Time</td><td><?php echo $mainrow['timestop']?></td></tr>
 					<tr><td>Start Run comment</td><td><?php echo $mainrow['startcomment']?></td></tr>
 					<tr><td>End Run comment</td><td><?php echo $mainrow['endcomment']?></td></tr>
-					<tr><td>Offline comment</td><td><?php echo $mainrow['usercomment']?></td></tr>
+					<tr><td>Offline comment <br><a href="na62_runlist.php?view=comment&run_id=<? echo $mainrow['id']?>">Edit</a></td><td><?php echo $mainrow['usercomment']?></td></tr>
 				</table>
 			</div>
 		</div>
