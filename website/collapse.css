@@ -6,7 +6,7 @@
 	float:left;
 }
 .column .dragbox{
-	margin:5px 2px  20px;
+	margin:5px 2px  15px;
 	background:#fff;
 	position:relative;
 	border:1px solid #ddd;
@@ -22,10 +22,16 @@
 	border-bottom:1px solid #eee;
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 	cursor:move;
+	text-align: center;
+}
+.column .dragbox h2 p{
+	font-size:9px;
+	margin:0px;
+	font-weight: normal;
 }
 .dragbox-content{
 	background:#fff;
-	min-height:100px;
+/*	min-height:100px;*/
 }
 .column  .placeholder{
 	background: #f0f0f0;
@@ -37,6 +43,7 @@
 	position: absolute;
 	font-size: large;
 	cursor:pointer;
+	display: none;
 }
 .dragbox div.collapsem{
 	top: 6px;
@@ -44,7 +51,6 @@
 	position: absolute;
 	font-size: 14px;
 	cursor: pointer;
-	display: none;
 }
 
 .dragbox h2 .configure{
