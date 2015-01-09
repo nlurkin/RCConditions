@@ -192,6 +192,7 @@ def mergeTriggers(trigg, prop, startTS, endTS):
             ## If found, delete it because used and assign it to the current enabled
             #del lProp[i]
             trigg[t][1] = prop[closest][1]
+            trigg[t][2] = prop[closest][2]
 
     ## Go through the remaining properties list
     for t in lProp:
@@ -202,7 +203,7 @@ def mergeTriggers(trigg, prop, startTS, endTS):
         i,closest = findPreviousInList(lTrigg, t)
         if closest:
             ## If found, assign the current propertie to this enabled
-            trigg[closest] = [trigg[closest][0], prop[t][1]]
+            trigg[closest] = [trigg[closest][0], prop[t][1], prop[t][2]]
     
     ## Find the element just before the start run timestamp and delete all elements before that one
     i,_ = findPreviousInList(lTrigg, startTS)
@@ -245,8 +246,8 @@ def retrieveAllRunInfos(nodeList, runNumber):
 def getTriggerEnabled(listNodes):
     """Return a map of triggers (enabled fields only).
     
-    Each map element is a map of timestamp whose element are a 2 elements list. The second is always None
-    {123456:[True|False, None]}
+    Each map element is a map of timestamp whose element are a 3 elements list. The second and third is always None
+    {123456:[True|False, None, None]}
     
     Input: 
         listNodes: list of <L0TP> nodes
@@ -261,15 +262,15 @@ def getTriggerEnabled(listNodes):
             if "Activated" in tNode.nodeName:
                 triggerName = tNode.nodeName.split('.')[1]
                 val = getValue(tNode.childNodes)
-                events[triggerName][timestamp] = [str2bool(val), None]
+                events[triggerName][timestamp] = [str2bool(val), None, None]
     return events
 
 def getTriggerProperties(listNode):
     """Return a map of triggers (propertie fields only).
     
     Each map element is a map of timestamp whose element are a 2 elements list. 
-    The first is always None, the second (triggProp) is dependent of the trigger type 
-    {123456:[None, triggProp]}
+    The first is always None. The second (triggProp) is dependent of the trigger type 
+    {123456:[None, triggProp]}. The third is the reference detector: None for periodic, calib and sync.
     
     Input: 
         listNodes: list of <na62L0TP_Torino> nodes
@@ -285,11 +286,11 @@ def getTriggerProperties(listNode):
             val = getValue(fileContentNode.childNodes)
             fc = ConfigFile(val)
             try:
-    		    events['Periodic'][timestamp] = [None, int(fc.getPropertie("periodicTrgTime"))]
+                events['Periodic'][timestamp] = [None, int(fc.getPropertie("periodicTrgTime")), None]
+                events['NIM'][timestamp] = [None, [x for x in buildNIMMask(fc)], fc.getRefDetNim()]
+                events['Primitive'][timestamp] = [None, buildPrimitiveMask(fc), fc.getRefDetPrim()]
             except BadConfigException as e:
-    		    print e
-            events['NIM'][timestamp] = [None, [x for x in buildNIMMask(fc)]]
-            events['Primitive'][timestamp] = [None, buildPrimitiveMask(fc)]
+                print e
     
     return events
 
@@ -368,7 +369,7 @@ def exportFile(myconn, filePath):
     for det in detEnabled:
         setDetectorID(detEnabled[det], getDetectorID(doc.getElementsByTagName(det)))
         removeAllAfterTS(detEnabled[det], endTS)
-        
+    
     ## Insert runinfo into DB
     myconn.setRunInfo(runInfo)
     

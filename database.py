@@ -9,6 +9,7 @@ import sys
 import textwrap
 
 import MySQLdb
+from dateutil import tz 
 
 
 class DBConnector(object):
@@ -17,9 +18,10 @@ class DBConnector(object):
     '''
     wrapper = textwrap.TextWrapper(initial_indent=" --->", width=150, subsequent_indent='     ')
     
-    def __init__(self):
+    def __init__(self, dry_run=True):
         self.db = None
         self.cursor = None
+        self.dryRun = dry_run
     
     def close(self):
         if self.db and self.db.open:
@@ -46,6 +48,8 @@ class DBConnector(object):
     
     def executeInsert(self, sqlCommand, params=[]):
         print self.indent(sqlCommand % tuple(params))
+        if self.dryRun:
+            return
         try:
             self.cursor.execute(sqlCommand, params)
             self.db.commit()
@@ -87,7 +91,12 @@ class DBConnector(object):
         if timestamp==None:
             return ''
         else:
-            return datetime.datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
+            tzHere = tz.tzlocal()
+            tzGeneva = tz.gettz('Europe/Brussels')
+            localTime = datetime.datetime.fromtimestamp(timestamp)
+            localTime = localTime.replace(tzinfo=tzHere)
+            genevaTime = localTime.astimezone(tzGeneva) 
+            return genevaTime.strftime('%Y-%m-%d %H:%M:%S')
     
     ##---------------------------------------
     #    Get INDEX ID from database table
@@ -110,14 +119,20 @@ class DBConnector(object):
     def _getNIMTriggerTypeID(self, mask):
         return self.getResultSingle("SELECT id FROM triggernimtype WHERE mask=%s",[mask])
     
-    def _getNIMTriggerID(self, triggerID, typeID, downscaling):
-        return self.getResultSingle("SELECT id FROM triggernim WHERE runtrigger_id=%s AND triggernimtype_id=%s AND triggernimdownscaling=%s", [triggerID, typeID, downscaling])
+    def _getNIMTriggerID(self, triggerID, typeID, downscaling, reference):
+        rid = self.getResultSingle("SELECT id FROM triggernim WHERE runtrigger_id=%s AND triggernimtype_id=%s AND triggernimdownscaling=%s AND triggernimreference=%s", [triggerID, typeID, downscaling, reference])
+        if rid==False:
+            rid = self.getResultSingle("SELECT id FROM triggernim WHERE runtrigger_id=%s AND triggernimtype_id=%s AND triggernimdownscaling=%s AND triggernimreference is NULL", [triggerID, typeID, downscaling])
+            return True,rid
+        return False, rid
 
     def _getPrimitiveTriggerTypeID(self, mask):
         return self.getResultSingle("SELECT id FROM triggerprimitivetype WHERE mask=%s", [mask])
     
-    def _getPrimitiveTriggerID(self, triggerID, typeID, downscaling):
-        return self.getResultSingle("SELECT id FROM triggerprimitive WHERE runtrigger_id=%s AND triggerprimitivetype_id=%s AND triggerprimitivedownscaling=%s", [triggerID, typeID, downscaling])
+    def _getPrimitiveTriggerID(self, triggerID, typeID, downscaling, reference):
+        rid = self.getResultSingle("SELECT id FROM triggerprimitive WHERE runtrigger_id=%s AND triggerprimitivetype_id=%s AND triggerprimitivedownscaling=%s AND triggerprimitivereference=%s", [triggerID, typeID, downscaling,reference])
+        if rid==False:
+            rid = self.getResultSingle("SELECT id FROM triggerprimitive WHERE runtrigger_id=%s AND triggerprimitivetype_id=%s AND triggerprimitivedownscaling=%s AND triggerprimitivereference is NULL", [triggerID, typeID, downscaling])
 
     def _getSyncTriggerID(self, triggerID):
         return self.getResultSingle("SELECT id FROM triggersync WHERE runtrigger_id=%s", [triggerID])
@@ -192,11 +207,13 @@ class DBConnector(object):
             return self.executeInsert("INSERT INTO triggernimtype (mask) VALUES (%s)", [mask])
         return typeID 
 
-    def _setNIMTrigger(self, triggerID, nimTypeID, downscaling):
-        nimID = self._getNIMTriggerID(triggerID, nimTypeID, downscaling)
+    def _setNIMTrigger(self, triggerID, nimTypeID, downscaling, reference):
+        exist, nimID = self._getNIMTriggerID(triggerID, nimTypeID, downscaling, reference)
         
         if nimID==False:
-            return self.executeInsert("INSERT INTO triggernim (runtrigger_id, triggernimtype_id, triggernimdownscaling) VALUES (%s, %s, %s)", [triggerID, nimTypeID, downscaling])
+            return self.executeInsert("INSERT INTO triggernim (runtrigger_id, triggernimtype_id, triggernimdownscaling, triggernimreference) VALUES (%s, %s, %s, %s)", [triggerID, nimTypeID, downscaling, reference])
+        elif exist==True:
+            return self.executeInsert("UPDATE triggernim SET triggernimreference=%s WHERE id=%s", [reference, nimID])
         return nimID 
 
     def _setPrimitiveTriggerType(self, mask):
@@ -206,11 +223,13 @@ class DBConnector(object):
             return self.executeInsert("INSERT INTO triggerprimitivetype (mask) VALUES (%s)", [mask])
         return typeID 
     
-    def _setPrimitiveTrigger(self, triggerID, primitiveTypeID, downscaling):
-        primitiveID = self._getPrimitiveTriggerID(triggerID, primitiveTypeID, downscaling)
+    def _setPrimitiveTrigger(self, triggerID, primitiveTypeID, downscaling, reference):
+        exist, primitiveID = self._getPrimitiveTriggerID(triggerID, primitiveTypeID, downscaling, reference)
         
         if primitiveID==False:
-            return self.executeInsert("INSERT INTO triggerprimitive (runtrigger_id, triggerprimitivetype_id, triggerprimitivedownscaling) VALUES (%s, %s, %s)", [triggerID, primitiveTypeID, downscaling])
+            return self.executeInsert("INSERT INTO triggerprimitive (runtrigger_id, triggerprimitivetype_id, triggerprimitivedownscaling, triggerprimitivereference) VALUES (%s, %s, %s, %s)", [triggerID, primitiveTypeID, downscaling, reference])
+        elif exist==True:
+            return self.executeInsert("UPDATE triggerprimitive triggerprimitivereference=%s WHERE id=%s", [reference, primitiveID])
         return primitiveID 
 
     def _setSyncTrigger(self, triggerID):
@@ -231,7 +250,7 @@ class DBConnector(object):
         triggerID = self._getTriggerID(runID, startTS, endTS)
         
         Down = "NULL"
-        if len(trigger)==3:
+        if len(trigger)>=3:
             Down = trigger[2]
         
         if triggerID==False:
@@ -245,10 +264,10 @@ class DBConnector(object):
             self._setPeriodicTrigger(triggerID, periodicType)
         if trigger[0]=='NIM':
             nimType = self._setNIMTriggerType(trigger[1])
-            self._setNIMTrigger(triggerID, nimType, Down)
+            self._setNIMTrigger(triggerID, nimType, Down, trigger[3])
         if trigger[0]=='Primitive':
             primitiveType = self._setPrimitiveTriggerType(trigger[1])
-            self._setPrimitiveTrigger(triggerID, primitiveType, Down)
+            self._setPrimitiveTrigger(triggerID, primitiveType, Down, trigger[3])
         if trigger[0]=='Sync':
             self._setSyncTrigger(triggerID)
         if trigger[0]=='Calib':
@@ -337,7 +356,7 @@ class DBConnector(object):
                     if len(m)==2:
                         down = m[1]
                     m = m[0]
-                    self._setTrigger(runID, startTS, endTS, ['NIM', m, down])
+                    self._setTrigger(runID, startTS, endTS, ['NIM', m, down, trigger[trigg][2]])
                     
     def setPrimitiveTriggerList(self, trigger, runNumber):
         runID = self._getRunID(runNumber)
