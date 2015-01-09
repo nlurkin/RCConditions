@@ -71,134 +71,11 @@ else{
     <html>
     <head>
     <title>NA62 Run Infos</title>
-    <style>
-    table {
-	    font: 11px/24px Verdana, Arial, Helvetica, sans-serif;
-	    border-collapse: collapse;
-	    width: 100%;
-	}
-	
-	table.autoalternate tr:nth-child(even){ background-color: #b8d1f3; }
-	table.autoalternate tr:nth-child(odd){ background-color: #dae5f4; }
-
-    th {
-	    border-top: 1px solid #FB7A31;
-	    border-bottom: 1px solid #FB7A31;
-	    background: #FFC;
-	}
-    tr.d0 {
-
-    }
-    tr.d1 {
-
-    }
-
-    tr.r1 {
-	    background-color: #b8d1f3;
-    }
-    tr.r2 {
-	    background-color: #dae5f4;
-    }
-
-    td {
-	    border-bottom: 1px solid #CCC;
-	    padding: 0 0.5em;
-	    }
-	td.wrappable {
-		white-space: pre-wrap;
-		white-space: pre-line;
-		word-wrap: break-word;
-	}
-	.column{
-		width:49%;
-		margin-right:.5%;
-		min-height:300px;
-		background:#fff;
-		float:left;
-	}
-	.column .dragbox{
-		#margin:5px 2px  20px;
-		padding: 0px 0px 0px 0px;
-		background:#fff;
-		position:relative;
-		border:1px solid #ddd;
-		-moz-border-radius:5px;
-		-webkit-border-radius:5px;
-	}
-	.column .dragbox h2{
-		margin:0;
-		font-size:12px;
-		padding:5px;
-		background:#f0f0f0;
-		color:#000;
-		border-bottom:1px solid #eee;
-		font-family:Verdana;
-		cursor:move;
-	}
-	.dragbox-content{
-		background:#fff;
-		min-height:100px; margin:5px;
-		font-family:'Lucida Grande', Verdana; font-size:0.8em; line-height:1.5em;
-	}
-	.column  .placeholder{
-		background: #f0f0f0;
-		border:1px dashed #ddd;
-	}
-	.dragbox h2.collapse{
-		background:#f0f0f0 url('collapse.png') no-repeat top right;
-	}
-	.dragbox h2 .configure{
-		font-size:11px; font-weight:normal;
-		margin-right:30px; float:right;
-	}
-    </style>
-    <script src="https://code.jquery.com/jquery-1.11.2.min.js"></script>
-    <script src="https://code.jquery.com/ui/1.11.2/jquery-ui.min.js"></script>
-    <script>
-    $('.column').sortable({  
-    	connectWith: '.column',  
-	    handle: 'h2',  
-	    cursor: 'move',  
-	    placeholder: 'placeholder',  
-	    forcePlaceholderSize: true,  
-	    opacity: 0.4,  
-	})  
-	.disableSelection();
-	$('.dragbox').each(function(){
-	    $(this).hover(function(){  
-	        $(this).find('h2').addClass('collapse');  
-	    }, function(){  
-    	  	  $(this).find('h2').removeClass('collapse');  
-	   	})  
-    	.find('h2').hover(function(){  
-    	    $(this).find('.configure').css('visibility', 'visible');  
-    	}, function(){  
-    	    $(this).find('.configure').css('visibility', 'hidden');  
-	    })
-    	.click(function(){  
-    	    $(this).siblings('.dragbox-content').toggle();  
-    	})  
-	    .end()  
-	    .find('.configure').css('visibility', 'hidden');  
-	});
-	$('.dragbox').each(function(){  
-	    $(this).hover(function(){  
-    	    $(this).find('h2').addClass('collapse');  
-	    }, function(){  
-	        $(this).find('h2').removeClass('collapse');  
-	    })  
-	    .find('h2').hover(function(){  
-	        $(this).find('.configure').css('visibility', 'visible');  
-	    }, function(){  
-	        $(this).find('.configure').css('visibility', 'hidden');  
-	    })  
-	    .click(function(){  
-	        $(this).siblings('.dragbox-content').toggle();  
-	    })  
-	    .end()  
-	    .find('.configure').css('visibility', 'hidden');  
-	});
-    </script>
+    <link rel="stylesheet" type="text/css" href="na62.css">
+	<link rel="stylesheet" type="text/css" href="collapse.css">
+	<script src="https://code.jquery.com/jquery-1.11.2.min.js"></script>
+	<script src="https://code.jquery.com/ui/1.11.2/jquery-ui.min.js"></script>
+	<script type="text/javascript" src="drag_collapse.js"></script>
     </head>
     <body>
 <?php
@@ -266,22 +143,21 @@ else{
 		    die("No data in database");
 		}
 ?>
-	Details for Run# <? echo $row['number']?>
-
+	<h1>Details for Run# <? echo $row['number']?></h1>
 	<div class="column" id="col1">
-	<div class="dragbox" id="box1">
-	<h2>Global information</h2>
-	<div class="dragbox-content">
-	<table border=1 style="table-layout:fixed; width:600px" class="autoalternate dragbox">
-        <tr><td>Run #</td><td><?php echo $row['number']?></td></tr>
-        <tr><td>Start Time</td><td><?php echo $row['timestart']?></td></tr>
-        <tr><td>End Time</td><td><?php echo $row['timestop']?></td></tr>
-        <tr><td>Start Run comment</td><td><?php echo $row['startcomment']?></td></tr>
-        <tr><td>End Run comment</td><td><?php echo $row['endcomment']?></td></tr>
-        </table>
-    </div>
-    </div>
-    </div>
+		<div class="dragbox" id="box1">
+			<h2>Global information</h2><div class="collapsep">&#x25C0</div><div class="collapsem">&#9660</div>
+			<div class="dragbox-content">
+				<table style="table-layout:fixed; width:100%" class="autoalternate">
+					<tr><td>Run #</td><td><?php echo $row['number']?></td></tr>
+					<tr><td>Start Time</td><td><?php echo $row['timestart']?></td></tr>
+					<tr><td>End Time</td><td><?php echo $row['timestop']?></td></tr>
+					<tr><td>Start Run comment</td><td><?php echo $row['startcomment']?></td></tr>
+					<tr><td>End Run comment</td><td><?php echo $row['endcomment']?></td></tr>
+				</table>
+			</div>
+		</div>
+	</div>
 <?php
     }
     else if($_GET['view']=="comment"){
