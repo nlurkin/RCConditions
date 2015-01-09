@@ -11,6 +11,18 @@ if($conn->connect_error){
 	die("Connection failed: " . $conn->connect_error . "<br>");
 }
 
+function humanReadable($value, $units){
+	$i=0;
+//	echo $value." ".$i."<br>";
+	while($value >= 1000 and $i<count($units)-1){
+//		echo $value." ".$i." ".$units[$i]."<br>";
+		$value /= 1000.;
+		$i=$i+1;
+	}
+	
+	return $value." ".$units[$i];
+}
+
 if($_GET['view']=='' || $_GET['view']=='csv'){
     //Get data from DB
     $sql = "SELECT run.id, run.number, runtype.runtypename, run.timestart, run.timestop, viewtriggerfull.triggerstring, 
@@ -113,7 +125,7 @@ else{
 	    $css = Array("r1", "r2");
 	    foreach($jsonArray as $row){
             $trigger = trim($row['triggerstring'], '+');
-            echo "<tr class='d0 ".$css[$i%2]."'><td>".$row['number']."</td><td>".$row['runtypename']."</td><td>".$row['timestart']."</td><td>".$row['timestop']."</td><td class='wrappable'>".$row['enabledstring']."</td><td style='text-align:right' class='wrappable'>".$trigger."</td><td><a href='na62_runlist.php?view=details&run_id=".$row['id']."'>Details</a></td>";
+            echo "<tr class='d0 ".$css[$i%2]."' id='".$row['id']."'><td>".$row['number']."</td><td>".$row['runtypename']."</td><td>".$row['timestart']."</td><td>".$row['timestop']."</td><td class='wrappable'>".$row['enabledstring']."</td><td style='text-align:right' class='wrappable'>".$trigger."</td><td><a href='na62_runlist.php?view=details&run_id=".$row['id']."'>Details</a></td>";
             //<td>".$row['startcomment']."</td></tr>\n";
             //echo "<tr class='d1 ".$css[$i%2]."'><td colspan=1></td><td>".$row['totalburst']."</td><td>".$row['totalL0']."</td><td colspan=2>".$row['enabledstring']."</td><td>".$row['endcomment']."</td></tr>\n";
             //echo "<tr class='d1 ".$css[$i%2]."'><td colspan=5></td><td>".$row['usercomment']."</td></tr>\n";
@@ -127,37 +139,195 @@ else{
     }
     else if($_GET['view']=="details"){
 		//Get data from DB
-		$sql = "SELECT run.id, run.number, runtype.runtypename, run.timestart, run.timestop, viewtriggerfull.triggerstring, 
-		    viewenableddet.enabledstring, run.startcomment, run.endcomment, run.totalburst, run.totalL0, run.usercomment
+		$sql = "SELECT run.id, run.number, runtype.runtypename, run.timestart, run.timestop,
+		    run.startcomment, run.endcomment, run.totalburst, run.totalL0, run.usercomment
 		    FROM run 
 		    LEFT JOIN runtype ON (runtype.id = run.runtype_id)
-		    LEFT JOIN viewenableddet ON (viewenableddet.run_id = run.id)
-		    LEFT JOIN viewtriggerfull ON (run.id = viewtriggerfull.run_id)
 		    where run.id=".$_GET['run_id'];
 		$result = $conn->query($sql);
 		//Fill the array with data
 		if($result->num_rows >0){
-			$row = $result->fetch_assoc();
+			$mainrow = $result->fetch_assoc();
 		}
 		else{
 		    die("No data in database");
 		}
 ?>
-	<h1>Details for Run# <? echo $row['number']?></h1>
+	<h1>Details for Run# <? echo $mainrow['number']?></h1><a href="na62_runlist.php#<?echo $_GET['run_id']?>" class="back">Back</a><br>
+	<div class="subtitle">Click on the arrow on the right of a box to collapse/expand it.</div>
 	<div class="column" id="col1">
-		<div class="dragbox" id="box1">
-			<h2>Global information</h2><div class="collapsep">&#x25C0</div><div class="collapsem">&#9660</div>
+		<div class="dragbox" id="boxShifter">
+			<h2>Shifter information</h2><div class="collapsep">&#x25C0</div><div class="collapsem">&#9660</div>
 			<div class="dragbox-content">
 				<table style="table-layout:fixed; width:100%" class="autoalternate">
-					<tr><td>Run #</td><td><?php echo $row['number']?></td></tr>
-					<tr><td>Start Time</td><td><?php echo $row['timestart']?></td></tr>
-					<tr><td>End Time</td><td><?php echo $row['timestop']?></td></tr>
-					<tr><td>Start Run comment</td><td><?php echo $row['startcomment']?></td></tr>
-					<tr><td>End Run comment</td><td><?php echo $row['endcomment']?></td></tr>
+					<tr><td>Run Type</td><td><?php echo $mainrow['runtypename']?></td></tr>
+					<tr><td>Start Time</td><td><?php echo $mainrow['timestart']?></td></tr>
+					<tr><td>End Time</td><td><?php echo $mainrow['timestop']?></td></tr>
+					<tr><td>Start Run comment</td><td><?php echo $mainrow['startcomment']?></td></tr>
+					<tr><td>End Run comment</td><td><?php echo $mainrow['endcomment']?></td></tr>
+					<tr><td>Offline comment</td><td><?php echo $mainrow['usercomment']?></td></tr>
+				</table>
+			</div>
+		</div>
+		<div class="dragbox">
+			<h2>Periodic Trigger<p>*EOR=End Of Run</p></h2><div class="collapsep" style="display:inline;">&#x25C0</div><div class="collapsem" style="display:none;">&#9660</div>
+			<div class="dragbox-content" style="display:none;">
+				<table style="table-layout:fixed; width:100%" class="autoalternate">
+					<tr>
+						<th width="150px">Frequency</th>
+						<th width="*">From</th>
+						<th width="*">Until*</th>
+					</tr>
+				<?
+					$sql = "SELECT viewperiodic.validitystart, viewperiodic.validityend, viewperiodic.period
+						FROM viewperiodic WHERE run_id=".$_GET['run_id']." ORDER BY validitystart";
+					$result = $conn->query($sql);
+					//Fill the array with data
+					if($result->num_rows >0){
+    					while($row = $result->fetch_assoc()){
+    						if($row["validityend"]=="") $end = "EOR";
+    						else $end=$row["validityend"]; 
+    						$period = $row["period"]*1000000.;
+    						$units = Array("Hz", "kHz", "MHz");
+				    	    echo "<tr><td>".humanReadable($period, $units)."</td><td>".$row["validitystart"]."</td><td>".$end."</td></tr>";
+				    	}
+				    }
+				?>
+				</table>
+			</div>
+		</div>
+		<div class="dragbox">
+			<h2>Calibration Trigger<p>*EOR=End Of Run</p></h2><div class="collapsep" style="display:inline;">&#x25C0</div><div class="collapsem" style="display:none;">&#9660</div>
+			<div class="dragbox-content" style="display:none;">
+				<table style="table-layout:fixed; width:100%" class="autoalternate">
+					<tr>
+						<th width="*">From</th>
+						<th width="*">Until*</th>
+					</tr>
+				<?
+					$sql = "SELECT viewcalibration.validitystart, viewcalibration.validityend
+						FROM viewcalibration WHERE run_id=".$_GET['run_id']." ORDER BY validitystart";
+					$result = $conn->query($sql);
+					//Fill the array with data
+					if($result->num_rows >0){
+    					while($row = $result->fetch_assoc()){
+    						if($row["validityend"]=="") $end = "EOR";
+    						else $end=$row["validityend"]; 
+				    	    echo "<tr><td>".$row["validitystart"]."</td><td>".$end."</td></tr>";
+				    	}
+				    }
+				?>
+				</table>
+			</div>
+		</div>
+		<div class="dragbox">
+			<h2>NIM Trigger<p>*EOR=End Of Run</p></h2><div class="collapsep" style="display:inline;">&#x25C0</div><div class="collapsem" style="display:none;">&#9660</div>
+			<div class="dragbox-content" style="display:none;">
+				<table style="table-layout:fixed; width:100%" class="autoalternate">
+					<tr>
+						<th width="50px">Mask</th>
+						<th width="200px">Trigger</th>
+						<th width="50px">Downs.</th>
+						<th width="55px">Ref. Det.</th>
+						<th width="*">From</th>
+						<th width="*">Until*</th>
+					</tr>
+				<?
+					$sql = "SELECT DISTINCT viewnimtype.validitystart, viewnimtype.validityend, viewnimtype.mask, 
+								viewnimtype.triggernimdownscaling, viewnimtype.triggernimreference, 
+								viewnimname.det_0, viewnimname.det_1, viewnimname.det_2, viewnimname.det_3, viewnimname.det_4
+						FROM viewnimtype 
+						LEFT JOIN viewnimname ON (viewnimtype.nim_id = viewnimname.nim_id)
+						WHERE viewnimtype.run_id=".$_GET['run_id']." ORDER BY validitystart";
+					$result = $conn->query($sql);
+					//Fill the array with data
+					if($result->num_rows >0){
+    					while($row = $result->fetch_assoc()){
+    						if($row["validityend"]=="") $end = "EOR";
+    						else $end=$row["validityend"];
+    						$string = "";
+    						for($i=0;$i<=4; $i++){
+    							if($string=="") $string=$row["det_".$i];
+    							elseif($row["det_".$i]!="") $string=$string."*".$row["det_".$i];
+    						}
+				    	    echo "<tr><td>".$row["mask"]."</td><td>".$string."</td><td>".$row["triggernimdownscaling"]."</td><td>".$row["triggernimreference"]."</td><td>".$row["validitystart"]."</td><td>".$end."</td></tr>";
+				    	}
+				    }
+				?>
+				</table>
+			</div>
+		</div>
+		<div class="dragbox">
+			<h2>Primitive Trigger<p>*EOR=End Of Run</p></h2><div class="collapsep" style="display:inline;">&#x25C0</div><div class="collapsem" style="display:none;">&#9660</div>
+			<div class="dragbox-content" style="display:none;">
+				<table style="table-layout:fixed; width:100%" class="autoalternate">
+					<tr>
+						<th width="60px">Mask</th>
+						<th width="60px">Downs.</th>
+						<th width="60px">Ref. Det.</th>
+						<th width="*">From</th>
+						<th width="*">Until*</th>
+					</tr>
+				<?
+					$sql = "SELECT DISTINCT viewprimitivetype.validitystart, viewprimitivetype.validityend, viewprimitivetype.mask, 
+								viewprimitivetype.triggerprimitivedownscaling, viewprimitivetype.triggerprimitivereference
+						FROM viewprimitivetype 
+						WHERE viewprimitivetype.run_id=".$_GET['run_id']." ORDER BY validitystart";
+					$result = $conn->query($sql);
+					//Fill the array with data
+					if($result->num_rows >0){
+    					while($row = $result->fetch_assoc()){
+    						if($row["validityend"]=="") $end = "EOR";
+    						else $end=$row["validityend"];
+				    	    echo "<tr><td>".$row["mask"]."</td><td>".$row["triggerprimitivedownscaling"]."</td><td>".$row["triggerprimitivereference"]."</td><td>".$row["validitystart"]."</td><td>".$end."</td></tr>";
+				    	}
+				    }
+				?>
 				</table>
 			</div>
 		</div>
 	</div>
+	<div class="column" id="col2">
+		<div class="dragbox" id="boxCollected">
+			<h2>Collected information</h2><div class="collapsep">&#x25C0</div><div class="collapsem">&#9660</div>
+			<div class="dragbox-content">
+				<table style="table-layout:fixed; width:100%" class="autoalternate">
+					<tr><td>Run Number</td><td><?php echo $mainrow['number']?></td></tr>
+					<tr><td>Number of Bursts</td><td><?php echo $mainrow['totalburst']?></td></tr>
+					<tr><td>Number of L0</td><td><?php echo $mainrow['totalL0']?></td></tr>
+					<tr><td>Number of L1</td><td><?php echo $mainrow['totalL1']?></td></tr>
+					<tr><td>Number of L2</td><td><?php echo $mainrow['totalL2']?></td></tr>
+				</table>
+			</div>
+		</div>
+		<div class="dragbox" id="boxDetector">
+			<h2>Enabled Detectors<p>*EOR=End Of Run</p></h2><div class="collapsep" style="display:inline;">&#x25C0</div><div class="collapsem" style="display:none;">&#9660</div>
+			<div class="dragbox-content" style="display:none;">
+				<table style="table-layout:fixed; width:100%" class="autoalternate">
+					<tr>
+						<th width="100px">Detector</th>
+						<th width="80px">Source ID</th>
+						<th width="*">From</th>
+						<th width="*">Until*</th>
+					</tr>
+				<?
+					$sql = "SELECT enableddetectors.detectorid, enableddetectors.detectorname, 
+						enableddetectors.validitystart, enableddetectors.validityend
+						FROM enableddetectors WHERE run_id=".$_GET['run_id']." ORDER BY validitystart";
+					$result = $conn->query($sql);
+					//Fill the array with data
+					if($result->num_rows >0){
+    					while($row = $result->fetch_assoc()){
+    						if($row["validityend"]=="") $end = "EOR";
+    						else $end=$row["validityend"]; 
+				    	    echo "<tr><td>".$row["detectorname"]."</td><td>".$row["detectorid"]."</td><td>".$row["validitystart"]."</td><td>".$end."</td></tr>";
+				    	}
+				    }
+				?>
+				</table>
+			</div>
+		</div>
+	<div>
 <?php
     }
     else if($_GET['view']=="comment"){
