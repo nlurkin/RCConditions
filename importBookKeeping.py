@@ -389,7 +389,7 @@ if __name__ == '__main__':
         sys.exit()
 
 
-    myconn = DBConnector()
+    myconn = DBConnector(False)
     myconn.connectDB(passwd=sys.argv[-1:][0])
     #myconn.setNIMNames(1409529600, None, [[0,'Q1'], [1,'NHOD'], [2,'MUV2'], [3,'MUV3'], [4,'']])
     #myconn.setPrimitivesNames(1409529600, None, [[0,'Q1'], [1,'NHOD'], [2,'MUV2'], [3,'MUV3'], [4,'']])

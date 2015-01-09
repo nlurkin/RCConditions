@@ -133,6 +133,8 @@ class DBConnector(object):
         rid = self.getResultSingle("SELECT id FROM triggerprimitive WHERE runtrigger_id=%s AND triggerprimitivetype_id=%s AND triggerprimitivedownscaling=%s AND triggerprimitivereference=%s", [triggerID, typeID, downscaling,reference])
         if rid==False:
             rid = self.getResultSingle("SELECT id FROM triggerprimitive WHERE runtrigger_id=%s AND triggerprimitivetype_id=%s AND triggerprimitivedownscaling=%s AND triggerprimitivereference is NULL", [triggerID, typeID, downscaling])
+            return True, rid
+        return False, rid
 
     def _getSyncTriggerID(self, triggerID):
         return self.getResultSingle("SELECT id FROM triggersync WHERE runtrigger_id=%s", [triggerID])
@@ -229,7 +231,7 @@ class DBConnector(object):
         if primitiveID==False:
             return self.executeInsert("INSERT INTO triggerprimitive (runtrigger_id, triggerprimitivetype_id, triggerprimitivedownscaling, triggerprimitivereference) VALUES (%s, %s, %s, %s)", [triggerID, primitiveTypeID, downscaling, reference])
         elif exist==True:
-            return self.executeInsert("UPDATE triggerprimitive triggerprimitivereference=%s WHERE id=%s", [reference, primitiveID])
+            return self.executeInsert("UPDATE triggerprimitive SET triggerprimitivereference=%s WHERE id=%s", [reference, primitiveID])
         return primitiveID 
 
     def _setSyncTrigger(self, triggerID):
@@ -258,7 +260,7 @@ class DBConnector(object):
                 triggerID = self.executeInsert("INSERT INTO runtrigger (run_id, validitystart) VALUES (%s, %s)", [runID, self.toSQLTime(startTS)])
             else:
                 triggerID = self.executeInsert("INSERT INTO runtrigger (run_id, validitystart, validityend) VALUES (%s, %s, %s)", [runID, self.toSQLTime(startTS), self.toSQLTime(endTS)])
-
+		
         if trigger[0]=='Periodic':
             periodicType = self._setPeriodicTriggerType(trigger[1])
             self._setPeriodicTrigger(triggerID, periodicType)
@@ -375,7 +377,7 @@ class DBConnector(object):
                     if len(m)==2:
                         down = m[1]
                     m = m[0]
-                    self._setTrigger(runID, startTS, endTS, ['Primitive', m, down])
+                    self._setTrigger(runID, startTS, endTS, ['Primitive', m, down, trigger[trigg][2]])
     
     def setSyncTriggerList(self, trigger, runNumber):
         runID = self._getRunID(runNumber)
