@@ -75,7 +75,11 @@ else if($_GET['view']=="submitcomment"){
     if(!$sql->execute()){
         echo "Execute failed: (" . $sql->errno . ") ".$sql->error;
     }
+<<<<<<< HEAD
     header("Location:na62_runlist.php");
+=======
+    header("Location:na62_runlist.php?view=details&run_id=".$run_id);
+>>>>>>> c2d81cdd213f71236ae682bcb87e37b4c8c433bf
     die();
 }
 else{
@@ -165,7 +169,11 @@ else{
 					<tr><td>End Time</td><td><?php echo $mainrow['timestop']?></td></tr>
 					<tr><td>Start Run comment</td><td><?php echo $mainrow['startcomment']?></td></tr>
 					<tr><td>End Run comment</td><td><?php echo $mainrow['endcomment']?></td></tr>
+<<<<<<< HEAD
 					<tr><td>Offline comment</td><td><?php echo $mainrow['usercomment']?></td></tr>
+=======
+					<tr><td>Offline comment <br><a href="na62_runlist.php?view=comment&run_id=<? echo $mainrow['id']?>">Edit</a></td><td><?php echo $mainrow['usercomment']?></td></tr>
+>>>>>>> c2d81cdd213f71236ae682bcb87e37b4c8c433bf
 				</table>
 			</div>
 		</div>
