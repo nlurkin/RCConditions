@@ -2,8 +2,8 @@
 
 //Init connection to DB
 $serverName = "nlurkinsql.cern.ch";
-$userName = "***REMOVED***";
-$password = "***REMOVED***";
+$userName = "user";
+$password = "password";
 $dbName = "testRC";
 
 $conn = new mysqli($serverName, $userName, $password, $dbName, 3306);
