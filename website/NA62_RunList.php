@@ -25,7 +25,7 @@ function humanReadable($value, $units){
 
 if($_GET['view']=='' || $_GET['view']=='csv'){
     //Get data from DB
-    $sql = "SELECT run.id, run.number, runtype.runtypename, run.timestart, run.timestop, viewtriggerfull.triggerstring, 
+    $sql = "SELECT run.id, run.number, run.startcomment, runtype.runtypename, run.timestart, run.timestop, viewtriggerfull.triggerstring, 
         viewenableddet.enabledstring
         FROM run 
         LEFT JOIN runtype ON (runtype.id = run.runtype_id)
@@ -103,7 +103,8 @@ else{
             <th width='80px'>Type</th>
             <th width='150px'>Start</th>
             <th width='150px'>End</th>
-            <th width='450px'>Detectors</th>
+            <th width='380px'>Detectors</th>
+				<th width='*'>Start run comment</th>
             <th width='*' style='text-align:right'>Trigger/Downscaling(Reference)</th>
             <th width='50px'></th>
 <!--            <th width='400px'>Start comment</th>
@@ -125,7 +126,7 @@ else{
 	    $css = Array("r1", "r2");
 	    foreach($jsonArray as $row){
             $trigger = trim($row['triggerstring'], '+');
-            echo "<tr class='d0 ".$css[$i%2]."' id='".$row['id']."'><td>".$row['number']."</td><td>".$row['runtypename']."</td><td>".$row['timestart']."</td><td>".$row['timestop']."</td><td class='wrappable'>".$row['enabledstring']."</td><td style='text-align:right' class='wrappable'>".$trigger."</td><td><a href='na62_runlist.php?view=details&run_id=".$row['id']."'>Details</a></td>";
+            echo "<tr class='d0 ".$css[$i%2]."' id='".$row['id']."'><td>".$row['number']."</td><td>".$row['runtypename']."</td><td>".$row['timestart']."</td><td>".$row['timestop']."</td><td class='wrappable'>".$row['enabledstring']."</td><td style='text-align:right' class='wrappable'>".$row['startcomment']."</td><td style='text-align:right' class='wrappable'>".$trigger."</td><td><a href='na62_runlist.php?view=details&run_id=".$row['id']."'>Details</a></td>";
             //<td>".$row['startcomment']."</td></tr>\n";
             //echo "<tr class='d1 ".$css[$i%2]."'><td colspan=1></td><td>".$row['totalburst']."</td><td>".$row['totalL0']."</td><td colspan=2>".$row['enabledstring']."</td><td>".$row['endcomment']."</td></tr>\n";
             //echo "<tr class='d1 ".$css[$i%2]."'><td colspan=5></td><td>".$row['usercomment']."</td></tr>\n";
