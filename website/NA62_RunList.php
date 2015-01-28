@@ -1,10 +1,16 @@
 <?php
 
+error_reporting(E_ALL);
+ini_set('display_errors', TRUE);
+ini_set('display_startup_errors', TRUE);
+
+include("config.php");
+
 //Init connection to DB
-$serverName = "nlurkinsql.cern.ch";
-$userName = "user";
-$password = "password";
-$dbName = "testRC";
+$serverName = $_na62dbHost;
+$userName = $_na62dbUser;
+$password = $_na62dbPassword;
+$dbName = $_na62dbName;
 
 $conn = new mysqli($serverName, $userName, $password, $dbName, 3306);
 if($conn->connect_error){
@@ -23,7 +29,7 @@ function humanReadable($value, $units){
 	return $value." ".$units[$i];
 }
 
-if($_GET['view']=='' || $_GET['view']=='csv'){
+if(!isset($_GET['view']) || $_GET['view']=='' || $_GET['view']=='csv'){
     //Get data from DB
     $sql = "SELECT run.id, run.number, run.startcomment, runtype.runtypename, run.timestart, run.timestop, viewtriggerfull.triggerstring, 
         viewenableddet.enabledstring
@@ -47,7 +53,7 @@ if($_GET['view']=='' || $_GET['view']=='csv'){
 }
 
 //CSV view
-if($_GET['view']=="csv"){
+if(isset($_GET['view']) && $_GET['view']=="csv"){
     header('Content-disposition: attachment; filename=na62_runlist.csv');
     header('Content-type: text/plain');
     
@@ -59,7 +65,7 @@ if($_GET['view']=="csv"){
 	    }
     }
 }
-else if($_GET['view']=="submitcomment"){
+else if(isset($_GET['view']) && $_GET['view']=="submitcomment"){
     $run_id = $_POST['run_id'];
     $comment = $_POST['comment'];
     
@@ -91,7 +97,7 @@ else{
     </head>
     <body>
 <?php
-    if($_GET['view']==""){
+    if(!isset($_GET['view']) || $_GET['view']==""){
 ?>
     <a href="na62_runlist.php?view=csv">Download as CSV file</a>
     <br>
@@ -154,7 +160,7 @@ else{
 		    die("No data in database");
 		}
 ?>
-	<h1>Details for Run# <? echo $mainrow['number']?></h1><a href="na62_runlist.php#<?echo $_GET['run_id']?>" class="back">Back</a><br>
+	<h1>Details for Run# <?php echo $mainrow['number']?></h1><a href="na62_runlist.php#<?php echo $_GET['run_id']?>" class="back">Back</a><br>
 	<div class="subtitle">Click on the arrow on the right of a box to collapse/expand it.</div>
 	<div class="column" id="col1">
 		<div class="dragbox" id="boxShifter">
@@ -166,7 +172,7 @@ else{
 					<tr><td>End Time</td><td><?php echo $mainrow['timestop']?></td></tr>
 					<tr><td>Start Run comment</td><td><?php echo $mainrow['startcomment']?></td></tr>
 					<tr><td>End Run comment</td><td><?php echo $mainrow['endcomment']?></td></tr>
-					<tr><td>Offline comment <br><a href="na62_runlist.php?view=comment&run_id=<? echo $mainrow['id']?>">Edit</a></td><td><?php echo $mainrow['usercomment']?></td></tr>
+					<tr><td>Offline comment <br><a href="na62_runlist.php?view=comment&run_id=<?php echo $mainrow['id']?>">Edit</a></td><td><?php echo $mainrow['usercomment']?></td></tr>
 				</table>
 			</div>
 		</div>
