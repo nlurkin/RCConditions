@@ -411,6 +411,7 @@ if __name__ == '__main__':
         if os.path.isfile(f):
             print "\nImport " + f + "\n---------------------"
             exportFile(myconn, f)
-            shutil.move(f, "/home/lkrpn0/XMLProcessed/" + os.path.basename(f))
+            shutil.move(f, "/home/XMLProcessed/" + os.path.basename(f))
+				#TODO chmod might be needed
     
     myconn.close()
