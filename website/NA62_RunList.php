@@ -84,6 +84,24 @@ else if(isset($_GET['view']) && $_GET['view']=="submitcomment"){
     header("Location:na62_runlist.php?view=details&run_id=".$run_id);
     die();
 }
+else if(isset($_GET['view']) && $_GET['view']=="downxml"){
+	$sql = "SELECT run.number FROM run WHERE run.id=".$_GET['run_id'];
+	$result = $conn->query($sql);
+
+
+	if($result->num_rows >0){
+		$dbres = $result->fetch_assoc();
+	}
+	else{
+	    die("No data in database");
+	}
+	$file_name = $dbres['number'].'.xml';
+	$file_url = 'http://nlurkinsql.cern.ch/XML/'.$file_name;
+   header('Content-type: text/plain');
+	header("Content-disposition: attachment; filename=\"".$file_name."\""); 
+	readfile($file_url);
+	exit;
+}
 else{
 ?>
     <html>
@@ -113,6 +131,7 @@ else{
 				<th width='*'>Start run comment</th>
             <th width='*' style='text-align:right'>Trigger/Downscaling(Reference)</th>
             <th width='50px'></th>
+            <th width='50px'></th>
 <!--            <th width='400px'>Start comment</th>
         </tr>
         <tr>
@@ -133,9 +152,8 @@ else{
 	    foreach($jsonArray as $row){
             $trigger = trim($row['triggerstring'], '+');
             echo "<tr class='d0 ".$css[$i%2]."' id='".$row['id']."'><td>".$row['number']."</td><td>".$row['runtypename']."</td><td>".$row['timestart']."</td><td>".$row['timestop']."</td><td class='wrappable'>".$row['enabledstring']."</td><td style='text-align:right' class='wrappable'>".$row['startcomment']."</td><td style='text-align:right' class='wrappable'>".$trigger."</td><td><a href='na62_runlist.php?view=details&run_id=".$row['id']."'>Details</a></td>";
-            //<td>".$row['startcomment']."</td></tr>\n";
-            //echo "<tr class='d1 ".$css[$i%2]."'><td colspan=1></td><td>".$row['totalburst']."</td><td>".$row['totalL0']."</td><td colspan=2>".$row['enabledstring']."</td><td>".$row['endcomment']."</td></tr>\n";
-            //echo "<tr class='d1 ".$css[$i%2]."'><td colspan=5></td><td>".$row['usercomment']."</td></tr>\n";
+				echo "<td><a href='na62_runlist.php?view=downxml&run_id=".$row['id']."'>XML</a></td>";
+				echo "</tr>\n";
             $i++;
 	    }
     }
