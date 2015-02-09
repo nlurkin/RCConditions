@@ -15,6 +15,7 @@ from runConfig import runParam
 import xml.dom.minidom as xmld
 import shutil
 import re
+import bz2
 
 def tryint(s):
     try:
@@ -411,7 +412,10 @@ if __name__ == '__main__':
         if os.path.isfile(f):
             print "\nImport " + f + "\n---------------------"
             exportFile(myconn, f)
-            shutil.move(f, "/home/XMLProcessed/" + os.path.basename(f))
+            with open(f, 'rb') as input:
+                with bz2.BZ2File('/afs/cern.ch/user/n/nlurkin/www/NA62/XMLProcessed/%s' % os.path.basename(f), 'wb', compresslevel=9) as output:
+                    shutil.copyfileobj(input, output)
+            #shutil.move(f, "/home/XMLProcessed/" + os.path.basename(f))
 				#TODO chmod might be needed
     
     myconn.close()
