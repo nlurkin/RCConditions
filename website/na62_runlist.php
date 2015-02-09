@@ -95,9 +95,9 @@ else if(isset($_GET['view']) && $_GET['view']=="downxml"){
 	else{
 	    die("No data in database");
 	}
-	$file_name = $dbres['number'].'.xml';
-	$file_url = 'http://nlurkinsql.cern.ch/XML/'.$file_name;
-   header('Content-type: text/plain');
+	$file_name = $dbres['number'].$_na62XmlExtension;
+	$file_url = $_na62XmlAddress.$file_name;
+   header('Content-type: '.$_na62XmlMIMEType);
 	header("Content-disposition: attachment; filename=\"".$file_name."\""); 
 	readfile($file_url);
 	exit;
@@ -165,7 +165,8 @@ else{
     else if($_GET['view']=="details"){
 		//Get data from DB
 		$sql = "SELECT run.id, run.number, runtype.runtypename, run.timestart, run.timestop,
-		    run.startcomment, run.endcomment, run.totalburst, run.totalL0, run.usercomment
+		    run.startcomment, run.endcomment, run.totalburst, run.totalL0, run.usercomment,
+			 run.totalL1, run.totalL2 
 		    FROM run 
 		    LEFT JOIN runtype ON (runtype.id = run.runtype_id)
 		    where run.id=".$_GET['run_id'];
