@@ -16,6 +16,7 @@ import xml.dom.minidom as xmld
 import shutil
 import re
 import bz2
+from contextlib import closing
 
 def tryint(s):
     try:
@@ -413,8 +414,9 @@ if __name__ == '__main__':
             print "\nImport " + f + "\n---------------------"
             exportFile(myconn, f)
             with open(f, 'rb') as input:
-                with bz2.BZ2File('/afs/cern.ch/user/n/nlurkin/www/NA62/XMLProcessed/%s' % os.path.basename(f), 'wb', compresslevel=9) as output:
+                with closing(bz2.BZ2File('/home/lkrpn0/XMLProcessed/%s.bz2' % os.path.basename(f), 'wb', compresslevel=9)) as output:
                     shutil.copyfileobj(input, output)
+            os.remove(f)
             #shutil.move(f, "/home/XMLProcessed/" + os.path.basename(f))
 				#TODO chmod might be needed
     
