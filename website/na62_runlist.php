@@ -29,6 +29,27 @@ function humanReadable($value, $units){
 	return $value." ".$units[$i];
 }
 
+function is_url_exist($url){
+	$ch = curl_init($url);    
+	curl_setopt($ch, CURLOPT_NOBODY, true);
+	curl_exec($ch);
+	$code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+	if($code == 200){
+		$status = true;
+	}else{
+		$status = false;
+	}
+	curl_close($ch);
+	return $status;
+}
+
+function exists($path){
+#	echo $path."<br>";
+	if(strpos($path, "http://")===false) return file_exists($path);
+	else return is_url_exist($path);
+}
+
 if(!isset($_GET['view']) || $_GET['view']=='' || $_GET['view']=='csv'){
     //Get data from DB
     $sql = "SELECT run.id, run.number, run.startcomment, runtype.runtypename, run.timestart, run.timestop, viewtriggerfull.triggerstring, 
@@ -152,7 +173,15 @@ else{
 	    foreach($jsonArray as $row){
             $trigger = trim($row['triggerstring'], '+');
             echo "<tr class='d0 ".$css[$i%2]."' id='".$row['id']."'><td>".$row['number']."</td><td>".$row['runtypename']."</td><td>".$row['timestart']."</td><td>".$row['timestop']."</td><td class='wrappable'>".$row['enabledstring']."</td><td style='text-align:right' class='wrappable'>".$row['startcomment']."</td><td style='text-align:right' class='wrappable'>".$trigger."</td><td><a href='na62_runlist.php?view=details&run_id=".$row['id']."'>Details</a></td>";
-				echo "<td><a href='na62_runlist.php?view=downxml&run_id=".$row['id']."'>XML</a></td>";
+
+				$file_name = $row['number'].$_na62XmlExtension;
+				$file_url = $_na62XmlAddress.$file_name;
+				if(exists($file_url)){
+					echo "<td><a href='na62_runlist.php?view=downxml&run_id=".$row['id']."'>XML</a></td>";
+				}
+				else{
+					echo "<td></td>";
+				}
 				echo "</tr>\n";
             $i++;
 	    }
