@@ -138,10 +138,18 @@ else{
 <?php
     if(!isset($_GET['view']) || $_GET['view']==""){
 ?>
-    <a href="na62_runlist.php?view=csv">Download as CSV file</a>
-    <br>
-    <br><b>Primitive triggers are not displayed.</b>
-    <br><b>Click on a run number to add offline comment on the run</b>
+	<h1>NA62 Run Conditions Database</h1>
+	<div style="text-align:center; max-width:600px;margin:0 auto;">This page displays the list of runs recorded by the RunControl. This is only an extract of all the information present in the RunControl database. This list can be <a href="na62_runlist.php?view=csv">Downloaded as CSV file</a></div>
+	 <div style="width:1100px">
+	 <ul>
+    <li><b>Primitive triggers are not displayed.</b>
+	 <li><b>The triggers are given with their downscaling (/ symbol) and the reference detector for the timing (in the parenthesis).</b>
+    <li><b>Click on the "Details" link to see more details about the run (trigger and enabled detectors timeline and few other metadata).</b>
+	 <b>You can also add an offline comment to the run (good for x, bad for y, ...)</b>
+	 <li><b>The full set of values and events recorded by RunControl for the run (including board configuration) 
+	 is available for download by clicking the "XML" link. The XML format is explained <a href="xmlhelp.php">here</a>.</b>
+	 </ul>
+	 </div>
     <table border=1 style="table-layout:fixed;">
         <tr>
             <th width='50px'>Run #</th>
@@ -150,7 +158,7 @@ else{
             <th width='150px'>End</th>
             <th width='380px'>Detectors</th>
 				<th width='*'>Start run comment</th>
-            <th width='*' style='text-align:right'>Trigger/Downscaling(Reference)</th>
+            <th width='*' style='text-align:right'>Trigger/Downscaling(Ref)</th>
             <th width='50px'></th>
             <th width='50px'></th>
 <!--            <th width='400px'>Start comment</th>
