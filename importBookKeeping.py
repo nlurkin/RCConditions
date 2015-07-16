@@ -119,7 +119,7 @@ def buildNIMMask(fd):
     else:
         for i in range(0, 7):
             try:
-                nimEnabled = int(fd.getPropertie("enableMask_NIM"))
+                nimEnabled = int(fd.getPropertie("enableMask_NIM"), 0)
                 if (nimEnabled & (1<<i)) != 0:
                     l.append(fd.findNIMMask(i))
             except BadConfigException as e:
@@ -288,7 +288,7 @@ def getTriggerProperties(listNode):
             val = getValue(fileContentNode.childNodes)
             fc = ConfigFile(val)
             try:
-                events['Periodic'][timestamp] = [None, int(fc.getPropertie("periodicTrgTime")), None]
+                events['Periodic'][timestamp] = [None, int(fc.getPropertie("periodicTrgTime"),0), None]
                 events['NIM'][timestamp] = [None, [x for x in buildNIMMask(fc)], fc.getRefDetNim()]
                 events['Primitive'][timestamp] = [None, buildPrimitiveMask(fc), fc.getRefDetPrim()]
             except BadConfigException as e:
@@ -369,7 +369,11 @@ def exportFile(myconn, filePath):
     enabledList = doc.getElementsByTagName("Enabled")
     detEnabled = getDetectorEnabled(enabledList)
     for det in detEnabled:
-        setDetectorID(detEnabled[det], getDetectorID(doc.getElementsByTagName(det)))
+	detID = getDetectorID(doc.getElementsByTagName(det))
+	detMap = {"CEDAR":4, "GTK":8, "CHANTI":12, "LAV":16, "STRAW": 20, "CHOD":24, "RICH":28, "IRC_SAC":32, "LKR":36, "MUV1":40, "MUV2":44, "MUV3":48, "SAC":52}
+	if detID==None:
+		detID = detMap[det]
+        setDetectorID(detEnabled[det], detID)
         removeAllAfterTS(detEnabled[det], endTS)
     
     ## Insert runinfo into DB
@@ -397,14 +401,14 @@ if __name__ == '__main__':
     #myconn.setPrimitivesNames(1409529600, None, [[0,'Q1'], [1,'NHOD'], [2,'MUV2'], [3,'MUV3'], [4,'']])
 
     if len(sys.argv)>1:
-        filePath = sys.argv[1:-1]
+        filePath = sys.argv[1:]
     else:
         filePath = ["/home/ncl/sampleExportConfig.xml"]
     
     fileList = []
     for path in filePath:
         if os.path.isdir(path):
-            fileList.append([path+"/"+f for f in sorted(os.listdir(path))])
+            fileList.extend([path+"/"+f for f in sorted(os.listdir(path))])
         else:
             fileList.append(path)
     
@@ -414,7 +418,7 @@ if __name__ == '__main__':
             print "\nImport " + f + "\n---------------------"
             exportFile(myconn, f)
             with open(f, 'rb') as input:
-                with closing(bz2.BZ2File('/home/lkrpn0/XMLProcessed/%s.bz2' % os.path.basename(f), 'wb', compresslevel=9)) as output:
+                with closing(bz2.BZ2File('/home/RCconfig/XMLProcessed/%s.bz2' % os.path.basename(f), 'wb', compresslevel=9)) as output:
                     shutil.copyfileobj(input, output)
             os.remove(f)
             #shutil.move(f, "/home/XMLProcessed/" + os.path.basename(f))

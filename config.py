@@ -81,7 +81,7 @@ class ConfigFile(object):
 				referenceDet = self.getPropertie("referenceDet_NIM")
 			except:
 				raise BadConfigException("Unable to parse for referenceDet_NIM")
-		return int(referenceDet)
+		return int(referenceDet, 0)
 	
 	def getRefDetPrim(self):
 		try:
@@ -92,4 +92,4 @@ class ConfigFile(object):
 				referenceDet = self.getPropertie("referenceDet")
 			except:
 				raise BadConfigException("Unable to parse for referenceDet")
-		return int(referenceDet)
+		return int(referenceDet, 0)
