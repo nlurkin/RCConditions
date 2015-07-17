@@ -11,8 +11,9 @@ $serverName = $_na62dbHost;
 $userName = $_na62dbUser;
 $password = $_na62dbPassword;
 $dbName = $_na62dbName;
+$port = $_na62dbPort;
 
-$conn = new mysqli($serverName, $userName, $password, $dbName, 3306);
+$conn = new mysqli($serverName, $userName, $password, $dbName, $port);
 if($conn->connect_error){
 	die("Connection failed: " . $conn->connect_error . "<br>");
 }
@@ -59,7 +60,7 @@ if(!isset($_GET['view']) || $_GET['view']=='' || $_GET['view']=='csv'){
         LEFT JOIN viewenableddet ON (viewenableddet.run_id = run.id)
         LEFT JOIN viewtriggerfull ON (run.id = viewtriggerfull.run_id)
         GROUP BY run.id
-        ORDER BY run.number";
+        ORDER BY run.number DESC";
     $result = $conn->query($sql);
     //Fill the array with data
     if($result->num_rows >0){
@@ -157,7 +158,7 @@ else{
             <th width='150px'>Start</th>
             <th width='150px'>End</th>
             <th width='380px'>Detectors</th>
-				<th width='*'>Start run comment</th>
+				<th width='250px'>Start run comment</th>
             <th width='*' style='text-align:right'>Trigger/Downscaling(Ref)</th>
             <th width='50px'></th>
             <th width='50px'></th>
