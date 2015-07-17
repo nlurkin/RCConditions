@@ -61,6 +61,8 @@ class DBConnector(object):
             sys.exit()
     
     def executeGet(self, sqlCommand, params=[]):
+        if self.db==None:
+            return ()
         res = ()
         try:
             self.cursor.execute(sqlCommand, params)
@@ -283,10 +285,10 @@ class DBConnector(object):
         if enabledID==False:
             if endTS==None:
                 return self.executeInsert("INSERT INTO enableddetectors (run_id, detectorid, detectorname, validitystart) VALUES (%s, %s, %s, %s)", 
-                                          [runID, detectorValues[1], detectorName, self.toSQLTime(startTS)])                
+                                          [runID, detectorValues.Name, detectorName, self.toSQLTime(startTS)])                
             else:
                 return self.executeInsert("INSERT INTO enableddetectors (run_id, detectorid, detectorname, validitystart, validityend) VALUES (%s, %s, %s, %s, %s)", 
-                                          [runID, detectorValues[1], detectorName, self.toSQLTime(startTS), self.toSQLTime(endTS)])
+                                          [runID, detectorValues.Name, detectorName, self.toSQLTime(startTS), self.toSQLTime(endTS)])
         return enabledID
     
     def _setNIMDetName(self, startTS, endTS, detector):
@@ -331,63 +333,59 @@ class DBConnector(object):
     def setPeriodicTriggerList(self, trigger, runNumber):
         runID = self._getRunID(runNumber)
         
-        triggList = sorted(trigger.keys())
-        for index, trigg in enumerate(triggList, 1):
-            if trigger[trigg][0]==True:
-                startTS = trigg
+        triggList = trigger.getList()
+        for index, (startTS, trigg) in enumerate(triggList, 1):
+            if trigg.Enabled==True:
                 if index<len(triggList):
-                    endTS = triggList[index]
+                    endTS = triggList[index][0]
                 else:
                     endTS = None
-                self._setTrigger(runID, startTS, endTS, ['Periodic', trigger[trigg][1]])
+                self._setTrigger(runID, startTS, endTS, ['Periodic', trigg.Propertie])
 
     def setNIMTriggerList(self, trigger, runNumber):
         runID = self._getRunID(runNumber)
         
-        triggList = sorted(trigger.keys())
-        for index, trigg in enumerate(triggList, 1):
-            if trigger[trigg][0]==True:
-                startTS = trigg
+        triggList = trigger.getList()
+        for index, (startTS, trigg) in enumerate(triggList, 1):
+            if trigg.Enabled==True:
                 if index<len(triggList):
-                    endTS = triggList[index]
+                    endTS = triggList[index][0]
                 else:
                     endTS = None
-                for mask in trigger[trigg][1]:
+                for mask in trigg.Propertie:
                     down = None
                     m = mask.split(":")
                     if len(m)==2:
                         down = m[1]
                     m = m[0]
-                    self._setTrigger(runID, startTS, endTS, ['NIM', m, down, trigger[trigg][2]])
+                    self._setTrigger(runID, startTS, endTS, ['NIM', m, down, trigg.RefDetector])
                     
     def setPrimitiveTriggerList(self, trigger, runNumber):
         runID = self._getRunID(runNumber)
         
-        triggList = sorted(trigger.keys())
-        for index, trigg in enumerate(triggList, 1):
-            if trigger[trigg][0]==True:
-                startTS = trigg
+        triggList = trigger.getList()
+        for index, (startTS, trigg) in enumerate(triggList, 1):
+            if trigg.Enabled==True and not trigg.Propertie is None:
                 if index<len(triggList):
-                    endTS = triggList[index]
+                    endTS = triggList[index][0]
                 else:
                     endTS = None
-                for mask in trigger[trigg][1]:
+                for mask in trigg.Propertie:
                     down = None
                     m = mask.split(":")
                     if len(m)==2:
                         down = m[1]
                     m = m[0]
-                    self._setTrigger(runID, startTS, endTS, ['Primitive', m, down, trigger[trigg][2]])
+                    self._setTrigger(runID, startTS, endTS, ['Primitive', m, down, trigg.RefDetector])
     
     def setSyncTriggerList(self, trigger, runNumber):
         runID = self._getRunID(runNumber)
         
-        triggList = sorted(trigger.keys())
-        for index, trigg in enumerate(triggList, 1):
-            if trigger[trigg][0]==True:
-                startTS = trigg
+        triggList = trigger.getList()
+        for index, (startTS, trigg) in enumerate(triggList, 1):
+            if trigg.Enabled==True:
                 if index<len(triggList):
-                    endTS = triggList[index]
+                    endTS = triggList[index][0]
                 else:
                     endTS = None
                 self._setTrigger(runID, startTS, endTS, ['Sync'])
@@ -395,12 +393,11 @@ class DBConnector(object):
     def setCalibTriggerList(self, trigger, runNumber):
         runID = self._getRunID(runNumber)
         
-        triggList = sorted(trigger.keys())
-        for index, trigg in enumerate(triggList, 1):
-            if trigger[trigg][0]==True:
-                startTS = trigg
+        triggList = trigger.getList()
+        for index, (startTS, trigg) in enumerate(triggList, 1):
+            if trigg.Enabled==True:
                 if index<len(triggList):
-                    endTS = triggList[index]
+                    endTS = triggList[index][0]
                 else:
                     endTS = None
                 self._setTrigger(runID, startTS, endTS, ['Calib'])
@@ -409,15 +406,14 @@ class DBConnector(object):
         runID = self._getRunID(runNumber)
         
         for det in enabled:
-            tsList = sorted(enabled[det].keys())
-            for index, tsVal in enumerate(tsList, 1):
-                if enabled[det][tsVal][0]==True:
-                    startTS = tsVal
+            tsList = enabled[det].getList()
+            for index, (startTS, detector) in enumerate(tsList, 1):
+                if detector.Enabled==True:
                     if index<len(tsList):
                         endTS = tsList[index]
                     else:
                         endTS = None
-                    self._setEnabledDetector(runID, startTS, endTS, det, enabled[det][tsVal])
+                    self._setEnabledDetector(runID, startTS, endTS, det, detector)
      
     def setNIMNames(self, startTS, endTS, detNames):
         for det in detNames:

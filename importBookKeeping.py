@@ -6,17 +6,19 @@ Created on Nov 4, 2014
 @author: ncl
 '''
 
+import bz2
+from contextlib import closing
 import os
+import re
+import shutil
 import sys
 
-from config import ConfigFile, BadConfigException
+from Timeline import Timeline, TriggerObject, DetectorObject
 from database import DBConnector
 from runConfig import runParam
 import xml.dom.minidom as xmld
-import shutil
-import re
-import bz2
-from contextlib import closing
+from L0TPDecoder import L0TPDecoder
+
 
 def tryint(s):
     try:
@@ -57,26 +59,26 @@ def getValue(nodelist):
 ##---------------------------------------
 #    Utility functions
 ##---------------------------------------
-def findPreviousInList(varList, val):
-    """
-    Find the element of the sorted varList that is just before val. Returns the index and the value of the element.
-    """
-    if len(varList)==0:
-        return 0, False
-    
-    ## If val is smaller than any in the list, there is no previous element
-    if varList[0]>val:
-        return 0, False
-
-    ## Val is greater than all elements in the list, return the last one
-    if val>varList[-1]:
-        return len(varList)-1, varList[-1]
-    
-    ## Go through the list. When an element is greater than val, we just passed the one we were searching
-    for i,el in enumerate(varList[1:]):
-        if el>val:
-            return i,varList[i] 
-    
+# def findPreviousInList(varList, val):
+#     """
+#     Find the element of the sorted varList that is just before val. Returns the index and the value of the element.
+#     """
+#     if len(varList)==0:
+#         return 0, False
+#     
+#     ## If val is smaller than any in the list, there is no previous element
+#     if varList[0]>val:
+#         return 0, False
+# 
+#     ## Val is greater than all elements in the list, return the last one
+#     if val>varList[-1]:
+#         return len(varList)-1, varList[-1]
+#     
+#     ## Go through the list. When an element is greater than val, we just passed the one we were searching
+#     for i,el in enumerate(varList[1:]):
+#         if el>val:
+#             return i,varList[i] 
+#     
 
 def str2bool(val):
     """
@@ -84,91 +86,93 @@ def str2bool(val):
     """
     return val.lower() in ("true")
 
-def removeAllAfterTS(tsDict, endTS):
-    lDict = sorted(tsDict.keys())
-    
-    for ts in lDict:
-        if ts>endTS:
-            del tsDict[ts]
+# def removeAllAfterTS(tsDict, endTS):
+#     lDict = sorted(tsDict.keys())
+#     
+#     for ts in lDict:
+#         if ts>endTS:
+#             del tsDict[ts]
     
 ##---------------------------------------
 #    Functions to for trigger processing
 ##---------------------------------------
-def buildNIMMask(fd):
-    """
-    Return a list of mask with each NIM trigger LUT.
-    The mask for a LUT is only build if detE != 1 (trick for 'don't use this LUT')
-    
-    Input:
-        fd: ConfigFile instance
-    """
-    l = []
-    if not param.l0tpFileNew:
-        for i in range(0, 7):
-            try:
-                if int(fd.getPropertie("lut%i_nim_detEmask" % (i))) != 1:
-                    row = []
-                    row.append(fd.getPropertie("lut%i_nim_detAmask" % (i)))
-                    row.append(fd.getPropertie("lut%i_nim_detBmask" % (i)))
-                    row.append(fd.getPropertie("lut%i_nim_detCmask" % (i)))
-                    row.append(fd.getPropertie("lut%i_nim_detDmask" % (i)))
-                    row.append(fd.getPropertie("lut%i_nim_detEmask" % (i)))
-                    l.append(''.join(row) + ":" + fd.getPropertie("downScal_mask%i_nim" % (i)))
-            except BadConfigException as e:
-                print e
-    else:
-        for i in range(0, 7):
-            try:
-                nimEnabled = int(fd.getPropertie("enableMask_NIM"), 0)
-                if (nimEnabled & (1<<i)) != 0:
-                    l.append(fd.findNIMMask(i))
-            except BadConfigException as e:
-                print e
-    return l
+# def buildNIMMask(fd):
+#     """
+#     Return a list of mask with each NIM trigger LUT.
+#     The mask for a LUT is only build if detE != 1 (trick for 'don't use this LUT')
+#     
+#     Input:
+#         fd: ConfigFile instance
+#     """
+#     l = []
+#     if not param.l0tpFileNew:
+#         for i in range(0, 7):
+#             try:
+#                 if int(fd.getPropertie("lut%i_nim_detEmask" % (i))) != 1:
+#                     row = []
+#                     row.append(fd.getPropertie("lut%i_nim_detAmask" % (i)))
+#                     row.append(fd.getPropertie("lut%i_nim_detBmask" % (i)))
+#                     row.append(fd.getPropertie("lut%i_nim_detCmask" % (i)))
+#                     row.append(fd.getPropertie("lut%i_nim_detDmask" % (i)))
+#                     row.append(fd.getPropertie("lut%i_nim_detEmask" % (i)))
+#                     l.append(''.join(row) + ":" + fd.getPropertie("downScal_mask%i_nim" % (i)))
+#             except BadConfigException as e:
+#                 print e
+#     else:
+#         for i in range(0, 7):
+#             try:
+#                 nimEnabled = int(fd.getPropertie("enableMask_NIM"), 0)
+#                 if (nimEnabled & (1<<i)) != 0:
+#                     l.append(fd.findNIMMask(i))
+#             except BadConfigException as e:
+#                 print e
+#     return l
 
-def buildPrimitiveMask(fd):
-    """
-    Return a list of mask with each Primitive trigger LUT.
-    
-    Input:
-        fd: ConfigFile instance
-    """
-    l = []
-    if not param.l0tpFileNew:
-        for i in range(0, 7):
-            try:
-                row = []
-                row.append(fd.getPropertie("lut%i_detAmask" % (i)).zfill(2))
-                row.append(fd.getPropertie("lut%i_detBmask" % (i)).zfill(2))
-                row.append(fd.getPropertie("lut%i_detCmask" % (i)).zfill(2))
-                l.append(''.join(row) + ":" + fd.getPropertie("downScal_mask%i" % (i)))
-            except BadConfigException as e:
-                print e
-    else:
-        for i in range(0, 7):
-            try:
-                l.append(fd.findPrimMask(i))
-            except BadConfigException as e:
-                print e
-    return l
+# def buildPrimitiveMask(fd):
+#     """
+#     Return a list of mask with each Primitive trigger LUT.
+#     
+#     Input:
+#         fd: ConfigFile instance
+#     """
+#     l = []
+#     if not param.l0tpFileNew:
+#         for i in range(0, 7):
+#             try:
+#                 row = []
+#                 row.append(fd.getPropertie("lut%i_detAmask" % (i)).zfill(2))
+#                 row.append(fd.getPropertie("lut%i_detBmask" % (i)).zfill(2))
+#                 row.append(fd.getPropertie("lut%i_detCmask" % (i)).zfill(2))
+#                 l.append(''.join(row) + ":" + fd.getPropertie("downScal_mask%i" % (i)))
+#             except BadConfigException as e:
+#                 print e
+#     else:
+#         for i in range(0, 7):
+#             try:
+#                 l.append(fd.findPrimMask(i))
+#             except BadConfigException as e:
+#                 print e
+#     return l
 
-def simplifyTrigger(trigg, reject):
-    """
-    Simplify triggers to merge timestamps with same content.
-    
-    Input:
-        trigg: triggers map
-        reject: trigger propertie values to reject
-    """
-    lTrigg = sorted(trigg.keys())
-    prev = [0,0]
-    for t in lTrigg:
-        if trigg[t]==prev:  ## if current entry is the same as the previous, delete the current
-            del trigg[t]
-        elif trigg[t][1]==reject:  ## if the current entry is one that should be rejected, delete it
-            del trigg[t]    
-        else:
-            prev = trigg[t]
+# def simplifyTrigger(trigg, reject):
+#     """
+#     Simplify triggers to merge timestamps with same content.
+#     
+#     Input:
+#         trigg: triggers map
+#         reject: trigger propertie values to reject
+#     """
+#     trigg.simplify(reject)
+#     return
+#     lTrigg = sorted(trigg.keys())
+#     prev = [0,0]
+#     for t in lTrigg:
+#         if trigg[t]==prev:  ## if current entry is the same as the previous, delete the current
+#             del trigg[t]
+#         elif trigg[t][1]==reject:  ## if the current entry is one that should be rejected, delete it
+#             del trigg[t]    
+#         else:
+#             prev = trigg[t]
             
 def mergeTriggers(trigg, prop, startTS, endTS):
     """
@@ -180,38 +184,43 @@ def mergeTriggers(trigg, prop, startTS, endTS):
         startTS: start run timestamp
         endTS: end run timestamp
     """
-    lProp = sorted(prop.keys())
-    lTrigg = sorted(trigg.keys())
-    
-    ## Go through the enabled list
-    for t in lTrigg:
-        if t>endTS:     ## If current timestamp is after the end of run, don't care
-            continue
-        
-        ## Find the previous entry in the properties
-        i,closest = findPreviousInList(lProp, t)
-        if closest:
-            ## If found, delete it because used and assign it to the current enabled
-            #del lProp[i]
-            trigg[t][1] = prop[closest][1]
-            trigg[t][2] = prop[closest][2]
-
-    ## Go through the remaining properties list
-    for t in lProp:
-        if t>endTS:     ## If current timestamp is after the end of run, don't care
-            continue
-        
-        ## Find the previous entry in the enabled list
-        i,closest = findPreviousInList(lTrigg, t)
-        if closest:
-            ## If found, assign the current propertie to this enabled
-            trigg[closest] = [trigg[closest][0], prop[t][1], prop[t][2]]
-    
-    ## Find the element just before the start run timestamp and delete all elements before that one
-    i,_ = findPreviousInList(lTrigg, startTS)
-    for t in lTrigg[:i]:
-        del trigg[t]
-    simplifyTrigger(trigg, None)
+    trigg.merge(prop, True)
+    trigg.cutAfter(endTS)
+    trigg.cutBefore(startTS, 1)
+    trigg.simplify()
+#     return
+#     lProp = sorted(prop.keys())
+#     lTrigg = sorted(trigg.keys())
+#     
+#     ## Go through the enabled list
+#     for t in lTrigg:
+#         if t>endTS:     ## If current timestamp is after the end of run, don't care
+#             continue
+#         
+#         ## Find the previous entry in the properties
+#         i,closest = findPreviousInList(lProp, t)
+#         if closest:
+#             ## If found, delete it because used and assign it to the current enabled
+#             #del lProp[i]
+#             trigg[t][1] = prop[closest][1]
+#             trigg[t][2] = prop[closest][2]
+# 
+#     ## Go through the remaining properties list
+#     for t in lProp:
+#         if t>endTS:     ## If current timestamp is after the end of run, don't care
+#             continue
+#         
+#         ## Find the previous entry in the enabled list
+#         i,closest = findPreviousInList(lTrigg, t)
+#         if closest:
+#             ## If found, assign the current propertie to this enabled
+#             trigg[closest] = [trigg[closest][0], prop[t][1], prop[t][2]]
+#     
+#     ## Find the element just before the start run timestamp and delete all elements before that one
+#     i,_ = findPreviousInList(lTrigg, startTS)
+#     for t in lTrigg[:i]:
+#         del trigg[t]
+#     simplifyTrigger(trigg, None)
 
 ##---------------------------------------
 #    Functions to retrieve batch of info from XML doc
@@ -254,7 +263,9 @@ def getTriggerEnabled(listNodes):
     Input: 
         listNodes: list of <L0TP> nodes
     """
-    events = {'Periodic':{}, 'NIM':{}, 'Primitive':{}, 'Calib':{}, 'Sync':{}}
+    events = {'Periodic':Timeline(TriggerObject), 
+              'NIM':Timeline(TriggerObject), 'Primitive':Timeline(TriggerObject), 
+              'Calib':Timeline(TriggerObject), 'Sync':Timeline(TriggerObject)}
     for node in listNodes:
         eventNode = node.parentNode
         timestamp = int(getAttribute(eventNode, "Timestamp"))
@@ -264,7 +275,8 @@ def getTriggerEnabled(listNodes):
             if "Activated" in tNode.nodeName:
                 triggerName = tNode.nodeName.split('.')[1]
                 val = getValue(tNode.childNodes)
-                events[triggerName][timestamp] = [str2bool(val), None, None]
+                tobject = events[triggerName].addTS(timestamp)
+                tobject.Enabled = str2bool(val)
     return events
 
 def getTriggerProperties(listNode):
@@ -278,7 +290,9 @@ def getTriggerProperties(listNode):
         listNodes: list of <na62L0TP_Torino> nodes
     """
 
-    events = {'Periodic':{}, 'NIM':{}, 'Primitive':{}, 'Calib':{}, 'Sync':{}}
+    events = {'Periodic':Timeline(TriggerObject), 
+              'NIM':Timeline(TriggerObject), 'Primitive':Timeline(TriggerObject), 
+              'Calib':Timeline(TriggerObject), 'Sync':Timeline(TriggerObject)}
     for node in listNode:
         fileContentNodeList = node.getElementsByTagName(param.configFileTagName)
         eventNode = node.parentNode
@@ -286,13 +300,16 @@ def getTriggerProperties(listNode):
         if fileContentNodeList.length>0:
             fileContentNode = fileContentNodeList[0]
             val = getValue(fileContentNode.childNodes)
-            fc = ConfigFile(val)
-            try:
-                events['Periodic'][timestamp] = [None, int(fc.getPropertie("periodicTrgTime"),0), None]
-                events['NIM'][timestamp] = [None, [x for x in buildNIMMask(fc)], fc.getRefDetNim()]
-                events['Primitive'][timestamp] = [None, buildPrimitiveMask(fc), fc.getRefDetPrim()]
-            except BadConfigException as e:
-                print e
+            l0tpConfig = L0TPDecoder(val, param.runNumber)
+            if not l0tpConfig._bad:
+                tobject = events['Periodic'].addTS(timestamp)
+                tobject.Propertie = l0tpConfig.getPeriodicPeriod()# int(fc.getPropertie("periodicTrgTime"),0)
+                tobject = events['NIM'].addTS(timestamp)
+                tobject.Propertie = l0tpConfig.getNIMMasks()# [x for x in buildNIMMask(fc)]
+                tobject.RefDetector = l0tpConfig.getNIMRefDetector()#fc.getRefDetNim()
+                tobject = events['Primitive'].addTS(timestamp)
+                tobject.Propertie = l0tpConfig.getPrimitiveMasks()#buildPrimitiveMask(fc)
+                tobject.RefDetector = l0tpConfig.getPrimitiveRefDetector()#fc.getRefDetPrim()
     
     return events
 
@@ -311,14 +328,15 @@ def getDetectorEnabled(listNode):
         timestamp = getAttribute(node.parentNode.parentNode, "Timestamp")
         val = getValue(node.childNodes)
         if not detectorName in enabled:
-            enabled[detectorName] = {}
-        enabled[detectorName][int(timestamp)] = [str2bool(val), None]
+            enabled[detectorName] = Timeline(DetectorObject)
+        detObj = enabled[detectorName].addTS(int(timestamp))
+        detObj.Enabled = str2bool(val)
     
     return enabled
 
 def setDetectorID(detList, detID):
-    for el in detList:
-        detList[el][1] = detID
+    for el in detList.getList():
+        el[1].Name = detID
 
 def exportFile(myconn, filePath):
     global param
@@ -352,51 +370,94 @@ def exportFile(myconn, filePath):
     l0tpFileList = doc.getElementsByTagName("na62L0TP_Torino")
     triggerProp = getTriggerProperties(l0tpFileList)
     
+    
+#     print "StartTS " + str(startTS)
+#     print "EndTS " + str(endTS)
+#     print "Enabled dict"
+#     print triggerDict['NIM'].getList()
+#     print "prop dict"
+#     print triggerProp['NIM'].getList()
+#      
+#     test = copy.copy(triggerDict["NIM"])
+#     test.merge(triggerProp['NIM'])
+#     print "Merged dict"
+#     print test.getList()
+    
     ## Process triggers into a coherent timeline
+    refTriggerObject = TriggerObject()
+    refTriggerObject.Propertie = -1;
     mergeTriggers(triggerDict['Periodic'], triggerProp['Periodic'], startTS, endTS)
     mergeTriggers(triggerDict['NIM'], triggerProp['NIM'], startTS, endTS)
     mergeTriggers(triggerDict['Primitive'], triggerProp['Primitive'], startTS, endTS)
-    simplifyTrigger(triggerDict['Calib'], -1)
-    simplifyTrigger(triggerDict['Sync'], -1)
+    triggerDict['Calib'].simplify(refTriggerObject)
+    triggerDict['Sync'].simplify(refTriggerObject)
     
-    removeAllAfterTS(triggerDict['Periodic'], endTS)
-    removeAllAfterTS(triggerDict['NIM'], endTS)
-    removeAllAfterTS(triggerDict['Primitive'], endTS)
-    removeAllAfterTS(triggerDict['Calib'], endTS)
-    removeAllAfterTS(triggerDict['Sync'], endTS)
+    triggerDict['Calib'].cutAfter(endTS)
+    triggerDict['Sync'].cutAfter(endTS)
+
+    #removeAllAfterTS(triggerDict['Periodic'], endTS)
+    #removeAllAfterTS(triggerDict['NIM'], endTS)
+    #removeAllAfterTS(triggerDict['Primitive'], endTS)
+    #removeAllAfterTS(triggerDict['Calib'], endTS)
+    #removeAllAfterTS(triggerDict['Sync'], endTS)
     
     ## Get detector enabled info
     enabledList = doc.getElementsByTagName("Enabled")
     detEnabled = getDetectorEnabled(enabledList)
+    detMap = {"CEDAR":4, "GTK":8, "CHANTI":12, "LAV":16, "STRAW": 20, "CHOD":24, "RICH":28, "IRC_SAC":32, "LKR":36, "MUV1":40, "MUV2":44, "MUV3":48, "SAC":52}
     for det in detEnabled:
-	detID = getDetectorID(doc.getElementsByTagName(det))
-	detMap = {"CEDAR":4, "GTK":8, "CHANTI":12, "LAV":16, "STRAW": 20, "CHOD":24, "RICH":28, "IRC_SAC":32, "LKR":36, "MUV1":40, "MUV2":44, "MUV3":48, "SAC":52}
-	if detID==None:
-		detID = detMap[det]
+        detID = getDetectorID(doc.getElementsByTagName(det))
+        if detID==None:
+            detID = detMap[det]
         setDetectorID(detEnabled[det], detID)
-        removeAllAfterTS(detEnabled[det], endTS)
+        detEnabled[det].cutAfter(endTS)
     
-    ## Insert runinfo into DB
-    myconn.setRunInfo(runInfo)
-    
-    ## Insert triggers into DB
-    myconn.setPeriodicTriggerList(triggerDict['Periodic'], runNumber)
-    myconn.setNIMTriggerList(triggerDict['NIM'], runNumber)
-    myconn.setPrimitiveTriggerList(triggerDict['Primitive'], runNumber)
-    
-    myconn.setSyncTriggerList(triggerDict['Sync'], runNumber)
-    myconn.setCalibTriggerList(triggerDict['Calib'], runNumber)
-    
-    myconn.setEnabledDetectorList(detEnabled, runNumber)
+    if myconn is None:
+        #Print everything
+        print "Run TS: %i -> %i" % (startTS, endTS)
+        print "RunInfo"
+        print runInfo
+        
+        print "Periodic triggers"
+        print triggerDict['Periodic'].getList()
+
+        print "NIM triggers"
+        print triggerDict['NIM'].getList()
+
+        print "Primitive triggers"
+        print triggerDict['Primitive'].getList()
+        
+        print "Enabled detectors"
+        for det in detEnabled:
+            print det
+            print detEnabled[det].getList()
+        
+        return False
+    else:
+        ## Insert runinfo into DB
+        myconn.setRunInfo(runInfo)
+        
+        ## Insert triggers into DB
+        myconn.setPeriodicTriggerList(triggerDict['Periodic'], runNumber)
+        myconn.setNIMTriggerList(triggerDict['NIM'], runNumber)
+        myconn.setPrimitiveTriggerList(triggerDict['Primitive'], runNumber)
+        
+        myconn.setSyncTriggerList(triggerDict['Sync'], runNumber)
+        myconn.setCalibTriggerList(triggerDict['Calib'], runNumber)
+        
+        myconn.setEnabledDetectorList(detEnabled, runNumber)
+        
+        return True
     
 if __name__ == '__main__':
     if len(sys.argv)<3:
         print "Please provide path and database password"
         sys.exit()
 
-
-    myconn = DBConnector(False)
-    myconn.connectDB(passwd=sys.argv[-1:][0])
+    
+    #myconn = None
+    myconn = DBConnector(True)
+    #myconn.connectDB(passwd=sys.argv[-1:][0])
     #myconn.setNIMNames(1409529600, None, [[0,'Q1'], [1,'NHOD'], [2,'MUV2'], [3,'MUV3'], [4,'']])
     #myconn.setPrimitivesNames(1409529600, None, [[0,'Q1'], [1,'NHOD'], [2,'MUV2'], [3,'MUV3'], [4,'']])
 
@@ -416,12 +477,13 @@ if __name__ == '__main__':
     for f in fileList:
         if os.path.isfile(f):
             print "\nImport " + f + "\n---------------------"
-            exportFile(myconn, f)
-            with open(f, 'rb') as input:
-                with closing(bz2.BZ2File('/home/RCconfig/XMLProcessed/%s.bz2' % os.path.basename(f), 'wb', compresslevel=9)) as output:
-                    shutil.copyfileobj(input, output)
+            if not exportFile(myconn, f):
+                continue
+            with open(f, 'rb') as inputFile:
+                with closing(bz2.BZ2File('/home/RCconfig/XMLProcessed/%s.bz2' % os.path.basename(f), 'wb', compresslevel=9)) as outputFile:
+                    shutil.copyfileobj(inputFile, outputFile)
             os.remove(f)
             #shutil.move(f, "/home/XMLProcessed/" + os.path.basename(f))
-				#TODO chmod might be needed
-    
-    myconn.close()
+            #TODO chmod might be needed
+    if not myconn is None:
+        myconn.close()

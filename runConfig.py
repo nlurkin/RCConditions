@@ -6,14 +6,12 @@ Created on Nov 6, 2014
 
 class runParam(object):
     configFileTagName = None
-    
-    l0tpFileNew = False
+    runNumber = None
     
     def __init__(self, runNumber):
+        self.runNumber = runNumber
         if int(runNumber) > 953:
             self.configFileTagName = "SplitContent"
         else:
             self.configFileTagName = "FileContent"
         
-        if int(runNumber) > 1307:
-            self.l0tpFileNew = True
