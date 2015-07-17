@@ -6,9 +6,22 @@ Created on Jul 16, 2015
 from string import replace
 from lxml import objectify, etree
 
-class PrimitiveInfo(object):
+class TriggerInfo(object):
     def __init__(self):
         self.Downscaling = None
+        
+    def __repr__(self):
+        return self.__str__()
+    
+    def __eq__(self, other):
+        return (isinstance(other, self.__class__)
+            and self.__dict__ == other.__dict__)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+        
+class PrimitiveInfo(TriggerInfo):
+    def __init__(self):
         self.detA = None
         self.detB = None
         self.detC = None
@@ -17,37 +30,33 @@ class PrimitiveInfo(object):
         self.detF = None
         self.detG = None
     
-    def __repr__(self):
-        return self.__str__()
     def __str__(self):
-        return ""
-    def __eq__(self, other):
-        if self.Downscaling==other.Downscaling and \
-            self.detA==other.detA and \
-            self.detB==other.detB and \
-            self.detC==other.detC and \
-            self.detD==other.detD and \
-            self.detE==other.detE and \
-            self.detF==other.detF and \
-            self.detG==other.detG:
-            return True
-        return False
+        return self.detA + "," + self.detB + "," + self.detB + \
+            "," + self.detB + "," + self.detB + "," + self.detB + \
+            "," + self.detB + ":" + str(self.Downscaling)
+#     def __eq__(self, other):
+#         if self.Downscaling==other.Downscaling and \
+#             self.detA==other.detA and \
+#             self.detB==other.detB and \
+#             self.detC==other.detC and \
+#             self.detD==other.detD and \
+#             self.detE==other.detE and \
+#             self.detF==other.detF and \
+#             self.detG==other.detG:
+#             return True
+#         return False
 
-class NIMInfo(object):
+class NIMInfo(TriggerInfo):
     def __init__(self):
-        self.Downscaling = None
         self.Mask = None
     
-    def __repr__(self):
-        return self.__str__()
     def __str__(self):
-        return self.Mask + ":" + str(self.Downscaling)
-    
-    def __eq__(self, other):
-        if self.Downscaling==other.Downscaling and \
-            self.Mask==other.Mask:
-            return True
-        return False
+        return self.Mask + ":" + str(self.Downscaling)    
+#     def __eq__(self, other):
+#         if self.Downscaling==other.Downscaling and \
+#             self.Mask==other.Mask:
+#             return True
+#         return False
         
 def readValue(node):
     if hasattr(node,"hex"):
@@ -97,8 +106,8 @@ class L0TPDecoder(object):
                     trigger.Mask = ''.join(row)
                     masksList.append(trigger)
         else:
+            nimEnabled = int(readValue(self._xml.global_parameters.enableMask_NIM), 0)
             for i in range(0, 7):
-                nimEnabled = int(readValue(self._xml.global_parameters.enableMask_NIM), 0)
                 if (nimEnabled & (1<<i)) != 0:
                     trigger = NIMInfo()
                     trigger.Downscaling = int(readValue(self._xml.global_parameters.downScal_NIM_mask.item[i]), 0)
@@ -116,25 +125,36 @@ class L0TPDecoder(object):
         return int(readValue(self._xml.global_parameters.referenceDet_NIM), 0)
     
     def getPrimitiveMasks(self):
-        '''
-        Message to Dario: FILL ME!
-        I need a list of fully filled PrimitiveInfo. One element for each enabled mask 
-        '''
         masksList = []
-        prim = PrimitiveInfo()
-        prim.Downscaling = 1
-        prim.ReferenceDet = 1
-        #In binary
-        prim.detA = "0000001001010111"
-        prim.detB = "0000001001010111"
-        prim.detC = "0000001001010111"
-        prim.detD = "0000001001010111"
-        prim.detE = "0000001001010111"
-        prim.detF = "0000001001010111"
-        prim.detG = "0000001001010111"
-        masksList.append(prim)
-        #return masksList
-        return []
+        if self._runNumber > 1307:
+            primEnabled = int(readValue(self._xml.global_parameters.enableMask), 0)
+            for i in range(0, 7):
+                if (primEnabled & (1<<i)) != 0:
+                    prim = PrimitiveInfo()
+                    prim.Downscaling = int(readValue(self._xml.global_parameters.downScal_mask.item[i]), 0)
+                    
+                    prim.detA = readValue(self._xml.LUT_parameters.item[i].lut_detAmask).lower()
+                    prim.detB = readValue(self._xml.LUT_parameters.item[i].lut_detBmask).lower()
+                    prim.detC = readValue(self._xml.LUT_parameters.item[i].lut_detCmask).lower()
+                    if hasattr(self._xml.LUT_parameters.item[i], "lut_detDmask"):
+                        prim.detD = readValue(self._xml.LUT_parameters.item[i].lut_detDmask).lower()
+                    else:
+                        prim.detD = "0x7fff7fff"
+                    if hasattr(self._xml.LUT_parameters.item[i], "lut_detDmask"):
+                        prim.detE = readValue(self._xml.LUT_parameters.item[i].lut_detEmask).lower()
+                    else:
+                        prim.detD = "0x7fff7fff"
+                    if hasattr(self._xml.LUT_parameters.item[i], "lut_detDmask"):
+                        prim.detF = readValue(self._xml.LUT_parameters.item[i].lut_detFmask).lower()
+                    else:
+                        prim.detD = "0x7fff7fff"
+                    if hasattr(self._xml.LUT_parameters.item[i], "lut_detDmask"):
+                        prim.detG = readValue(self._xml.LUT_parameters.item[i].lut_detGmask).lower()
+                    else:
+                        prim.detD = "0x7fff7fff"
+                    
+                    masksList.append(prim)
+        return masksList
     
     def getPrimitiveMeaning(self, detector, mask):
         '''
@@ -143,10 +163,10 @@ class L0TPDecoder(object):
         '''
         meaning = ""
         if detector=="A":
-            if mask == "000000111010101":
+            if mask == "0x7FFF6FFF":
                 meaning = "LAV blah blah blah"
         if detector=="B":
-            if mask == "0000110010101010":
+            if mask == "0x7FFF456F":
                 meaning = "!MUV(Loose)"
         #etc, etc
         return meaning
