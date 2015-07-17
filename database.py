@@ -35,7 +35,7 @@ class DBConnector(object):
     ##---------------------------------------
     #    Utility functions for DB actions
     ##---------------------------------------
-    def connectDB(self, host="127.0.0.1", user="root", passwd="", db="testRC"):
+    def connectDB(self, host="nlurkinsql.cern.ch", user="nlurkin", passwd="", db="testRC"):
         '''Create Database connection and cursor for SQL requests'''
         
         try:
@@ -160,7 +160,7 @@ class DBConnector(object):
         if endTS==None:
             return self.getResultSingle("SELECT id FROM enableddetectors WHERE run_id=%s AND detectorName=%s AND validitystart=%s AND validityend IS NULL", [runID, detectorName, startT])
         else:
-            return self.getResultSingle("SELECT id FROM enableddetectors WHERE run_id=%s AND detectorName=%s AND validitystart=%s AND validityend=%s", [runID, detectorName, startT, endT])
+            return self.getResultSingle("SELECT id FROM enableddetectors WHERE run_id=%s AND detectorName=%s AND validitystart=%s AND (validityend=%s OR validityend IS NULL)", [runID, detectorName, startT, endT])
         
     
     def _getNIMDetNameID(self, startTS, endTS, detNumber):
@@ -262,7 +262,7 @@ class DBConnector(object):
                 triggerID = self.executeInsert("INSERT INTO runtrigger (run_id, validitystart) VALUES (%s, %s)", [runID, self.toSQLTime(startTS)])
             else:
                 triggerID = self.executeInsert("INSERT INTO runtrigger (run_id, validitystart, validityend) VALUES (%s, %s, %s)", [runID, self.toSQLTime(startTS), self.toSQLTime(endTS)])
-		
+        
         if trigger[0]=='Periodic':
             periodicType = self._setPeriodicTriggerType(trigger[1])
             self._setPeriodicTrigger(triggerID, periodicType)
@@ -289,6 +289,9 @@ class DBConnector(object):
             else:
                 return self.executeInsert("INSERT INTO enableddetectors (run_id, detectorid, detectorname, validitystart, validityend) VALUES (%s, %s, %s, %s, %s)", 
                                           [runID, detectorValues.Name, detectorName, self.toSQLTime(startTS), self.toSQLTime(endTS)])
+        elif not endTS is None:
+            return self.executeInsert("UPDATE enableddetectors SET validityend=%s WHERE id=%s", 
+                                      [self.toSQLTime(endTS), enabledID])
         return enabledID
     
     def _setNIMDetName(self, startTS, endTS, detector):
@@ -335,7 +338,7 @@ class DBConnector(object):
         
         triggList = trigger.getList()
         for index, (startTS, trigg) in enumerate(triggList, 1):
-            if trigg.Enabled==True:
+            if trigg.Enabled==True and not trigg.Propertie is None:
                 if index<len(triggList):
                     endTS = triggList[index][0]
                 else:
@@ -347,7 +350,7 @@ class DBConnector(object):
         
         triggList = trigger.getList()
         for index, (startTS, trigg) in enumerate(triggList, 1):
-            if trigg.Enabled==True:
+            if trigg.Enabled==True and not trigg.Propertie is None:
                 if index<len(triggList):
                     endTS = triggList[index][0]
                 else:
@@ -410,7 +413,7 @@ class DBConnector(object):
             for index, (startTS, detector) in enumerate(tsList, 1):
                 if detector.Enabled==True:
                     if index<len(tsList):
-                        endTS = tsList[index]
+                        endTS = tsList[index][0]
                     else:
                         endTS = None
                     self._setEnabledDetector(runID, startTS, endTS, det, detector)

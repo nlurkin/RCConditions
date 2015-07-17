@@ -300,12 +300,13 @@ def getTriggerProperties(listNode):
         if fileContentNodeList.length>0:
             fileContentNode = fileContentNodeList[0]
             val = getValue(fileContentNode.childNodes)
-            l0tpConfig = L0TPDecoder(val, param.runNumber)
+            l0tpConfig = L0TPDecoder(val, param.runNumber) 
             if not l0tpConfig._bad:
                 tobject = events['Periodic'].addTS(timestamp)
                 tobject.Propertie = l0tpConfig.getPeriodicPeriod()# int(fc.getPropertie("periodicTrgTime"),0)
                 tobject = events['NIM'].addTS(timestamp)
                 tobject.Propertie = l0tpConfig.getNIMMasks()# [x for x in buildNIMMask(fc)]
+                print tobject.Propertie
                 tobject.RefDetector = l0tpConfig.getNIMRefDetector()#fc.getRefDetNim()
                 tobject = events['Primitive'].addTS(timestamp)
                 tobject.Propertie = l0tpConfig.getPrimitiveMasks()#buildPrimitiveMask(fc)
@@ -455,8 +456,8 @@ if __name__ == '__main__':
         sys.exit()
 
     
-    #myconn = None
-    myconn = DBConnector(True)
+    myconn = None
+    #myconn = DBConnector(True)
     #myconn.connectDB(passwd=sys.argv[-1:][0])
     #myconn.setNIMNames(1409529600, None, [[0,'Q1'], [1,'NHOD'], [2,'MUV2'], [3,'MUV3'], [4,'']])
     #myconn.setPrimitivesNames(1409529600, None, [[0,'Q1'], [1,'NHOD'], [2,'MUV2'], [3,'MUV3'], [4,'']])
