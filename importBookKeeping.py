@@ -497,9 +497,10 @@ if __name__ == '__main__':
             print "\nImport " + f + "\n---------------------"
             if not exportFile(myconn, f):
                 continue
-            with open(f, 'rb') as inputFile:
-                with closing(bz2.BZ2File('/home/RCconfig/XMLProcessed/%s.bz2' % os.path.basename(f), 'wb', compresslevel=9)) as outputFile:
-                    shutil.copyfileobj(inputFile, outputFile)
+            #with open(f, 'rb') as inputFile:
+            #    with closing(bz2.BZ2File('/home/RCconfig/XMLProcessed/%s.bz2' % os.path.basename(f), 'wb', compresslevel=9)) as outputFile:
+            #        shutil.copyfileobj(inputFile, outputFile)
+            shutil.copyfile(f, '/home/lkrpn0/XMLProcessedDBOD/%s' % os.path.basename(f))
             os.remove(f)
             #shutil.move(f, "/home/XMLProcessed/" + os.path.basename(f))
             #TODO chmod might be needed
