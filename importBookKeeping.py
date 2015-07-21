@@ -456,7 +456,7 @@ if __name__ == '__main__':
 
     
     #myconn = None
-    myconn = DBConnector(True)
+    myconn = DBConnector(False)
     myconn.connectDB(passwd=sys.argv[-1:][0])
     #myconn.setNIMNames(1409529600, None, [[0,'Q1'], [1,'NHOD'], [2,'MUV2'], [3,'MUV3'], [4,'']])
     #myconn.setPrimitivesNames(1409529600, None, [[0,'Q1'], [1,'NHOD'], [2,'MUV2'], [3,'MUV3'], [4,'']])
@@ -479,9 +479,10 @@ if __name__ == '__main__':
             print "\nImport " + f + "\n---------------------"
             if not exportFile(myconn, f):
                 continue
-            with open(f, 'rb') as inputFile:
-                with closing(bz2.BZ2File('/home/RCconfig/XMLProcessed/%s.bz2' % os.path.basename(f), 'wb', compresslevel=9)) as outputFile:
-                    shutil.copyfileobj(inputFile, outputFile)
+            #with open(f, 'rb') as inputFile:
+            #    with closing(bz2.BZ2File('/home/RCconfig/XMLProcessed/%s.bz2' % os.path.basename(f), 'wb', compresslevel=9)) as outputFile:
+            #        shutil.copyfileobj(inputFile, outputFile)
+            shutil.copyfile(f, '/home/lkrpn0/XMLProcessedDBOD/%s' % os.path.basename(f))
             os.remove(f)
             #shutil.move(f, "/home/XMLProcessed/" + os.path.basename(f))
             #TODO chmod might be needed
