@@ -120,7 +120,7 @@ else{
 		"CHOD" => "",
 		"GTK" => "",
 		"IRC_SAC" => "",
-		"CEDAR" => "",
+		"KTAG" => "",
 		"L0TP" => "",
 		"LAV" => "",
 		"LKR" => "",
@@ -179,7 +179,7 @@ else{
 				value="IRC_SAC" <?php echo $det_checked["IRC_SAC"]; ?>>
 			<label for="detectors_en[3]">IRC_SAC</label>
 		<input type="checkbox" class="input-field-box" name="detectors_en[]" id="detectors_en[4]"
-				value="CEDAR"   <?php echo $det_checked["CEDAR"]; ?>>
+				value="KTAG"   <?php echo $det_checked["KTAG"]; ?>>
 			<label for="detectors_en[4]">KTAG</label>
 		<input type="checkbox" class="input-field-box" name="detectors_en[]" id="detectors_en[5]"
 				value="L0TP"    <?php echo $det_checked["L0TP"]; ?>>

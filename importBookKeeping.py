@@ -329,6 +329,8 @@ def getDetectorEnabled(listNode):
         detectorName = node.parentNode.nodeName
         timestamp = getAttribute(node.parentNode.parentNode, "Timestamp")
         val = getValue(node.childNodes)
+		  if detectorName=="CEDAR":
+			  detectorName="KTAG"
         if not detectorName in enabled:
             enabled[detectorName] = Timeline(DetectorObject)
         detObj = enabled[detectorName].addTS(int(timestamp))
@@ -406,7 +408,7 @@ def exportFile(myconn, filePath):
     ## Get detector enabled info
     enabledList = doc.getElementsByTagName("Enabled")
     detEnabled = getDetectorEnabled(enabledList)
-    detMap = {"CEDAR":4, "GTK":8, "CHANTI":12, "LAV":16, "STRAW": 20, "CHOD":24, "RICH":28, "IRC_SAC":32, "LKR":36, "MUV1":40, "MUV2":44, "MUV3":48, "SAC":52}
+    detMap = {"KTAG":4, "GTK":8, "CHANTI":12, "LAV":16, "STRAW": 20, "CHOD":24, "RICH":28, "IRC_SAC":32, "LKR":36, "MUV1":40, "MUV2":44, "MUV3":48, "SAC":52}
     for det in detEnabled:
         detID = getDetectorID(doc.getElementsByTagName(det))
         if detID==None:
