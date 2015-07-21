@@ -1,4 +1,24 @@
 $(function(){
+	$('.search-form')
+	.each(function(){
+		$(this).find('h4').hover(function(){
+			$(this).find('.configure').css('visibility', 'visible');
+		}, function(){
+			$(this).find('.configure').css('visibility', 'hidden');
+		})
+		$(this).find('.collapsep').click(function(){
+			$(this).siblings('.search-form-content').toggle();
+			$(this).siblings('.collapsem').show();
+			$(this).hide();
+		})
+		$(this).find('.collapsem').click(function(){
+			$(this).siblings('.search-form-content').toggle();
+			$(this).siblings('.collapsep').show();
+			$(this).hide();
+		})
+		.end()
+		.find('.configure').css('visibility', 'hidden');
+	});
 	$('.dragbox')
 	.each(function(){
 		$(this).find('h2').hover(function(){

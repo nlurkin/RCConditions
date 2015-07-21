@@ -78,3 +78,125 @@ h4{
 	max-width:900px;
 	background-color: #FFC;
 }
+
+.search-form{
+    max-width: 900px;
+	border: 1px solid #FB7A31;
+    padding: 5px 5px 5px 10px;
+    font: 11px Verdana, Arial, Helvetica, sans-serif;
+	background-color: #FFC;
+	overflow: hidden;
+	position: relative;
+}
+.search-form h4{
+	border: 0px;
+	padding: 0px;
+	margin: 0px;
+    font-style: italic;
+    border-bottom: 2px solid #ddd;
+    /*margin-bottom: 20px;*/
+    padding-bottom: 3px;
+}
+
+.search-form form{
+	margin-top: 10px;
+}
+
+.search-form label{
+    display: block;
+    margin: 0px 0px 2px 0px;
+}
+.search-form label.main > span{
+    width: 120px;
+    font-weight: bold;
+    float: left;
+    padding-top: 8px;
+    padding-right: 5px;
+}
+
+.search-form input.input-field,
+.search-form input.input-field-date{
+	width: 200px;
+    box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    border: 1px solid #C2C2C2;
+    box-shadow: 1px 1px 4px #EBEBEB;
+    -moz-box-shadow: 1px 1px 4px #EBEBEB;
+    -webkit-box-shadow: 1px 1px 4px #EBEBEB;
+    border-radius: 3px;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    padding: 5px;
+    outline: none;
+}
+
+.search-form input.input-field-box{
+	display: none;
+}
+
+.search-form input.input-field-box + label{
+    display: inline-block;
+    cursor: pointer;
+    position: relative;
+	padding-top: 8px;
+    padding-left: 20px;
+    margin-right: 5px;	
+	width: 50px;
+}
+
+.search-form input.input-field-box + label:before {
+    content: "";
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    margin-right: 10px;
+    position: absolute;
+    left: 0;
+	top: 5;
+    bottom: 1px;
+    background-color: #aaa;
+    box-shadow: inset 0px 2px 3px 0px rgba(0, 0, 0, .3), 0px 1px 0px 0px rgba(255, 255, 255, .8);
+}
+
+.search-form input.input-field-box + label:before{
+	border-radius: 3px;
+}
+
+.search-form input[type=checkbox]:checked+ label:before{
+	content: "\2713";
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, .2);
+    font-size: 15px;
+    color: #f3f3f3;
+    text-align: center;
+    line-height: 15px;
+}
+	
+.search-form .input-field:focus{
+    border: 1px solid #0C0;
+}
+
+.search-form .input-field-date:focus{
+    border: 1px solid #0C0;
+	padding-top: 3px;
+	padding-bottom: 2px;
+}
+
+.search-form input[type=submit]{
+    border: none;
+    padding: 8px 15px 8px 15px;
+    background: #FF8500;
+    color: #fff;
+    box-shadow: 1px 1px 4px #DADADA;
+    -moz-box-shadow: 1px 1px 4px #DADADA;
+    -webkit-box-shadow: 1px 1px 4px #DADADA;
+    border-radius: 3px;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+	float: right;
+}
+.search-form input[type=submit]:hover{
+    background: #EA7B00;
+    color: #fff;
+}
+</style>
