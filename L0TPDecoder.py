@@ -22,6 +22,7 @@ class TriggerInfo(object):
         
 class PrimitiveInfo(TriggerInfo):
     def __init__(self):
+        super(PrimitiveInfo, self).__init__()
         self.detA = None
         self.detB = None
         self.detC = None
@@ -31,20 +32,9 @@ class PrimitiveInfo(TriggerInfo):
         self.detG = None
     
     def __str__(self):
-        return self.detA + "," + self.detB + "," + self.detB + \
-            "," + self.detB + "," + self.detB + "," + self.detB + \
-            "," + self.detB + ":" + str(self.Downscaling)
-#     def __eq__(self, other):
-#         if self.Downscaling==other.Downscaling and \
-#             self.detA==other.detA and \
-#             self.detB==other.detB and \
-#             self.detC==other.detC and \
-#             self.detD==other.detD and \
-#             self.detE==other.detE and \
-#             self.detF==other.detF and \
-#             self.detG==other.detG:
-#             return True
-#         return False
+        return self.detA + "," + self.detB + "," + self.detC + \
+            "," + self.detD + "," + self.detE + "," + self.detF + \
+            "," + self.detG + ":" + str(self.Downscaling)
 
 class NIMInfo(TriggerInfo):
     def __init__(self):
@@ -52,11 +42,6 @@ class NIMInfo(TriggerInfo):
     
     def __str__(self):
         return self.Mask + ":" + str(self.Downscaling)    
-#     def __eq__(self, other):
-#         if self.Downscaling==other.Downscaling and \
-#             self.Mask==other.Mask:
-#             return True
-#         return False
         
 def readValue(node):
     if hasattr(node,"hex"):
@@ -156,19 +141,90 @@ class L0TPDecoder(object):
                     masksList.append(prim)
         return masksList
     
-    def getPrimitiveMeaning(self, detector, mask):
+    @staticmethod
+    def getPrimitiveMeaning(detector, mask):
         '''
         Message to Dario: FILL ME!
         I need a string that tells me what that mask means for that detector
+        Dont specify don't cares (not displayed)
         '''
         meaning = ""
         if detector=="A":
-            if mask == "0x7FFF6FFF":
-                meaning = "LAV blah blah blah"
+            if mask == "0x00000000":
+                meaning = "!CHOD"
+#             if mask == "0x7fff7fff":
+#                 meaning = "CHOD don't care"
+            if mask == "0x6fff7fff":
+                meaning = "CHOD"
+                
         if detector=="B":
-            if mask == "0x7FFF456F":
-                meaning = "!MUV(Loose)"
-        #etc, etc
+            if mask == "0x00000000":
+                meaning = "!RICH"
+#             if mask == "0x7fff7fff":
+#                 meaning = "RICH don't care"
+            if mask == "0x6fff7fff":
+                meaning = "RICH"
+            if mask == "0x00001001":
+                meaning = "R1"
+            if mask == "0x00001002":
+                meaning = "R2"
+            if mask == "0x00001004":
+                meaning = "R3"
+             
+        if detector=="C":
+            if mask == "0x00000000":
+                meaning = "!LAV"
+#             if mask == "0x7fff7fff":
+#                 meaning = "LAV don't care"
+            if mask == "0x6fff7fff":
+                meaning = "LAV"
+            if mask=="0x00001001":
+                meaning="LMIP"
+            if mask=="0x00001002":
+                meaning="LES"
+            if mask=="0x00001004":
+                meaning="LM"
+                
+        if detector=="D":
+            if mask == "0x00000000":
+                meaning = "!MUV"
+#             if mask == "0x7fff7fff":
+#                 meaning = "MUV don't care"
+            if mask == "0x3fff7fff":
+                meaning = "MUV"
+            if mask == "0x1fff7fff":
+                meaning = "M2"
+            if mask == "0x00004001":
+                meaning = "ML1"
+            if mask == "0x00004002":
+                meaning = "MT1"
+            if mask == "0x00004004":
+                meaning = "MLO1"
+            if mask == "0x00004008":
+                meaning = "MTO1"
+            if mask == "0x00004010":
+                meaning = "MLO2"
+            if mask == "0x00004020":
+                meaning = "MTO2"
+            if mask == "0x00004040":
+                meaning = "MMO2"
+            if mask == "0x00004080":
+                meaning = "ML2"
+            if mask == "0x00004100":
+                meaning = "MT2"
+            if mask == "0x00004200":
+                meaning = "MM2"
+            if mask == "0x00004400":
+                meaning = "MO1"
+            if mask == "0x00004800":
+                meaning = "M1"
+            if mask == "0x00005000":
+                meaning = "MO2"
+            if mask == "0x00006000":
+                meaning = "M2" 
+            
+            
+        
         return meaning
     
     def getPrimitiveRefDetector(self):

@@ -173,14 +173,14 @@ class DBConnector(object):
         else:
             return self.getResultSingle("SELECT id FROM nimdetname WHERE detnumber=%s AND validitystart=%s AND validityend=%s", [detNumber, startT, endT])
     
-    def _getPrimitiveDetNameID(self, startTS, endTS, detNumber):
+    def _getPrimitiveDetNameID(self, startTS, endTS, detector, mask):
         startT = self.toSQLTime(startTS)
         endT = self.toSQLTime(endTS)
         
         if endTS==None:
-            return self.getResultSingle("SELECT id FROM primitivedetname WHERE detnumber=%s AND validitystart=%s AND validityend IS NULL", [detNumber, startT])
+            return self.getResultSingle("SELECT id FROM primitivedetname WHERE detnumber=%s AND detmask=%s AND validitystart=%s AND validityend IS NULL", [detector, mask, startT])
         else:
-            return self.getResultSingle("SELECT id FROM primitivedetname WHERE detnumber=%s AND validitystart=%s AND validityend=%s", [detNumber, startT, endT])  
+            return self.getResultSingle("SELECT id FROM primitivedetname WHERE detnumber=%s AND detmask=%s AND validitystart=%s AND validityend=%s", [detector, mask, startT, endT])  
     ##---------------------------------------
     #    Get INDEX ID from database table, create the entry if does not exist
     ##---------------------------------------
@@ -308,15 +308,30 @@ class DBConnector(object):
                                           [detector[0], detector[1], self.toSQLTime(startTS), self.toSQLTime(endTS)])
         return detID
     
-    def _setPrimitiveDetName(self, startTS, endTS, detector):
-        detID = self._getPrimitiveDetNameID(startTS, endTS, detector[0])
+    def _setPrimitiveDetName(self, startTS, endTS, detector, mask, meaning):
+        if detector=="A":
+            detector = 0
+        if detector=="B":
+            detector = 1
+        if detector=="C":
+            detector = 2
+        if detector=="D":
+            detector = 3
+        if detector=="E":
+            detector = 4
+        if detector=="F":
+            detector = 5
+        if detector=="G":
+            detector = 6
+            
+        detID = self._getPrimitiveDetNameID(startTS, endTS, detector, mask)
         if detID==False:
             if endTS==None:
-                return self.executeInsert("INSERT INTO primitivedetname (detnumber, detname, validitystart) VALUES (%s, %s, %s)", 
-                                          [detector[0], detector[1], self.toSQLTime(startTS)])                
+                return self.executeInsert("INSERT INTO primitivedetname (detnumber, detmask, detname, validitystart) VALUES (%s, %s, %s, %s)", 
+                                          [detector, mask, meaning, self.toSQLTime(startTS)])                
             else:
-                return self.executeInsert("INSERT INTO primitivedetname (detnumber, detname, validitystart, validityend) VALUES (%s, %s, %s, %s)",
-                                          [detector[0], detector[1], self.toSQLTime(startTS), self.toSQLTime(endTS)])
+                return self.executeInsert("INSERT INTO primitivedetname (detnumber, detmask, detname, validitystart, validityend) VALUES (%s, %s, %s, %s, %s)",
+                                          [detector, mask, meaning, self.toSQLTime(startTS), self.toSQLTime(endTS)])
         return detID
         
     ##---------------------------------------
@@ -415,7 +430,12 @@ class DBConnector(object):
         for det in detNames:
             self._setNIMDetName(startTS, endTS, det)
             
-    def setPrimitivesNames(self, startTS, endTS, detNames):
-        for det in detNames:
-            self._setPrimitivesDetName(startTS, endTS, det)
+    def setPrimitivesNames(self, startTS, endTS, detNames, mask):
+        self._setPrimitiveDetName(startTS, endTS, "A", mask.detA, detNames.detA)
+        self._setPrimitiveDetName(startTS, endTS, "B", mask.detB, detNames.detB)
+        self._setPrimitiveDetName(startTS, endTS, "C", mask.detC, detNames.detC)
+        self._setPrimitiveDetName(startTS, endTS, "D", mask.detD, detNames.detD)
+        self._setPrimitiveDetName(startTS, endTS, "E", mask.detE, detNames.detE)
+        self._setPrimitiveDetName(startTS, endTS, "F", mask.detF, detNames.detF)
+        self._setPrimitiveDetName(startTS, endTS, "G", mask.detG, detNames.detG)
             

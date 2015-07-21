@@ -17,7 +17,7 @@ from Timeline import Timeline, TriggerObject, DetectorObject
 from database import DBConnector
 from runConfig import runParam
 import xml.dom.minidom as xmld
-from L0TPDecoder import L0TPDecoder
+from L0TPDecoder import L0TPDecoder, PrimitiveInfo
 
 
 def tryint(s):
@@ -310,6 +310,8 @@ def getTriggerProperties(listNode):
                 tobject = events['Primitive'].addTS(timestamp)
                 tobject.Propertie = l0tpConfig.getPrimitiveMasks()
                 tobject.RefDetector = l0tpConfig.getPrimitiveRefDetector()
+                for prim in tobject.Propertie:
+                    setPrimitivesReferences(prim)
     
     return events
 
@@ -448,6 +450,22 @@ def exportFile(myconn, filePath):
         myconn.setEnabledDetectorList(detEnabled, runNumber)
         
         return True
+
+def setPrimitivesReferences(prim):
+    l0 = L0TPDecoder
+    startTS = 1435701600
+    
+    primDef = PrimitiveInfo()
+    
+    primDef.detA = l0.getPrimitiveMeaning("A", prim.detA)
+    primDef.detB = l0.getPrimitiveMeaning("B", prim.detB)
+    primDef.detC = l0.getPrimitiveMeaning("C", prim.detC)
+    primDef.detD = l0.getPrimitiveMeaning("D", prim.detD)
+    primDef.detE = l0.getPrimitiveMeaning("E", prim.detE)
+    primDef.detF = l0.getPrimitiveMeaning("F", prim.detF)
+    primDef.detG = l0.getPrimitiveMeaning("G", prim.detG)
+    
+    myconn.setPrimitivesNames(startTS, None, primDef, prim)
     
 if __name__ == '__main__':
     if len(sys.argv)<3:
@@ -456,7 +474,7 @@ if __name__ == '__main__':
 
     
     #myconn = None
-    myconn = DBConnector(True)
+    myconn = DBConnector(False)
     myconn.connectDB(passwd=sys.argv[-1:][0])
     #myconn.setNIMNames(1409529600, None, [[0,'Q1'], [1,'NHOD'], [2,'MUV2'], [3,'MUV3'], [4,'']])
     #myconn.setPrimitivesNames(1409529600, None, [[0,'Q1'], [1,'NHOD'], [2,'MUV2'], [3,'MUV3'], [4,'']])
