@@ -65,7 +65,7 @@
 	font-size: large;
 	cursor:pointer;
 	display: none;
-	width:20px;
+	width:900px;
 	text-align: right;
 	padding-right: 10px;
 }
@@ -75,7 +75,7 @@
 	position: absolute;
 	font-size: 14px;
 	cursor: pointer;
-	width:20px;
+	width:900px;
 	text-align: right;
 	padding-right: 10px;
 }
