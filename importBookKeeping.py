@@ -329,8 +329,8 @@ def getDetectorEnabled(listNode):
         detectorName = node.parentNode.nodeName
         timestamp = getAttribute(node.parentNode.parentNode, "Timestamp")
         val = getValue(node.childNodes)
-		  if detectorName=="CEDAR":
-			  detectorName="KTAG"
+        if detectorName=="CEDAR":
+            detectorName="KTAG"
         if not detectorName in enabled:
             enabled[detectorName] = Timeline(DetectorObject)
         detObj = enabled[detectorName].addTS(int(timestamp))

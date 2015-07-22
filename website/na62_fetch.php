@@ -298,6 +298,7 @@ function fetch_xml($db, $runID){
 	$sql = "SELECT run.number FROM run WHERE run.id=".$runID;
 	if($db->executeGet($sql) >0){
 		$dbres = $db->next();
+		return $dbres;
 	}
 	else{
 	    die("No data in database");
