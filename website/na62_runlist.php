@@ -34,6 +34,8 @@ else if(isset($_GET['view']) && $_GET['view']=="search"){
 	if(isset($_GET["date_from"]) && !empty($_GET["date_from"])) $searchParams["date_from"] = $_GET["date_from"];
 	if(isset($_GET["date_to"]) && !empty($_GET["date_to"])) $searchParams["date_to"] = $_GET["date_to"];
 	if(isset($_GET["detectors_en"])) $searchParams["detectors_en"] = $_GET["detectors_en"];
+	if(isset($_GET["triggers_en"])) $searchParams["triggers_en"] = $_GET["triggers_en"];
+	if(isset($_GET["primitive"])) $searchParams["primitive"] = $_GET["primitive"];
 	$sqlwhere = generate_search_sql($searchParams);
 	$dataArray = fetch_search($db, $rowOffset, $runLimits, $sqlwhere);
 	
@@ -132,8 +134,23 @@ else{
 	if(isset($_GET["detectors_en"])){
 		foreach($_GET["detectors_en"] as $det) $det_checked[$det] = "checked";
 	}
+	
+	$trigger_checked = array(
+		"calibration" => "",
+		"sync" => "",
+		"periodic" => ""
+	);
+	if(isset($_GET["triggers_en"])){
+		foreach($_GET["triggers_en"] as $trigg) $trigger_checked[$trigg] = "checked";
+	}
+	if(isset($_GET["nPrimComb"])) $nPrimComb = $_GET["nPrimComb"];
+	else $nPrimComb=-1;
+	if(isset($_GET["primitive"])) $selectedPrimitive = $_GET["primitive"];
+	else $selectedPrimitive = "";
+
 	if(isset($_GET['view']) && $_GET['view']=="search"){
 ?>
+
 	<div class="collapsep">&#x25C0</div><div class="collapsem">&#9660</div>
 	<div class="search-form-content">
 <?php
@@ -143,29 +160,54 @@ else{
 	<div class="search-form-content" style="display: none;">
 <?php
 	}
+	//Prepare primitive triggers array
+	$primTypes = fetch_PrimitivesTypes($db);
+	echo "<script>";
+	echo "var triggers = [";
+	$triggCombs = array();
+	foreach($primTypes as $type){
+		array_push($triggCombs, "\"" . implode(",", $type) . "\"");
+	}
+	echo implode(",\n", $triggCombs);
+	echo "];\n";
+	echo "var primSelected = '" . $selectedPrimitive . "';\n";
+	echo "</script>";
 ?>
+	<script>
+	function applyTriggersList(){
+		var nTriggers = document.getElementById("nPrimComb").value;
+		var prim = document.getElementById("primitive");
+		while(prim.options.length > 0) prim.remove(0);
+		var els = triggers[nTriggers-1].split(",");
+		for(var i =0; i< els.length; i++){
+			var opt = document.createElement("option");
+			opt.value = els[i];
+			opt.innerHTML = els[i];
+			prim.appendChild(opt);
+		}
+		if(nTriggers==<?php echo $nPrimComb; ?>) prim.value = primSelected;
+		else prim.selectedIndex = 0;
+	}
+	</script>
     <form action="na62_runlist.php" method="GET">
 		<input type="hidden" name="view" value="search">
-		
-		<label class = "main" for="run_from"><span>Run number</span>
+		<div class="leftsearch">
+		<label class="main" for="run_from"><span>Run number</span></label>
 		<input type="number" class="input-field" name="run_from" id="run_from" 
 			placeholder="From run #" value="<?php echo $run_from;?>">
 		<input type="number" class="input-field" name="run_to"   id="run_to"   
 			placeholder="To run #"   value="<?php echo $run_to;?>">
-		</label>
 		
-		
-		<label class = "main" for="date_from"><span>Date </span>
+		<label class="main" for="date_from"><span>Date </span></label>
 		<input type="text" class="input-field-date" name="date_from" id="date_from" 
 			onfocus="(this.type='date')" onblur="(this.type='text')" placeholder="From date" 
 			value="<?php echo $date_from;?>">
 		<input type="text" class="input-field-date" name="date_to" id="date_to"
 			onfocus="(this.type='date')" onblur="(this.type='text')" placeholder="To data"
 			value="<?php echo $date_to;?>">
-		</label>
 		
 		
-		<label class = "main" for="detectors_en[]"><span>Enabled detectors</span>
+		<label class="main" for="detectors_en[]"><span>Enabled detectors</span></label>
 		<input type="checkbox" class="input-field-box" name="detectors_en[]" id="detectors_en[0]" 
 				value="CHANTI"  <?php echo $det_checked["CHANTI"]; ?>>
 			<label for="detectors_en[0]">CHANTI</label>
@@ -185,7 +227,7 @@ else{
 				value="L0TP"    <?php echo $det_checked["L0TP"]; ?>>
 			<label for="detectors_en[5]">L0TP</label>
 		<br>
-		<span></span>
+		<label class="main"><span></span></label>
 		<input type="checkbox" class="input-field-box" name="detectors_en[]" id="detectors_en[6]"
 				value="LAV"    <?php echo $det_checked["LAV"]; ?>>
 			<label for="detectors_en[6]">LAV</label>
@@ -194,7 +236,7 @@ else{
 			<label for="detectors_en[7]">LKr</label>
 		<input type="checkbox" class="input-field-box" name="detectors_en[]" id="detectors_en[8]"
 				value="MUV1"   <?php echo $det_checked["MUV1"]; ?>>
-			<label for="detectors_en[8]">MUV1&2</label>
+			<label for="detectors_en[8]">MUV1&2 </label>
 		<input type="checkbox" class="input-field-box" name="detectors_en[]" id="detectors_en[9]"
 				value="MUV3"   <?php echo $det_checked["MUV3"]; ?>>
 			<label for="detectors_en[9]">MUV3</label>
@@ -204,12 +246,35 @@ else{
 		<input type="checkbox" class="input-field-box" name="detectors_en[]" id="detectors_en[11]"
 				value="STRAW"  <?php echo $det_checked["STRAW"]; ?>>
 			<label for="detectors_en[11]">Straw</label>
-		</label>
+		</div>
+		<div class="rightSearch">
+		<label class="main" for="run_from"><span>Triggers</span></label>
+		<input type="checkbox" class="input-field-box" name="triggers_en[]" id="triggers_en[0]"
+				value="calibration"    <?php echo $trigger_checked["calibration"]; ?>>
+			<label for="triggers_en[0]">Calib</label>
+		<input type="checkbox" class="input-field-box" name="triggers_en[]" id="triggers_en[1]"
+			value="sync"    <?php echo $trigger_checked["sync"]; ?>>
+		<label for="triggers_en[1]">Sync</label>
+		<input type="checkbox" class="input-field-box" name="triggers_en[]" id="triggers_en[2]"
+			value="periodic"    <?php echo $trigger_checked["periodic"]; ?>>
+		<label for="triggers_en[2]">Periodic</label>
+		<label class="main" for="nPrimComb"><span>Primitives</span></label>
+		<input type="range" min="0" max="7" name="nPrimComb" id="nPrimComb" placeholder="# Combination" value="<?php echo abs($nPrimComb); ?>"
+			onChange="applyTriggersList();" onInput="applyTriggersList();">
+		<br>
+		<br>
+		<label class="main" for="primitive"><span></span></label>
+		<select id="primitive" name="primitive" class="input-field" style="width:300px">
+		</select>
 		<input type="submit" value="Search">
+		</div>
     </form>
 	</div>
 	</div>
 	</div>
+	<script>
+	applyTriggersList();
+	</script>
 <?php
 	if(isset($_GET['view']) && $_GET['view']=="search"){
 ?>

@@ -109,13 +109,14 @@ function fetch_nim($db, $runID, $tsStart, $tsStop){
 }
 
 function fetch_primitives($db, $runID, $tsStart, $tsStop){
-	$sql = "SELECT viewprimitivename.triggerprimitivedownscaling, viewprimitivename.triggerprimitivereference, viewprimitivename.maskA,
+	$sql = "SELECT DISTINCT viewprimitivename.triggerprimitivedownscaling, viewprimitivename.triggerprimitivereference, viewprimitivename.maskA,
 		viewprimitivename.maskB, viewprimitivename.maskC, viewprimitivename.maskD, viewprimitivename.maskE, viewprimitivename.maskF,
 		viewprimitivename.maskG
 		FROM viewprimitivename
 		WHERE viewprimitivename.run_id = ".$runID."
 		AND (viewprimitivename.validityend > '".$tsStart."'
 		OR viewprimitivename.validityend is NULL)";
+	
 	if(!empty($tsStop)) $sql = $sql." AND viewprimitivename.validitystart < '".$tsStop."'";
 	$db->executeGet($sql);
 
@@ -143,14 +144,23 @@ function generate_search_sql($searchParams){
 		if(strtotime($searchParams["date_to"])!==false) array_push($whereArray, "run.timestart <= " . $searchParams["date_to"]);
 	}
 	if(isset($searchParams["detectors_en"])) {
-		$joinstring = "";
-		$condArray = array();
 		foreach($searchParams["detectors_en"] as $key => $det){
 			array_push($joinArray, "enableddetectors as d" . $key);
 			array_push($whereArray, "d" . $key . ".run_id = run.id AND d" . $key . ".detectorname = \"" . $det . "\"");
 		}
-		//array_push($whereArray, $joinstring . " ON " . implode(" AND ", $condArray));
 	}
+	
+	if(isset($searchParams["triggers_en"])) {
+		foreach($searchParams["triggers_en"] as $key => $trigg){
+			array_push($joinArray, "view" . $trigg);
+			array_push($whereArray, "view" . $trigg . ".run_id = run.id");
+		}
+	}
+	if(isset($searchParams["primitive"])) {
+		array_push($joinArray, "viewprimitive");
+		array_push($whereArray, "viewprimitive.run_id = run.id AND viewprimitive.triggerstring LIKE '" . $searchParams["primitive"] . "/%'");
+	}
+	
 	$sql = "";
 	if(sizeof($joinArray)>0) $sql = $sql . " JOIN " . implode(" JOIN ", $joinArray);
 	if(sizeof($whereArray)>0) $sql = $sql . " ON " . implode(" AND ", $whereArray);
@@ -345,7 +355,61 @@ function prepare_trigger($type, $record){
 			if(!is_null($value['maskG'])) array_push($detArray, $value["maskG"]);
 			array_push($PrimArray, implode("x", $detArray)."/".$value["triggerprimitivedownscaling"]."(".$value["triggerprimitivereference"].")");
 		}
-		if(sizeof($PrimArray)>0) array_push($trigger, "Primitive:".implode("+", $PrimArray));
+		if(sizeof($PrimArray)>0) array_push($trigger, "Primitive:".implode("<br>", $PrimArray));
 		return implode("<br>", $trigger);
 	}	
+}
+
+function fetch_PrimitivesTypes($db){
+	$primArray = array(1=>array());
+	
+	//Get data from DB (1 detector)
+	$sql = "SELECT d0.detname AS triggertype 
+		FROM primitivedetname as d0
+		WHERE d0.detname<>''";
+	//Fill the array with data
+	$db->executeGet($sql);
+	while($row = $db->next()){
+		array_push($primArray[1], $row["triggertype"]);
+	}
+	
+	
+	//Get data from DB (2 detectors)
+	$primArray[2] = prepare_PrimCorrelationSQL($db, 2);
+	//Get data from DB (3 detectors)
+	$primArray[3] = prepare_PrimCorrelationSQL($db, 3);
+	//Get data from DB (4 detectors)
+	$primArray[4] = prepare_PrimCorrelationSQL($db, 4);
+	//Get data from DB (5 detectors)
+	$primArray[5] = prepare_PrimCorrelationSQL($db, 5);
+	//Get data from DB (6 detectors)
+	$primArray[6] = prepare_PrimCorrelationSQL($db, 6);
+	//Get data from DB (7 detectors)
+	$primArray[7] = prepare_PrimCorrelationSQL($db, 7);
+		
+	return $primArray;
+}
+
+function prepare_PrimCorrelationSQL($db, $nCombi){
+	$fieldsArray = array();
+	$tablesArray = array();
+	$stCond = array();
+	for($i=0; $i<$nCombi; $i++){
+		$fieldsArray["d" . $i] = "d" . $i . ".detname";
+		$tablesArray["d" . $i] = "primitivedetname AS d" . $i;
+	}
+	for($i=0; $i<sizeof($fieldsArray)-1; $i++){
+		array_push($stCond, $fieldsArray["d" . $i] . "<" . $fieldsArray["d" . ($i+1)]);
+	}
+	$sql = "SELECT CONCAT_WS('x', " . implode(",", $fieldsArray) . ") AS triggertype " .
+		"FROM " . implode(" JOIN ", $tablesArray) . " ON " .
+		implode("<>'' AND ", $fieldsArray) . "<>'' AND " . 
+		implode(" AND ", $stCond);
+		
+	$db->executeGet($sql);
+	$resArray = array();
+	while($row = $db->next()){
+		array_push($resArray, $row["triggertype"]);
+	}
+	return $resArray;
 }

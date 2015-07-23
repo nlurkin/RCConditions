@@ -75,12 +75,12 @@ h4{
 	font: 16px Verdana, Arial, Helvetica, sans-serif;
 	border: 1px solid #FB7A31;
 	padding: 5px 5px 5px 10px;
-	max-width:900px;
+	max-width: 100%;
 	background-color: #FFC;
 }
 
 .search-form{
-    max-width: 900px;
+    width: 1200px;
 	border: 1px solid #FB7A31;
     padding: 5px 5px 5px 10px;
     font: 11px Verdana, Arial, Helvetica, sans-serif;
@@ -115,6 +115,7 @@ h4{
 }
 
 .search-form input.input-field,
+.search-form select.input-field,
 .search-form input.input-field-date{
 	width: 200px;
     box-sizing: border-box;
@@ -193,10 +194,26 @@ h4{
     border-radius: 3px;
     -webkit-border-radius: 3px;
     -moz-border-radius: 3px;
-	float: right;
+	position: absolute;
+	bottom: 0;
+	right: 0;
 }
 .search-form input[type=submit]:hover{
     background: #EA7B00;
     color: #fff;
+}
+
+.search-form .leftsearch{
+	position: relative;
+	width: 600px;
+	float: left;
+	height: 120px;
+}
+
+.search-form .rightsearch{
+	position: relative;
+	width: 595px;
+	float: left;
+	height: 120px;
 }
 </style>
