@@ -144,7 +144,7 @@ else{
 		foreach($_GET["triggers_en"] as $trigg) $trigger_checked[$trigg] = "checked";
 	}
 	if(isset($_GET["nPrimComb"])) $nPrimComb = $_GET["nPrimComb"];
-	else $nPrimComb=-1;
+	else $nPrimComb=0;
 	if(isset($_GET["primitive"])) $selectedPrimitive = $_GET["primitive"];
 	else $selectedPrimitive = "";
 
@@ -266,7 +266,10 @@ else{
 		<label class="main" for="primitive"><span></span></label>
 		<select id="primitive" name="primitive" class="input-field" style="width:300px">
 		</select>
+		<div class="form-submit">
 		<input type="submit" value="Search">
+		<input type="button" value="Reset" onclick="location.href='na62_runlist.php';">
+		</div>
 		</div>
     </form>
 	</div>
