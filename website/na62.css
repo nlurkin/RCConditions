@@ -1,4 +1,4 @@
-﻿table {
+table {
 	font: 11px/24px Verdana, Arial, Helvetica, sans-serif;
 	border-collapse: collapse;
 	width: 100%;
@@ -114,9 +114,9 @@ h4{
     padding-right: 5px;
 }
 
-.search-form input.input-field,
-.search-form select.input-field,
-.search-form input.input-field-date{
+input.input-field,
+select.input-field,
+input.input-field-date{
 	width: 200px;
     box-sizing: border-box;
     -webkit-box-sizing: border-box;
@@ -132,11 +132,11 @@ h4{
     outline: none;
 }
 
-.search-form input.input-field-box{
+input.input-field-box{
 	display: none;
 }
 
-.search-form input.input-field-box + label{
+input.input-field-box + label{
     display: inline-block;
     cursor: pointer;
     position: relative;
@@ -146,7 +146,7 @@ h4{
 	width: 50px;
 }
 
-.search-form input.input-field-box + label:before {
+input.input-field-box + label:before {
     content: "";
     display: inline-block;
     width: 16px;
@@ -160,11 +160,11 @@ h4{
     box-shadow: inset 0px 2px 3px 0px rgba(0, 0, 0, .3), 0px 1px 0px 0px rgba(255, 255, 255, .8);
 }
 
-.search-form input.input-field-box + label:before{
+input.input-field-box + label:before{
 	border-radius: 3px;
 }
 
-.search-form input[type=checkbox]:checked+ label:before{
+input[type=checkbox]:checked+ label:before{
 	content: "\2713";
     text-shadow: 1px 1px 1px rgba(0, 0, 0, .2);
     font-size: 15px;
@@ -173,18 +173,18 @@ h4{
     line-height: 15px;
 }
 	
-.search-form .input-field:focus{
+.input-field:focus{
     border: 1px solid #0C0;
 }
 
-.search-form .input-field-date:focus{
+.input-field-date:focus{
     border: 1px solid #0C0;
 	padding-top: 3px;
 	padding-bottom: 2px;
 }
 
-.search-form input[type=submit],
-.search-form input[type=button]{
+input[type=submit],
+input[type=button]{
     border: none;
     padding: 8px 15px 8px 15px;
     background: #FF8500;
@@ -197,13 +197,13 @@ h4{
     -moz-border-radius: 3px;
 }
 
-.search-form input[type=submit]:hover,
-.search-form input[type=button]:hover{
+input[type=submit]:hover,
+input[type=button]:hover{
     background: #EA7B00;
     color: #fff;
 }
 
-.search-form .form-submit{
+.form-submit{
 	position: absolute;
 	bottom: 0;
 	right: 0;
@@ -222,4 +222,17 @@ h4{
 	float: left;
 	height: 120px;
 }
+
+.help_content{
+	position: relative;
+	width: 1000px;
+}
+
+.left_column{
+	float: left;
+}
+.right_column{
+	float: right;
+}
+
 </style>
