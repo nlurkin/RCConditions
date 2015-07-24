@@ -275,7 +275,8 @@ function fetch_run_details($db, $runID) {
 			viewprimitivename.maskD, viewprimitivename.maskE,
 			viewprimitivename.maskF, viewprimitivename.maskG,
 			viewprimitivename.triggerprimitivedownscaling,
-			viewprimitivename.triggerprimitivereference
+			viewprimitivename.triggerprimitivereference,
+			viewprimitivename.masknumber
 			FROM viewprimitivename
 			WHERE viewprimitivename.run_id=" . $runID . " ORDER BY validitystart";
 		// Fill the array with data

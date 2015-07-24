@@ -594,7 +594,7 @@ else if ($_GET ['view'] == "details") {
 				<table style="table-layout: fixed; width: 100%"
 					class="autoalternate">
 					<tr>
-						<th width="50px">Mask</th>
+						<th width="50px">Mask #</th>
 						<th width="200px">Trigger</th>
 						<th width="50px">Downs.</th>
 						<th width="55px">Ref. Det.</th>
@@ -614,7 +614,10 @@ else if ($_GET ['view'] == "details") {
 				elseif ($nim ["det_" . $i] != "")
 					$string = $string . "*" . $nim ["det_" . $i];
 			}
-			echo "<tr><td>" . $nim ["mask"] . "</td><td>" . $string . "</td><td>" . $nim ["triggernimdownscaling"] . "</td><td>" . $nim ["triggernimreference"] . "</td><td>" . $nim ["validitystart"] . "</td><td>" . $end . "</td></tr>";
+			echo "<tr><td>" . $nim ["mask"] . "</td><td>" . $string . "</td>";
+			echo "<td>" . $nim ["triggernimdownscaling"] . "</td>";
+			echo "<td>" . $nim ["triggernimreference"] . "</td>";
+			echo "<td>" . $nim ["validitystart"] . "</td><td>" . $end . "</td></tr>";
 		}
 		?>
 				</table>
@@ -660,7 +663,7 @@ else if ($_GET ['view'] == "details") {
 				array_push ( $primNameArr, $prim ["maskF"] );
 			if (! is_null ( $prim ["maskG"] ))
 				array_push ( $primNameArr, $prim ["maskG"] );
-			echo "<tr><td>&nbsp;</td><td>" . implode ( "x", $primNameArr ) . "</td><td>" . $prim ["triggerprimitivedownscaling"] . "</td><td>" . $prim ["triggerprimitivereference"] . "</td><td>" . $prim ["validitystart"] . "</td><td>" . $end . "</td></tr>";
+			echo "<tr><td>" . $prim ["masknumber"] . "</td><td>" . implode ( "x", $primNameArr ) . "</td><td>" . $prim ["triggerprimitivedownscaling"] . "</td><td>" . $prim ["triggerprimitivereference"] . "</td><td>" . $prim ["validitystart"] . "</td><td>" . $end . "</td></tr>";
 		}
 		?>
 				</table>
@@ -745,6 +748,12 @@ else if ($_GET ['view'] == "comment") {
 	}
 	?>
     
+
+
+
+
+
+
 
 
 
