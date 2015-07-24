@@ -594,7 +594,7 @@ else if ($_GET ['view'] == "details") {
 				<table style="table-layout: fixed; width: 100%"
 					class="autoalternate">
 					<tr>
-						<th width="50px">Mask #</th>
+						<th width="50px">Mask</th>
 						<th width="200px">Trigger</th>
 						<th width="50px">Downs.</th>
 						<th width="55px">Ref. Det.</th>
@@ -634,7 +634,7 @@ else if ($_GET ['view'] == "details") {
 				<table style="table-layout: fixed; width: 100%"
 					class="autoalternate">
 					<tr>
-						<th width="60px">Mask</th>
+						<th width="60px">Mask #</th>
 						<th width="120px">Trigger</th>
 						<th width="60px">Downs.</th>
 						<th width="60px">Ref. Det.</th>
@@ -642,7 +642,6 @@ else if ($_GET ['view'] == "details") {
 						<th width="*">Until*</th>
 					</tr>
 				<?php
-		// TODO improve
 		foreach ( $runDetails ["primitive"] as $prim ) {
 			if ($prim ["validityend"] == "")
 				$end = "EOR";
