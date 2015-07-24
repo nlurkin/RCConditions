@@ -30,9 +30,10 @@ class PrimitiveInfo(TriggerInfo):
         self.detE = None
         self.detF = None
         self.detG = None
+        self.MaskNumber = None
     
     def __str__(self):
-        return self.detA + "," + self.detB + "," + self.detC + \
+        return self.MaskNumber + ")" + self.detA + "," + self.detB + "," + self.detC + \
             "," + self.detD + "," + self.detE + "," + self.detF + \
             "," + self.detG + ":" + str(self.Downscaling)
 
@@ -117,6 +118,7 @@ class L0TPDecoder(object):
                 if (primEnabled & (1<<i)) != 0:
                     prim = PrimitiveInfo()
                     prim.Downscaling = int(readValue(self._xml.global_parameters.downScal_mask.item[i]), 0)
+                    prim.MaskNumber = i
                     
                     prim.detA = readValue(self._xml.LUT_parameters.item[i].lut_detAmask).lower()
                     prim.detB = readValue(self._xml.LUT_parameters.item[i].lut_detBmask).lower()

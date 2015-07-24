@@ -229,13 +229,13 @@ class DBConnector(object):
                                       [masks.detA,masks.detB,masks.detC,masks.detD,masks.detE,masks.detF,masks.detG])
         return typeID 
     
-    def _setPrimitiveTrigger(self, triggerID, primitiveTypeID, downscaling, reference):
+    def _setPrimitiveTrigger(self, triggerID, primitiveTypeID, downscaling, maskNumber, reference):
         exist, primitiveID = self._getPrimitiveTriggerID(triggerID, primitiveTypeID, downscaling, reference)
         
         if primitiveID==False:
-            return self.executeInsert("INSERT INTO triggerprimitive (runtrigger_id, triggerprimitivetype_id, triggerprimitivedownscaling, triggerprimitivereference) VALUES (%s, %s, %s, %s)", [triggerID, primitiveTypeID, downscaling, reference])
+            return self.executeInsert("INSERT INTO triggerprimitive (runtrigger_id, triggerprimitivetype_id, triggerprimitivedownscaling, triggerprimitivereference, maskNumber) VALUES (%s, %s, %s, %s, %s)", [triggerID, primitiveTypeID, downscaling, reference, maskNumber])
         elif exist==True:
-            return self.executeInsert("UPDATE triggerprimitive SET triggerprimitivereference=%s WHERE id=%s", [reference, primitiveID])
+            return self.executeInsert("UPDATE triggerprimitive SET triggerprimitivereference=%s, maskNumber=%s WHERE id=%s", [reference, maskNumber, primitiveID])
         return primitiveID 
 
     def _setSyncTrigger(self, triggerID):
@@ -273,7 +273,7 @@ class DBConnector(object):
             self._setNIMTrigger(triggerID, nimType, Down, triggerList[2])
         if triggerList[0]=='Primitive':
             primitiveType = self._setPrimitiveTriggerType(triggerList[1])
-            self._setPrimitiveTrigger(triggerID, primitiveType, Down, triggerList[2])
+            self._setPrimitiveTrigger(triggerID, primitiveType, Down, triggerList[1].MaskNumber , triggerList[2])
             pass
         if triggerList[0]=='Sync':
             self._setSyncTrigger(triggerID)
