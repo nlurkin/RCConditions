@@ -1,3 +1,6 @@
 *.pyc
 .pydevproject
 .gitignore
+/.settings/
+/.project
+/.buildpath
