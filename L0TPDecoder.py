@@ -150,7 +150,7 @@ class L0TPDecoder(object):
         '''
         meaning = ""
         if detector=="A":
-            if mask == "0x00000000":
+            if mask == "0x00000000" or mask == "0x0":
                 meaning = "!CHOD"
 #             if mask == "0x7fff7fff":
 #                 meaning = "CHOD don't care"
@@ -158,7 +158,7 @@ class L0TPDecoder(object):
                 meaning = "CHOD"
                 
         if detector=="B":
-            if mask == "0x00000000":
+            if mask == "0x00000000" or mask == "0x0":
                 meaning = "!RICH"
 #             if mask == "0x7fff7fff":
 #                 meaning = "RICH don't care"
@@ -172,7 +172,7 @@ class L0TPDecoder(object):
                 meaning = "R3"
              
         if detector=="C":
-            if mask == "0x00000000":
+            if mask == "0x00000000" or mask == "0x0":
                 meaning = "!LAV"
 #             if mask == "0x7fff7fff":
 #                 meaning = "LAV don't care"
@@ -186,7 +186,7 @@ class L0TPDecoder(object):
                 meaning="LM"
                 
         if detector=="D":
-            if mask == "0x00000000":
+            if mask == "0x00000000" or mask == "0x0":
                 meaning = "!MUV"
 #             if mask == "0x7fff7fff":
 #                 meaning = "MUV don't care"
