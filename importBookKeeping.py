@@ -13,11 +13,14 @@ import re
 import shutil
 import sys
 
-from Timeline import Timeline, TriggerObject, DetectorObject
-from database import DBConnector
-from runConfig import runParam
 import xml.dom.minidom as xmld
-from L0TPDecoder import L0TPDecoder, PrimitiveInfo
+
+from XMLExtract import Timeline
+from XMLExtract.Timeline import TriggerObject, DetectorObject
+from NA62DB import DBConnector
+from runConfig import runParam
+from XMLExtract import L0TPDecoder
+from XMLExtract.L0TPDecoder import PrimitiveInfo
 
 
 def tryint(s):
@@ -56,123 +59,11 @@ def getValue(nodelist):
             rc.append(node.data)
     return ''.join(rc)
 
-##---------------------------------------
-#    Utility functions
-##---------------------------------------
-# def findPreviousInList(varList, val):
-#     """
-#     Find the element of the sorted varList that is just before val. Returns the index and the value of the element.
-#     """
-#     if len(varList)==0:
-#         return 0, False
-#     
-#     ## If val is smaller than any in the list, there is no previous element
-#     if varList[0]>val:
-#         return 0, False
-# 
-#     ## Val is greater than all elements in the list, return the last one
-#     if val>varList[-1]:
-#         return len(varList)-1, varList[-1]
-#     
-#     ## Go through the list. When an element is greater than val, we just passed the one we were searching
-#     for i,el in enumerate(varList[1:]):
-#         if el>val:
-#             return i,varList[i] 
-#     
-
 def str2bool(val):
     """
     Transform boolean string to boolean type
     """
     return val.lower() in ("true")
-
-# def removeAllAfterTS(tsDict, endTS):
-#     lDict = sorted(tsDict.keys())
-#     
-#     for ts in lDict:
-#         if ts>endTS:
-#             del tsDict[ts]
-    
-##---------------------------------------
-#    Functions to for trigger processing
-##---------------------------------------
-# def buildNIMMask(fd):
-#     """
-#     Return a list of mask with each NIM trigger LUT.
-#     The mask for a LUT is only build if detE != 1 (trick for 'don't use this LUT')
-#     
-#     Input:
-#         fd: ConfigFile instance
-#     """
-#     l = []
-#     if not param.l0tpFileNew:
-#         for i in range(0, 7):
-#             try:
-#                 if int(fd.getPropertie("lut%i_nim_detEmask" % (i))) != 1:
-#                     row = []
-#                     row.append(fd.getPropertie("lut%i_nim_detAmask" % (i)))
-#                     row.append(fd.getPropertie("lut%i_nim_detBmask" % (i)))
-#                     row.append(fd.getPropertie("lut%i_nim_detCmask" % (i)))
-#                     row.append(fd.getPropertie("lut%i_nim_detDmask" % (i)))
-#                     row.append(fd.getPropertie("lut%i_nim_detEmask" % (i)))
-#                     l.append(''.join(row) + ":" + fd.getPropertie("downScal_mask%i_nim" % (i)))
-#             except BadConfigException as e:
-#                 print e
-#     else:
-#         for i in range(0, 7):
-#             try:
-#                 nimEnabled = int(fd.getPropertie("enableMask_NIM"), 0)
-#                 if (nimEnabled & (1<<i)) != 0:
-#                     l.append(fd.findNIMMask(i))
-#             except BadConfigException as e:
-#                 print e
-#     return l
-
-# def buildPrimitiveMask(fd):
-#     """
-#     Return a list of mask with each Primitive trigger LUT.
-#     
-#     Input:
-#         fd: ConfigFile instance
-#     """
-#     l = []
-#     if not param.l0tpFileNew:
-#         for i in range(0, 7):
-#             try:
-#                 row = []
-#                 row.append(fd.getPropertie("lut%i_detAmask" % (i)).zfill(2))
-#                 row.append(fd.getPropertie("lut%i_detBmask" % (i)).zfill(2))
-#                 row.append(fd.getPropertie("lut%i_detCmask" % (i)).zfill(2))
-#                 l.append(''.join(row) + ":" + fd.getPropertie("downScal_mask%i" % (i)))
-#             except BadConfigException as e:
-#                 print e
-#     else:
-#         for i in range(0, 7):
-#             try:
-#                 l.append(fd.findPrimMask(i))
-#             except BadConfigException as e:
-#                 print e
-#     return l
-
-# def simplifyTrigger(trigg, reject):
-#     """
-#     Simplify triggers to merge timestamps with same content.
-#     
-#     Input:
-#         trigg: triggers map
-#         reject: trigger propertie values to reject
-#     """
-#     trigg.simplify(reject)
-#     return
-#     lTrigg = sorted(trigg.keys())
-#     prev = [0,0]
-#     for t in lTrigg:
-#         if trigg[t]==prev:  ## if current entry is the same as the previous, delete the current
-#             del trigg[t]
-#         elif trigg[t][1]==reject:  ## if the current entry is one that should be rejected, delete it
-#             del trigg[t]    
-#         else:
-#             prev = trigg[t]
             
 def mergeTriggers(trigg, prop, startTS, endTS):
     """
@@ -188,39 +79,6 @@ def mergeTriggers(trigg, prop, startTS, endTS):
     trigg.cutAfter(endTS)
     trigg.cutBefore(startTS, 1)
     trigg.simplify()
-#     return
-#     lProp = sorted(prop.keys())
-#     lTrigg = sorted(trigg.keys())
-#     
-#     ## Go through the enabled list
-#     for t in lTrigg:
-#         if t>endTS:     ## If current timestamp is after the end of run, don't care
-#             continue
-#         
-#         ## Find the previous entry in the properties
-#         i,closest = findPreviousInList(lProp, t)
-#         if closest:
-#             ## If found, delete it because used and assign it to the current enabled
-#             #del lProp[i]
-#             trigg[t][1] = prop[closest][1]
-#             trigg[t][2] = prop[closest][2]
-# 
-#     ## Go through the remaining properties list
-#     for t in lProp:
-#         if t>endTS:     ## If current timestamp is after the end of run, don't care
-#             continue
-#         
-#         ## Find the previous entry in the enabled list
-#         i,closest = findPreviousInList(lTrigg, t)
-#         if closest:
-#             ## If found, assign the current propertie to this enabled
-#             trigg[closest] = [trigg[closest][0], prop[t][1], prop[t][2]]
-#     
-#     ## Find the element just before the start run timestamp and delete all elements before that one
-#     i,_ = findPreviousInList(lTrigg, startTS)
-#     for t in lTrigg[:i]:
-#         del trigg[t]
-#     simplifyTrigger(trigg, None)
 
 ##---------------------------------------
 #    Functions to retrieve batch of info from XML doc
@@ -374,19 +232,6 @@ def exportFile(myconn, filePath):
     l0tpFileList = doc.getElementsByTagName("na62L0TP_Torino")
     triggerProp = getTriggerProperties(l0tpFileList)
     
-    
-#     print "StartTS " + str(startTS)
-#     print "EndTS " + str(endTS)
-#     print "Enabled dict"
-#     print triggerDict['NIM'].getList()
-#     print "prop dict"
-#     print triggerProp['NIM'].getList()
-#      
-#     test = copy.copy(triggerDict["NIM"])
-#     test.merge(triggerProp['NIM'])
-#     print "Merged dict"
-#     print test.getList()
-    
     ## Process triggers into a coherent timeline
     refTriggerObject = TriggerObject()
     refTriggerObject.Propertie = -1;
@@ -399,12 +244,6 @@ def exportFile(myconn, filePath):
     triggerDict['Calib'].cutAfter(endTS)
     triggerDict['Sync'].cutAfter(endTS)
 
-    #removeAllAfterTS(triggerDict['Periodic'], endTS)
-    #removeAllAfterTS(triggerDict['NIM'], endTS)
-    #removeAllAfterTS(triggerDict['Primitive'], endTS)
-    #removeAllAfterTS(triggerDict['Calib'], endTS)
-    #removeAllAfterTS(triggerDict['Sync'], endTS)
-    
     ## Get detector enabled info
     enabledList = doc.getElementsByTagName("Enabled")
     detEnabled = getDetectorEnabled(enabledList)
@@ -505,6 +344,5 @@ if __name__ == '__main__':
             shutil.copyfile(f, '/home/lkrpn0/XMLProcessedDBOD/%s' % os.path.basename(f))
             os.remove(f)
             #shutil.move(f, "/home/XMLProcessed/" + os.path.basename(f))
-            #TODO chmod might be needed
     if not myconn is None:
         myconn.close()
