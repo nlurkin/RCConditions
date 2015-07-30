@@ -15,19 +15,12 @@ import sys
 
 import xml.dom.minidom as xmld
 
-from XMLExtract import Timeline
+from XMLExtract import Timeline, L0TPDecoder, tryint
 from XMLExtract.Timeline import TriggerObject, DetectorObject
 from NA62DB import DBConnector
 from runConfig import runParam
-from XMLExtract import L0TPDecoder
 from XMLExtract.L0TPDecoder import PrimitiveInfo
 
-
-def tryint(s):
-    try:
-        return int(s)
-    except:
-        return s
 
 def alphanum_key(s):
     """ Turn a string into a list of string and number chunks.

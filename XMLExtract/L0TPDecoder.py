@@ -231,5 +231,5 @@ class L0TPDecoder(object):
     
     def getPrimitiveRefDetector(self):
         if readValue(self._xml.global_parameters.referenceDet)=="":
-			  return -1
+            return -1
         return int(readValue(self._xml.global_parameters.referenceDet), 0)
