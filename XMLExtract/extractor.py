@@ -1,9 +1,30 @@
 #!/bin/env python
 
+'''
+XMLExtract.extractor -- Extract device xml configuration file from run xml
+
+XMLExtract.extractor is a description
+
+@author:     Nicolas Lurkin
+
+@contact:    nicolas.lurkin@cern.ch
+@deffield    updated: Updated
+'''
+
+from argparse import ArgumentParser
+from argparse import RawDescriptionHelpFormatter
+
+import bz2
 import sys
 import XMLDoc
+import urllib2
 from lxml import etree
 from string import replace
+
+__all__ = []
+__version__ = 0.1
+__date__ = '2015-08-05'
+__updated__ = '2015-08-05'
 
 class abortException(Exception):
     """
@@ -182,6 +203,38 @@ def startReading(filePath):
             except abortException:
                 pass
 
-if __name__=="__main__":
-    startReading(sys.argv[1])
+def main(argv=None):
+    '''Command line options.'''
+
+    if argv is None:
+        argv = sys.argv
+    else:
+        sys.argv.extend(argv)
+
+    program_version = "v%s" % __version__
+    program_build_date = str(__updated__)
+    program_version_message = '%%(prog)s %s (%s)' % (program_version, program_build_date)
+    program_shortdesc = __import__('__main__').__doc__.split("\n")[1]
+    
+    # Setup argument parser
+    parser = ArgumentParser(description=program_shortdesc, formatter_class=RawDescriptionHelpFormatter)
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("-f", "--file", dest="file", help="File to process")
+    group.add_argument("-r", "--run", dest="run", help="Run number to extract", type=int)
+    parser.add_argument('-V', '--version', action='version', version=program_version_message)
+
+    # Process arguments
+    args = parser.parse_args()
+
+    if not args.file is None:
+        startReading(args.file)
+    elif not args.run is None:    
+        response = urllib2.urlopen('https://na62runconditions.web.cern.ch/na62runconditions/XMLProcessed/{0}.xml.bz2'.format(args.run))
+        html = response.read()
+        data = bz2.decompress(html)
+        startReading(data)
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())
     
