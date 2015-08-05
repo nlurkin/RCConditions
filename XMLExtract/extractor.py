@@ -228,9 +228,13 @@ def main(argv=None):
 
     if not args.file is None:
         startReading(args.file)
-    elif not args.run is None:    
-        response = urllib2.urlopen('https://na62runconditions.web.cern.ch/na62runconditions/XMLProcessed/{0}.xml.bz2'.format(args.run))
-        html = response.read()
+    elif not args.run is None:
+        try:    
+            response = urllib2.urlopen('https://na62runconditions.web.cern.ch/na62runconditions/XMLProcessed/{0}.xml.bz2'.format(args.run))
+            html = response.read()
+        except urllib2.HTTPError as e:
+            print e
+            return -1
         data = bz2.decompress(html)
         startReading(data)
     return 0
