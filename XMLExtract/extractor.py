@@ -13,13 +13,16 @@ XMLExtract.extractor is a description
 
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
-
 import bz2
-import sys
-import XMLDoc
-import urllib2
-from lxml import etree
 from string import replace
+import sys
+import urllib2
+
+from lxml import etree
+
+import XMLDoc
+import TEL62Decoder
+
 
 __all__ = []
 __version__ = 0.1
@@ -169,14 +172,14 @@ def writeFile(elementDict, TS):
     """
     path = elementDict["node"].tag
     if elementDict["bad"]:
-        text = XMLDoc.getSplitElementText(elementDict["node"])
+        _, text = XMLDoc.getSplitElementText(elementDict["node"])
         if text == "\"\"":
             print "This file is empty"
         else:
             with open("{devName}_{ts}.corrupt.xml".format(devName=path, ts=TS), "w") as fd:
                 fd.write(text)
     else:
-        xmlDoc = XMLDoc.parseSplitElementText(elementDict["node"])
+        _, xmlDoc = XMLDoc.parseSplitElementText(elementDict["node"])
         with open("{devName}_{ts}.xml".format(devName=path, ts=TS), "w") as fd:
             fd.write(etree.tostring(xmlDoc._xml, pretty_print=True))
 

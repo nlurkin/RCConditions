@@ -4,7 +4,11 @@ Created on Jul 16, 2015
 @author: nlurkin
 '''
 from string import replace
+
 from lxml import objectify, etree
+
+from XMLExtract.XMLDoc import xmlDocument
+
 
 class TriggerInfo(object):
     def __init__(self):
@@ -53,7 +57,7 @@ def readValue(node):
         return str(node)
         
     
-class L0TPDecoder(object):
+class L0TPDecoder(xmlDocument):
     '''
     classdocs
     '''
@@ -62,16 +66,9 @@ class L0TPDecoder(object):
         '''
         Constructor
         '''
-        self._xmlstring = replace(replace(replace(xml, "&gt;", ">"), "&st;", ">"), "\"", "")
-        self._runNumber = runNumber
-        try:
-            self._xml = objectify.fromstring(self._xmlstring)
-        except etree.XMLSyntaxError as e:
-            print e
-            self._bad = True
-        else:
-            self._bad = False
         
+        super(L0TPDecoder, self).__init__(xml)
+        self._runNumber = runNumber        
     
     def getPeriodicPeriod(self):
         return int(readValue(self._xml.global_parameters.periodicTrgTime), 0)

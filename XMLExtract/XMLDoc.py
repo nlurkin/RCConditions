@@ -10,11 +10,12 @@ import re
 from lxml import objectify, etree
 
 def tryint(s):
+    if "lxml.objectify" in str(type(s)):
+        s = str(s)
     try:
-        return int(s)
+        return int(s, 0)
     except:
         return s
-
     
 def getSplitElementText(el):
     """
@@ -121,6 +122,13 @@ class xmlDocument(object):
         print self._xmlstring[-nLast]    
     
     def getTagRefs(self, tagName, parent=None):
+        if parent is None:
+            parent = self._xml
+
+        return xmlDocument.getTagRefsStatic(tagName, parent)
+    
+    @staticmethod
+    def getTagRefsStatic(tagName, parent=None):
         """
         Returns a list containing the xml elements whose 
         tag name corresponding to tagName
@@ -131,10 +139,7 @@ class xmlDocument(object):
                     Default is root
         Returns:
             A list of ObjectifiedElement elements
-        """
-        if parent is None:
-            parent = self._xml
-        
+        """        
         listTags = []
         for el in parent.iter(tagName):
             listTags.append(el)
@@ -148,6 +153,8 @@ class xmlDocument(object):
             TEL        (TEL62 file)
                 -> S   (Start command)
                 -> I   (Initialize command)
+            L0TP       (L0TP file)
+                -> S   (Start command)
             Other      (Undefined device)
                 -> U   (Unknown command)
         """
@@ -157,6 +164,9 @@ class xmlDocument(object):
                 self._cmd = "S"
             else:
                 self._cmd = "I"
+        elif self._xml.tag == "conf":
+            self._type = "L0TP"
+            self._cmd = "S"
         else:
             self._type = "Other"
             self._cmd = "U"    
