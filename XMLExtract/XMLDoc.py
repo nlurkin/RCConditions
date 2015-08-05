@@ -28,10 +28,12 @@ def getSplitElementText(el):
         String
     """
     if hasattr(el, "SplitStore"):
+        field = "R"
         xmlstring = el.SplitStore
     elif hasattr(el, "SplitContent"):
+        field = "S"
         xmlstring = el.SplitContent
-    return str(xmlstring)
+    return field, str(xmlstring)
 
 def parseSplitElementText(el):
     """
@@ -45,7 +47,8 @@ def parseSplitElementText(el):
     Returns:
         xmlDocument
     """
-    return xmlDocument(getSplitElementText(el))
+    field, text = getSplitElementText(el)
+    return field, xmlDocument(text)
 
 def checkElementsXMLValidity(listTs):
     """
@@ -54,19 +57,21 @@ def checkElementsXMLValidity(listTs):
     bad field of the secondary dictionary to True
     if the string is not valid xml. Also sets the 
     cmd field of the secondary dictionary to the 
-    identified command.
+    identified command. The type is R(eport) or 
+    S(ent)
     
     Args:
         listTs: Dictionary of dictionary of ObjectifiedElement
             {TS: {"node": el}}
     
     Modifies:
-        listTs: {TS: {"node": el, "cmd": cmd, "bad": bad}}
+        listTs: {TS: {"node": el, "cmd": cmd, "bad": bad, "type": type}}
     """
     for k, v in listTs.iteritems():
-        test = parseSplitElementText(v["node"])
-        listTs[k]["cmd"] = " "
+        field, test = parseSplitElementText(v["node"])
+        listTs[k]["cmd"] = "-"
         listTs[k]["bad"] = test._bad
+        listTs[k]["type"] = field
         
         if not test._bad:
             test.identifyFileType()

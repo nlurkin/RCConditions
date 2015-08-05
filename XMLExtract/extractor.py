@@ -129,8 +129,11 @@ def selectTimeStamp(xml, selectedDevice):
     printStart = False
     printEnd = False
     print "Found element at following timestamps:"
+    print "  [i]TC Timestamp*"
+    print "  (i: index; T: R(eport) or S(ent); C: I(NITIALIZE) or S(TART_RUN); *: Invalid XML file)"
+    print ""
     
-    for i, ts in enumerate(listTs):
+    for i, ts in enumerate(sorted(listTs)):
         if ts>xml._runStart and printStart==False:
             print "--->start"
             printStart = True
@@ -138,10 +141,11 @@ def selectTimeStamp(xml, selectedDevice):
             print "--->end"
             printEnd = True
         
-        print "  [{index}]{cmd} {ts}{corrupt}".format(index= i, 
+        print "  [{index}]{type}{cmd} {ts}{corrupt}".format(index= i, 
                                                       ts = ts, 
                                                       corrupt = "*" if listTs[ts]["bad"] else "",
-                                                      cmd = listTs[ts]["cmd"])
+                                                      cmd = listTs[ts]["cmd"], 
+                                                      type = listTs[ts]["type"])
     
     if len(listTs)>0:
         value = requestInput("Select entries")
