@@ -4,9 +4,6 @@ Created on Aug 5, 2015
 @author: nlurkin
 '''
 
-import os
-import sys
-
 from XMLDoc import xmlDocument, tryint
 
 
@@ -353,47 +350,3 @@ class TEL62Decoder(xmlDocument):
             self.pp[tryint(el.attrib["id"])] = PP(el)        
 
         self.sl = SL(self._xml.sl)
-    
-def getch():
-    import tty, termios
-    fd = sys.stdin.fileno()
-    old = termios.tcgetattr(fd)
-    try:
-        tty.setraw(fd)
-        return sys.stdin.read(1)
-    finally:
-        termios.tcsetattr(fd, termios.TCSADRAIN, old)
-        
-if __name__ == "__main__":
-    xmldoc = TEL62Decoder(sys.argv[1])
-    xmlstring = str(xmldoc).split("\n")
-    length = 0
-    newLength = 0
-    doQuit = False
-    termLen = int(os.popen('stty size', 'r').read().split()[0])-3
-    while not doQuit:
-        length = newLength
-        for line in xmlstring[length:length+termLen]:
-            print line
-        print ""
-        print "Up/Down arrows to navigate   Space/Enter to skip 1 screen   q to exit"
-        while newLength==length and not doQuit:
-            ch = getch()
-            if ord(ch)==13 or ord(ch)==32:
-                newLength += termLen
-            elif ord(ch)==27:
-                if ord(getch())==91:
-                    #arrow key
-                    ch = getch()
-                    if ord(ch)==65:
-                        newLength -= 1
-                    elif ord(ch)==66:
-                        newLength += 1
-            if newLength<0:
-                newLength=0
-            elif (newLength+termLen)>len(xmlstring):
-                newLength = len(xmlstring)-termLen
-            elif ord(ch)==113:
-                doQuit = True
-    
-    
