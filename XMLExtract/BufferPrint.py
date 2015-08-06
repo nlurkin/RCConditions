@@ -4,15 +4,52 @@ Created on Aug 6, 2015
 @author: nlurkin
 '''
 
-from XMLExtract import TEL62Decoder
 import sys
 import os
-
-color = "\033[33;1m"
 
 def enum(*sequential, **named):
     enums = dict(zip(sequential, range(len(sequential))), **named)
     return type('Enum', (), enums)
+
+color = enum(BLACK=30, RED=31, GREEN=32, YELLOW=33, BLUE=34, PURPLE=35, CYAN=36, WHITE=37)
+modifier = enum(NORMAL=0, BOLD=1, UNDERLINE=4, BACKGROUND=10)
+class termManip():
+    @staticmethod
+    def getColor(*col):
+        codeList = []
+        adder = 0
+        for el in col:
+            if el==modifier.BACKGROUND:
+                adder = el
+            else:
+                codeList.append(str(el+adder))
+                adder = 0
+        return "\033[{0}m".format(";".join(codeList))
+    
+    @staticmethod
+    def setColor(*col):
+        print termManip.getColor(*col),
+    
+    @staticmethod
+    def reset():
+        print termManip.getReset(),
+        
+    @staticmethod
+    def getReset():
+        return "\033[0m"
+    
+    @staticmethod
+    def setCursorTopLeft():
+        print "\033[0;0f",
+
+    @staticmethod
+    def setCursorBottomLeft():
+        termHeight = int(os.popen('stty size', 'r').read().split()[0])
+        print "\033[{};0f".format(termHeight),
+        
+    @staticmethod
+    def clearScreen():
+        print "\033[2J",
 
 OperationType = enum("FORWARD_SCREEN", "FORWARD_LINE" ,"BACKWARD_LINE", "QUIT")
 
@@ -50,10 +87,14 @@ def displayBuffer(stringBuffer):
     bufferLen = len(stringBuffer)
     while not doQuit:
         length = newLength
+        termManip.clearScreen()
+        termManip.setCursorTopLeft()
         for line in stringBuffer[length:length+termLen]:
             print line
-        print ""
-        print "Up/Down arrows to navigate   Space/Enter to skip 1 screen   q to exit"
+        termManip.setCursorBottomLeft()
+        print termManip.getColor(color.BLACK, modifier.BACKGROUND, color.WHITE)+\
+            "Up/Down arrows to navigate   Space/Enter to skip 1 screen   q to exit"+\
+            termManip.getReset(),
         while newLength==length and not doQuit:
             opType = waitOperation()
             if opType==OperationType.FORWARD_SCREEN:
@@ -70,7 +111,4 @@ def displayBuffer(stringBuffer):
             elif (newLength+termLen)>bufferLen:
                 newLength = bufferLen-termLen    
 
-if __name__ == "__main__":
-    xmldoc = TEL62Decoder(sys.argv[1])
-    displayBuffer(str(xmldoc))
     

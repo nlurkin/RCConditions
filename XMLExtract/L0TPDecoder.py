@@ -3,10 +3,6 @@ Created on Jul 16, 2015
 
 @author: nlurkin
 '''
-from string import replace
-
-from lxml import objectify, etree
-
 from XMLExtract.XMLDoc import xmlDocument
 
 
@@ -62,7 +58,7 @@ class L0TPDecoder(xmlDocument):
     classdocs
     '''
 
-    def __init__(self, xml, runNumber):
+    def __init__(self, xml, runNumber=None):
         '''
         Constructor
         '''
@@ -230,3 +226,6 @@ class L0TPDecoder(xmlDocument):
         if readValue(self._xml.global_parameters.referenceDet)=="":
             return -1
         return int(readValue(self._xml.global_parameters.referenceDet), 0)
+    
+    def __str__(self):
+        return str(self.__dict__)

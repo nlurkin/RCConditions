@@ -305,6 +305,7 @@ class TEL62Decoder(xmlDocument):
         '''
         Constructor
         '''
+        
         super(TEL62Decoder, self).__init__(xml)
         
         self.version = None

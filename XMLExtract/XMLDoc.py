@@ -90,29 +90,35 @@ class xmlDocument(object):
         Args:
             xml: File path of the xml or xml string itself
         '''
-        
-        #Replace all html < and > codes with the real ascii character 
-        self._xmlstring = replace(replace(xml, "&gt;", ">"), "&st;", ">")
-        
-        #Remove eventual enclosing doubles quotes
-        if self._xmlstring[0] == "\"":
-            self._xmlstring = self._xmlstring[1:]
-        if self._xmlstring[-1] == "\"":
-            self._xmlstring = self._xmlstring[:-1]
-        try:
-            #Read from file or from string
-            if os.path.isfile(self._xmlstring):
-                self._xml = objectify.parse(self._xmlstring).getroot()
+      
+        if isinstance(xml, xmlDocument):
+            self._copy_construct(xml)
+        else:    
+            #Replace all html < and > codes with the real ascii character 
+            self._xmlstring = replace(replace(xml, "&gt;", ">"), "&st;", ">")
+            
+            #Remove eventual enclosing doubles quotes
+            if self._xmlstring[0] == "\"":
+                self._xmlstring = self._xmlstring[1:]
+            if self._xmlstring[-1] == "\"":
+                self._xmlstring = self._xmlstring[:-1]
+            try:
+                #Read from file or from string
+                if os.path.isfile(self._xmlstring):
+                    self._xml = objectify.parse(self._xmlstring).getroot()
+                else:
+                    self._xml = objectify.fromstring(self._xmlstring)
+            except etree.XMLSyntaxError as e:
+                print e
+                self._bad = True
             else:
-                self._xml = objectify.fromstring(self._xmlstring)
-        except etree.XMLSyntaxError as e:
-            print e
-            self._bad = True
-        else:
-            self._bad = False
-
+                self._bad = False
+    
+    def _copy_construct(self, xml):
+        self.__dict__ = xml.__dict__
+        
     def __str__(self):
-        objectify.dump(self._root)
+        objectify.dump(self._xml)
     
     def printXML(self, nFirst, nLast):
         print self._xmlstring[0:nFirst]

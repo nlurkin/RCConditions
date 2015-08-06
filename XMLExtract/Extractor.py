@@ -143,7 +143,7 @@ def selectTimeStamp(xml, selectedDevice):
         retList = []
         for selected in valueList:
             if selected < len(listTs):
-                retList.append(listTs.items()[selected])
+                retList.append(sorted(listTs.items())[selected])
         return retList
         
 def writeFile(elementDict, TS):
