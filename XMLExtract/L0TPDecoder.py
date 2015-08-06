@@ -219,7 +219,6 @@ class L0TPDecoder(xmlDocument):
                 meaning = "M2" 
             
             
-        
         return meaning
     
     def getPrimitiveRefDetector(self):

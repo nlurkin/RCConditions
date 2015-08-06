@@ -5,19 +5,46 @@ Created on Aug 5, 2015
 '''
 
 from XMLDoc import xmlDocument, tryint
+from BufferPrint import PartialFormatter
 
+fmt = PartialFormatter()
 
 def toLine(l):
+    """
+    Transforms a list in a whitespace separated string
+    
+    Args:
+        l: List
+    
+    Returns:
+        String
+    """
     return " ".join(l)
 
 def formatIP(l):
+    """
+    Returns original list whose last element has been 
+    interpreted as an IP address (last 2 fields only)
+    and reformatted as an aligned string (xxx.xxx).
+    
+    Args:
+        l: list whose last element is a 2 elements list
+        [x,x,[123, 45]]
+    
+    Returns:
+        Input list with last elements formatted as a 
+        string [x,x,"123. 45"]
+    """
     ret = l[:-1]
     if len(l[-1])==1:
         ret.append("")
     else:
         ret.append("{:>3}.{:>3}".format(*l[-1]))
     return ret
-    
+
+# ------------------------------------
+# String templates for each TEL62 class
+# ------------------------------------
 tel62Template = """
 TEL62 Configuration file decoding
 ---------------------------------
@@ -85,10 +112,13 @@ gbeTemplate = """
 
 class TDC(object):
     '''
-    classdocs
+    Class representing a TDC configuration
     '''
     
     def __init__(self, xml):
+        """
+        Constructor
+        """
         self.id = None
         self.enabled = None
         self.tdcId = None
@@ -96,38 +126,58 @@ class TDC(object):
         self.useTrailing = None
         self.Offset = None
         self.channelOffset = {}
-        self.channelEnabled = None
+        self.channelEnabled = 0
         
         self._decode(xml)
 
     def _decode(self, xml):
+        """
+        XML decoding method. Fill the class with
+        available information from XML.
+        
+        Args:
+            xml: xml node of the TDC
+        """
         self.id = tryint(xml.attrib["id"])
-        self.enabled = bool(xml.enable)
-        self.tdcId = tryint(xml.id) 
-        self.useLeading = bool(xml.useleading)
-        self.useTrailing = bool(xml.usetrailing)
-        self.Offset = tryint(xml.tdcoff)
+        
+        if hasattr(xml, "enable"):
+            self.enabled = bool(xml.enable)
+        if hasattr(xml, "id"):
+            self.tdcId = tryint(xml.id)
+        if hasattr(xml, "useleading"): 
+            self.useLeading = bool(xml.useleading)
+        if hasattr(xml, "usetrailing"):
+            self.useTrailing = bool(xml.usetrailing)
+        if hasattr(xml, "tdcoff"):
+            self.Offset = tryint(xml.tdcoff)
         
         lOffset = xmlDocument.getTagRefsStatic("choff", xml)
         for el in lOffset:
             self.channelOffset[tryint(el.attrib["id"])] = el
-        self.channelEnabled = tryint(xml.chena)   
+        if hasattr(xml, "chena"):
+            self.channelEnabled = tryint(xml.chena)   
     
     def __str__(self):
+        """
+        Build pretty string printing of the class following the template
+        """
         stringChoff = ['{:>2}: {:}  '.format(*k) for k in self.channelOffset.items()]
         stringChoff = zip(*[iter(stringChoff)]*8)
         stringChoff = map(toLine, stringChoff)
         stringChoff = "\n      ".join(stringChoff)
-        return tdcTemplate.format(channelOffsetS=stringChoff, 
+        return fmt.format(tdcTemplate, channelOffsetS=stringChoff, 
                                   **self.__dict__)
     
 class TDCB(object):
     '''
-    classdocs
+    Class representing a TDCB configuration
     '''
     
     
     def __init__(self, xmlNode):
+        """
+        Constructor
+        """
         self.id = None
         self.tdccRateMon = None
         self.tdccDebug = None
@@ -136,26 +186,44 @@ class TDCB(object):
         self._decode(xmlNode)
         
     def _decode(self, xml):
+        """
+        XML decoding method. Fill the class with
+        available information from XML.
+        
+        Args:
+            xml: xml node of the TDCB
+        """
+
         self.id = tryint(xml.attrib["id"])
-        self.tdccRateMon = tryint(xml.tdcc.ratemon)
-        self.tdccDebug = tryint(xml.tdcc.debug)
+        
+        if hasattr(xml, "tdcc"):
+            if hasattr(xml.tdcc, "ratemon"):
+                self.tdccRateMon = tryint(xml.tdcc.ratemon)
+            if hasattr(xml.tdcc, "debug"):
+                self.tdccDebug = tryint(xml.tdcc.debug)
         
         lTDC = xmlDocument.getTagRefsStatic("tdc", xml)
         for el in lTDC:
             self.tdc[tryint(el.attrib["id"])] = TDC(el)
     
     def __str__(self):
+        """
+        Build pretty string printing of the class following the template
+        """
         TDCLListS = "\n".join([str(tdc) for _,tdc in sorted(self.tdc.items())])
-        return tdcbTemplate.format(nTDC=len(self.tdc), 
+        return fmt.format(tdcbTemplate, nTDC=len(self.tdc), 
                                    TDCList=TDCLListS, 
                                    **self.__dict__)
 
 class PP(object):
     '''
-    classdocs
+    Class representing a PP configuration
     '''
     
     def __init__(self, xml):
+        """
+        Constructor
+        """
         self.id = None
         self.enabled = None
         self.logEnabled = None
@@ -173,29 +241,56 @@ class PP(object):
         self._decode(xml)
     
     def _decode(self, xml):
+        """
+        XML decoding method. Fill the class with
+        available information from XML.
+        
+        Args:
+            xml: xml node of the PP
+        """
+
         self.id = tryint(xml.attrib["id"])
-        self.enabled = bool(xml.enable)
-        self.logEnabled = bool(xml.logena)
-        self.logLevel = tryint(xml.loglevel)
-        self.logMask = tryint(xml.logmask)
-        self.debug = tryint(xml.debug)
-        self.tdccPhase = tryint(xml.tdccphase)
-        self.trigrxPhase = tryint(xml.trigrxphase)
-        self.chokeMask = tryint(xml.chokemask)
-        self.errorMask = tryint(xml.errormask)
-        self.nSlots = tryint(xml.nslots)
-        self.lastSlot = tryint(xml.lastslot)
-        self.countMode = tryint(xml.countmode)
+        
+        if hasattr(xml, "enable"):
+            self.enabled = bool(xml.enable)
+        if hasattr(xml, "logena"):
+            self.logEnabled = bool(xml.logena)
+        if hasattr(xml, "loglevel"):
+            self.logLevel = tryint(xml.loglevel)
+        if hasattr(xml, "logmask"):
+            self.logMask = tryint(xml.logmask)
+        if hasattr(xml, "debug"):
+            self.debug = tryint(xml.debug)
+        if hasattr(xml, "tdccphase"):
+            self.tdccPhase = tryint(xml.tdccphase)
+        if hasattr(xml, "trigrxphase"):
+            self.trigrxPhase = tryint(xml.trigrxphase)
+        if hasattr(xml, "chokemask"):
+            self.chokeMask = tryint(xml.chokemask)
+        if hasattr(xml, "errormask"):
+            self.errorMask = tryint(xml.errormask)
+        if hasattr(xml, "nslots"):
+            self.nSlots = tryint(xml.nslots)
+        if hasattr(xml, "lastslot"):
+            self.lastSlot = tryint(xml.lastslot)
+        if hasattr(xml, "countmode"):
+            self.countMode = tryint(xml.countmode)
     
     def __str__(self):
-        return ppTemplate.format(**self.__dict__)
+        """
+        Build pretty string printing of the class following the template
+        """
+        return fmt.format(ppTemplate, **self.__dict__)
     
 class GBEPort(object):
     '''
-    classdocs
+    Class representing a Gigabit Ethernet port configuration
     '''
     
     def __init__(self, xml):
+        """
+        Constructor
+        """
         self.id = None
         self.enable = None
         self.dataNotTrig = None
@@ -211,15 +306,31 @@ class GBEPort(object):
         self._decode(xml)
     
     def _decode(self, xml):
+        """
+        XML decoding method. Fill the class with
+        available information from XML.
+        
+        Args:
+            xml: xml node of the GBE port
+        """
+
         self.id = tryint(xml.attrib["id"])
-        self.enable = bool(xml.enable)
-        self.dataNotTrig = bool(xml.datanottrig)
-        self.srcMac = str(xml.srcmac_s)
-        self.srcIP = str(xml.srcip_s)
-        self.srcUDP = tryint(xml.srcudp_s)
-        self.dstMac = str(xml.dstmac_s)
-        self.dstIP = str(xml.dstip_s)
-        self.dstUDP = tryint(xml.dstudp_s)
+        if hasattr(xml, "enable"):
+            self.enable = bool(xml.enable)
+        if hasattr(xml, "datanottrig"):
+            self.dataNotTrig = bool(xml.datanottrig)
+        if hasattr(xml, "srcmac_s"):
+            self.srcMac = str(xml.srcmac_s)
+        if hasattr(xml, "srcip_s"):
+            self.srcIP = str(xml.srcip_s)
+        if hasattr(xml, "srcudp_s"):
+            self.srcUDP = tryint(xml.srcudp_s)
+        if hasattr(xml, "dstmac_s"):
+            self.dstMac = str(xml.dstmac_s)
+        if hasattr(xml, "dstip_s"):
+            self.dstIP = str(xml.dstip_s)
+        if hasattr(xml, "dstudp_s"):
+            self.dstUDP = tryint(xml.dstudp_s)
         
         lDynMac = xmlDocument.getTagRefsStatic("dynmac_s", xml)
         for el in lDynMac:
@@ -229,22 +340,28 @@ class GBEPort(object):
             self.dynIP[tryint(el.attrib["id"])] = str(el)
     
     def __str__(self):
+        """
+        Build pretty string printing of the class following the template
+        """
         dstDict = {key:(mac, "".join([ip for ipkey,ip in self.dynIP.items() if ipkey==key])) for key,mac in self.dynMac.items()}
         dstList = [[key, mac, ip.split(".")] for key,(mac,ip) in dstDict.items()]
         dstList = map(formatIP, dstList)
         dstList = ["  [{0:2}]  Mac: {1}   IP: {2}".format(*x) for x in dstList]
         dstListS = "\n    ".join(dstList)
-        return gbeTemplate.format(srcIPSplit=self.srcIP.split("."),
+        return fmt.format(gbeTemplate, srcIPSplit=self.srcIP.split("."),
                                   dstIPSplit=self.dstIP.split("."),
                                   dstList=dstListS,
                                   **self.__dict__)
     
 class SL(object):
     '''
-    classdocs
+    Class representing a SL configuration
     '''
     
     def __init__(self, xml):
+        """
+        Constructor
+        """
         self.logEnabled = None
         self.logLevel = None
         self.logMask = None
@@ -264,40 +381,64 @@ class SL(object):
         self._decode(xml)
 
     def _decode(self, xml):
-        self.logEnabled = bool(xml.logena)
-        self.logLevel = tryint(xml.loglevel)
-        self.logMask = tryint(xml.logmask)
+        """
+        XML decoding method. Fill the class with
+        available information from XML.
+        
+        Args:
+            xml: xml node of the SL
+        """
+
+        if hasattr(xml, "logena"):
+            self.logEnabled = bool(xml.logena)
+        if hasattr(xml, "loglevel"):
+            self.logLevel = tryint(xml.loglevel)
+        if hasattr(xml, "logmask"):
+            self.logMask = tryint(xml.logmask)
         
         lPPPhases = xmlDocument.getTagRefsStatic("ppphase", xml)
         for el in lPPPhases:
             self.ppPhases[tryint(el.attrib["id"])] = tryint(el)
         
-        self.chokeMask = tryint(xml.chokemask)
-        self.errorMask = tryint(xml.errormask)
-        self.latency = tryint(xml.latency)
-        self.mtpPeriod = tryint(xml.mtpperiod)
-        self.mtpFactor = tryint(xml.mtpfactor)
-        self.mepFactor = tryint(xml.mepfactor)
-        self.jumboFrame = bool(xml.jumbo)
-        self.mepPort = tryint(xml.mepport)
-        self.nDynAdd = tryint(xml.ndynadd)
-        self.mepAddr = tryint(xml.mepaddr)
+        if hasattr(xml, "chokemask"):
+            self.chokeMask = tryint(xml.chokemask)
+        if hasattr(xml, "errormask"):
+            self.errorMask = tryint(xml.errormask)
+        if hasattr(xml, "latency"):
+            self.latency = tryint(xml.latency)
+        if hasattr(xml, "mtpperiod"):
+            self.mtpPeriod = tryint(xml.mtpperiod)
+        if hasattr(xml, "mtpfactor"):
+            self.mtpFactor = tryint(xml.mtpfactor)
+        if hasattr(xml, "mepfactor"):
+            self.mepFactor = tryint(xml.mepfactor)
+        if hasattr(xml, "jumbo"):
+            self.jumboFrame = bool(xml.jumbo)
+        if hasattr(xml, "mepport"):
+            self.mepPort = tryint(xml.mepport)
+        if hasattr(xml, "ndynadd"):
+            self.nDynAdd = tryint(xml.ndynadd)
+        if hasattr(xml, "mepaddr"):
+            self.mepAddr = tryint(xml.mepaddr)
         
         lPort = xmlDocument.getTagRefsStatic("port", xml)
         for el in lPort:
             self.gbePort[tryint(el.attrib["id"])] = GBEPort(el)
     
     def __str__(self):
+        """
+        Build pretty string printing of the class following the template
+        """
         ppPhasesS = "   ".join(["{0}:{1:>3}".format(i, str(x)) for i,x in self.ppPhases.items()])
         gbeListS = "\n".join([str(gbe) for _,gbe in sorted(self.gbePort.items())])
-        return slTemplate.format(ppPhasesS=ppPhasesS,
+        return fmt.format(slTemplate, ppPhasesS=ppPhasesS,
                                  nGBE=len(self.gbePort),
                                  GBEList=gbeListS,
                                  **self.__dict__)
     
 class TEL62Decoder(xmlDocument):
     '''
-    classdocs
+    Class representing a TEL62 configuration
     '''
 
 
@@ -323,9 +464,12 @@ class TEL62Decoder(xmlDocument):
             self._decode()
     
     def __str__(self):
+        """
+        Build pretty string printing of the class following the template
+        """
         TDCBListS = "\n".join([str(tdcb) for _,tdcb in sorted(self.tdcb.items())])
         PPListS = "\n".join([str(pp) for _,pp in sorted(self.pp.items())])
-        return tel62Template.format(nTDCB=len(self.tdcb), 
+        return fmt.format(tel62Template, nTDCB=len(self.tdcb), 
                     TDCBList=TDCBListS,
                     nPP=len(self.pp), 
                     PPList=PPListS,
@@ -333,13 +477,25 @@ class TEL62Decoder(xmlDocument):
                     **self.__dict__)
         
     def _decode(self):
-        self.version = tryint(self._xml.version)
-        self.subdetectorName = self._xml.subdetector_name
-        self.subdetectorID = tryint(self._xml.subdetector_id)
-        self.subID = tryint(self._xml.subid)
-        self.triggerEnabled = bool(self._xml.trig_enable)
-        self.dataEnabled = bool(self._xml.data_enable)
-        self.spyEnabled = bool(self._xml.spy_enable)
+        """
+        XML decoding method. Fill the class with
+        available information from XML.
+        """
+        
+        if hasattr(self._xml, "version"):
+            self.version = tryint(self._xml.version)
+        if hasattr(self._xml, "subdetector_name"):
+            self.subdetectorName = self._xml.subdetector_name
+        if hasattr(self._xml, "subdetector_id"):
+            self.subdetectorID = tryint(self._xml.subdetector_id)
+        if hasattr(self._xml, "subid"):
+            self.subID = tryint(self._xml.subid)
+        if hasattr(self._xml, "trig_enable"):
+            self.triggerEnabled = bool(self._xml.trig_enable)
+        if hasattr(self._xml, "data_enable"):
+            self.dataEnabled = bool(self._xml.data_enable)
+        if hasattr(self._xml, "spy_enable"):
+            self.spyEnabled = bool(self._xml.spy_enable)
         
         
         lTDCB = self.getTagRefs("tdcb")
@@ -350,4 +506,5 @@ class TEL62Decoder(xmlDocument):
         for el in lPP:
             self.pp[tryint(el.attrib["id"])] = PP(el)        
 
-        self.sl = SL(self._xml.sl)
+        if hasattr(self._xml, "sl"):
+            self.sl = SL(self._xml.sl)

@@ -15,6 +15,8 @@ from string import replace
 import sys
 from lxml import etree
 import XMLDoc
+from XMLExtract import BufferPrint, TEL62Decoder, L0TPDecoder
+
 
 class abortException(Exception):
     """
@@ -163,12 +165,22 @@ def writeFile(elementDict, TS):
         if text == "\"\"":
             print "This file is empty"
         else:
-            with open("{devName}_{ts}.corrupt.xml".format(devName=path, ts=TS), "w") as fd:
-                fd.write(text)
+            ret = BufferPrint.displayBuffer(text)
+            if ret==BufferPrint.OperationType.WRITE:
+                with open("{devName}_{ts}.corrupt.xml".format(devName=path, ts=TS), "w") as fd:
+                    fd.write(text)
     else:
         _, xmlDoc = XMLDoc.parseSplitElementText(elementDict["node"])
-        with open("{devName}_{ts}.xml".format(devName=path, ts=TS), "w") as fd:
-            fd.write(etree.tostring(xmlDoc._xml, pretty_print=True))
+        xmlDoc.identifyFileType()
+        if xmlDoc._type=="TEL":
+            xmlDoc = TEL62Decoder(xmlDoc)
+        elif xmlDoc._type=="L0TP":
+            xmlDoc = L0TPDecoder(xmlDoc)
+        #ret=BufferPrint.OperationType.WRITE
+        ret = BufferPrint.displayBuffer(str(xmlDoc))
+        if ret==BufferPrint.OperationType.WRITE:
+            with open("{devName}_{ts}.xml".format(devName=path, ts=TS), "w") as fd:
+                fd.write(etree.tostring(xmlDoc._xml, pretty_print=True))
 
 def startReading(filePath):
     """
