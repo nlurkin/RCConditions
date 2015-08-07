@@ -453,7 +453,7 @@ class GBEPort(object):
         """
         Build pretty string printing of the class following the template
         """
-        dstDict = {key:(mac, "".join([ip for ipkey,ip in self.dynIP.items() if ipkey==key])) for key,mac in self.dynMac.items()}
+        dstDict = dict((key,(mac, "".join([ip for ipkey,ip in self.dynIP.items() if ipkey==key]))) for key,mac in self.dynMac.items())
         dstList = [[key, mac, ip.split(".")] for key,(mac,ip) in dstDict.items()]
         dstList = map(formatIP, dstList)
         dstList = ["  [{0:2}]  Mac: {1}   IP: {2}".format(*x) for x in dstList]

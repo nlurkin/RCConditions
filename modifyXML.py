@@ -85,7 +85,7 @@ USAGE
     
     fileList = [item for sublist in args.file for item in sublist]
     for xmlFile in fileList:
-        print "Processing file {}".format(xmlFile)
+        print "Processing file {0}".format(xmlFile)
         
         xmldoc = xmlDocument(xmlFile)
         xmldoc.identifyFileType()
