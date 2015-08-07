@@ -458,8 +458,19 @@ class GBEPort(object):
         dstList = map(formatIP, dstList)
         dstList = ["  [{0:2}]  Mac: {1}   IP: {2}".format(*x) for x in dstList]
         dstListS = "\n    ".join(dstList)
-        return fmt.format(gbeTemplate, srcIPSplit=self.srcIP.split("."),
-                                  dstIPSplit=self.dstIP.split("."),
+        
+        if not self.srcIP is None:
+            srcIPS = self.srcIP.split(".")
+        else:
+            srcIPS = "....".split(".")
+        if not self.dstIP is None:
+            dstIPS = self.dstIP.split(".")
+        else:
+            dstIPS = "....".split(".")
+            
+        print self.__dict__
+        return fmt.format(gbeTemplate, srcIPSplit=srcIPS,
+                                  dstIPSplit=dstIPS,
                                   dstList=dstListS,
                                   **self.__dict__)
     
