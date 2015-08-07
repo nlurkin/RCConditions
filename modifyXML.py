@@ -26,6 +26,7 @@ from lxml import etree
 
 from XMLExtract.TEL62Decoder import TEL62Decoder
 import shutil
+from XMLExtract.XMLDoc import xmlDocument
 
 
 __all__ = []
@@ -86,7 +87,13 @@ USAGE
     for xmlFile in fileList:
         print "Processing file {}".format(xmlFile)
         
-        xmldoc = TEL62Decoder(xmlFile)
+        xmldoc = xmlDocument(xmlFile)
+        xmldoc.identifyFileType()
+        if xmldoc._type=="TEL":
+            xmldoc = TEL62Decoder(xmldoc)
+        else:
+            print "Not a TEL62 configuration file... skipping"
+            continue
         
         if not args.pp is None and not args.pp in xmldoc.pp:
             print "Specified PP does not exist in file. PP operations are ignored"
