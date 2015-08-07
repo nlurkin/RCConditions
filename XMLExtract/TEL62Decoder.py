@@ -657,8 +657,6 @@ class TEL62Decoder(xmlDocument):
 
         if hasattr(self._xml, "sl"):
             self.sl = SL(self._xml.sl)
-        
-        self._xml.pp[1].rcphase = 56
 
     def navigate(self, path):
         listPath = path.split(".")
