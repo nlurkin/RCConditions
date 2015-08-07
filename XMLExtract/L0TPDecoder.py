@@ -3,8 +3,25 @@ Created on Jul 16, 2015
 
 @author: nlurkin
 '''
-from XMLExtract.XMLDoc import xmlDocument
+from BufferPrint import PartialFormatter
+from XMLDoc import xmlDocument
+from XMLDoc import tryint
 
+
+L0TPTemplate = """
+L0TP (Torino) Configuration file decoding
+-----------------------------------------
+
+{globalParamS}
+{lutParamS}
+{lutNIMParamS}
+"""
+
+GlobalTemplate = """
+  # of events/MEP: {numEvtMEP:>5}
+"""
+
+fmt = PartialFormatter()
 
 class TriggerInfo(object):
     def __init__(self):
@@ -52,7 +69,123 @@ def readValue(node):
     else:
         return str(node)
         
+class Global(object):
     
+    def __init__(self, xml):
+        self.numEvtMEP = None
+        self.fixLatency = None
+        self.periodicTrgPrimitive = None
+        self.periodicTrgTime = None
+        self.calibLatency = None
+        self.calibLatencyDirection = None
+        self.referenceDet = None
+        self.referenceDetNIM = None
+        self.enableMask = None
+        self.enableMaskNIM = None
+        self.primitiveDT = None
+        self.nimDT = None
+        self.shiftReg = None
+        self.calibTriggerWord = None
+        self.downscalMask = []
+        self.downscalNIMMask = []
+        self.offsetDet = []
+        self.maxDelayDetector = None
+        
+        self._decode(xml)
+        
+    def _decode(self, xml):
+        if hasattr(xml, "numEvtMEP"):
+            self.numEvtMEP = tryint(xml.numEvtMEP.hex)
+        if hasattr(xml, "fixLatency"):
+            self.fixLatency = tryint(xml.fixLatency.hex)
+        if hasattr(xml, "periodicTrgPrimitive"):
+            self.periodicTrgPrimitive = tryint(xml.periodicTrgPrimitive.hex)
+        if hasattr(xml, "periodicTrgTime"):
+            self.periodicTrgTime = tryint(xml.periodicTrgTime.hex)
+        if hasattr(xml, "calibLatency"):
+            self.calibLatency = tryint(xml.calibLatency.hex)
+        if hasattr(xml, "calibLatencyDirection"):
+            self.calibLatencyDirection = tryint(xml.calibLatencyDirection.hex)
+        if hasattr(xml, "referenceDet"):
+            self.referenceDet = tryint(xml.referenceDet.hex)
+        if hasattr(xml, "referenceDet_NIM"):
+            self.referenceDetNIM = tryint(xml.referenceDet_NIM.hex)
+        if hasattr(xml, "enableMask"):
+            self.enableMask = tryint(xml.enableMask.hex)
+        if hasattr(xml, "enableMask_NIM"):
+            self.enableMaskNIM = tryint(xml.enableMask_NIM.hex)
+        if hasattr(xml, "primitiveDT"):
+            self.primitiveDT = tryint(xml.primitiveDT.hex)
+        if hasattr(xml, "nimDT"):
+            self.nimDT = tryint(xml.nimDT.hex)
+        if hasattr(xml, "shift_reg"):
+            self.shiftReg = tryint(xml.shift_reg.hex)
+        if hasattr(xml, "calib_triggerword"):
+            self.calibTriggerWord = tryint(xml.calib_triggerword.hex)
+        if hasattr(xml, "bit_finetime"):
+            self.bitFineTime = tryint(xml.bit_finetime.hex)
+        
+        if hasattr(xml, "downScal_mask"):
+            lDownMask = xmlDocument.getTagRefsStatic("item", xml.downScal_mask)
+            for el in lDownMask:
+                self.downscalMask.append(el.hex)
+        if hasattr(xml, "downScal_NIM_mask"):
+            lDownMask = xmlDocument.getTagRefsStatic("item", xml.downScal_NIM_mask)
+            for el in lDownMask:
+                self.downscalNIMMask.append(el.hex)
+        if hasattr(xml, "offset_det"):
+            lOffset = xmlDocument.getTagRefsStatic("item", xml.offset_det)
+            for el in lOffset:
+                self.offsetDet.append(el.hex)
+        
+        if hasattr(xml, "maxDelayDetector"):
+            self.maxDelayDetector = tryint(xml.maxDelayDetector.hex)
+    
+    def __str__(self):
+        return fmt.format(GlobalTemplate, 
+                          **self.__dict__)
+
+class LUT(object):
+    
+    def __init__(self, xml):
+        self.id = None
+        self.addressLUT = None
+        self.lut_detAmask = None
+        self.lut_detBmask = None
+        self.lut_detCmask = None
+        self.lut_detDmask = None
+        self.lut_detEmask = None
+        self.lut_detFmask = None
+        self.lut_detGmask = None
+        
+        self._decode(xml)
+
+    
+    def _decode(self, xml):
+        pass
+    
+    def __str__(self):
+        return ""
+
+class LUTNIM(object):
+    
+    def __init__(self, xml):
+        self.id = None
+        self.addressLUT = None
+        self.lut_detAmask = None
+        self.lut_detBmask = None
+        self.lut_detCmask = None
+        self.lut_detDmask = None
+        self.lut_detEmask = None
+        
+        self._decode(xml)
+    
+    def _decode(self, xml):
+        pass
+    
+    def __str__(self):
+        return ""
+
 class L0TPDecoder(xmlDocument):
     '''
     classdocs
@@ -64,7 +197,15 @@ class L0TPDecoder(xmlDocument):
         '''
         
         super(L0TPDecoder, self).__init__(xml)
-        self._runNumber = runNumber        
+        self._runNumber = runNumber
+        self.globalParam = None
+        self.lutParam = None
+        self.lutNIMParam = None
+        
+        self._decode()
+    
+    def _decode(self):
+        self.globalParam = Global(self._xml.global_parameters)
     
     def getPeriodicPeriod(self):
         return int(readValue(self._xml.global_parameters.periodicTrgTime), 0)
@@ -227,4 +368,6 @@ class L0TPDecoder(xmlDocument):
         return int(readValue(self._xml.global_parameters.referenceDet), 0)
     
     def __str__(self):
-        return str(self.__dict__)
+        return fmt.format(L0TPTemplate,
+                          globalParamS = str(self.globalParam), 
+                          **self.__dict__)
