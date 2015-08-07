@@ -4,10 +4,44 @@ Created on Aug 5, 2015
 @author: nlurkin
 '''
 
-from XMLDoc import xmlDocument, tryint
+from __builtin__ import True
+import copy
+import datetime
+import re
+
+from lxml import objectify, etree
+
 from BufferPrint import PartialFormatter
+from XMLDoc import xmlDocument, tryint
+
 
 fmt = PartialFormatter()
+
+def getArrayIndex(el):
+    """
+    Read a string and extract the eventual array index
+    Format is name[index]
+    
+    Args:
+        string
+    
+    Returns:
+        index, name
+        If no [index] pattern is found returns 
+        -1, el
+    """
+    m = re.search("(.*)\[([0-9])\]", el)
+    if m is None:
+        return -1,el
+    else:
+        return int(m.group(2)), m.group(1)
+    
+def saveElement(el):
+    parent = el.getparent()
+    cpy = copy.deepcopy(el)
+    cpy.attrib["date"] = str(datetime.datetime.now())
+    cmt = etree.Comment(etree.tostring(cpy))
+    parent.append(cmt)
 
 def toLine(l):
     """
@@ -128,6 +162,8 @@ class TDC(object):
         self.channelOffset = {}
         self.channelEnabled = 0
         
+        self._xml = xml
+        
         self._decode(xml)
 
     def _decode(self, xml):
@@ -167,7 +203,51 @@ class TDC(object):
         stringChoff = "\n      ".join(stringChoff)
         return fmt.format(tdcTemplate, channelOffsetS=stringChoff, 
                                   **self.__dict__)
+        
+    def replaceOffset(self, value):
+        self.Offset = value
+        if hasattr(self._xml, "tdcoff"):
+            saveElement(self._xml.tdcoff)
+        self._xml.tdcoff = self.Offset
+        objectify.deannotate(self._xml.tdcoff, xsi_nil=True, cleanup_namespaces=True)
     
+    def addToOffset(self, value):
+        prevValue = 0
+        if hasattr(self._xml, "tdcoff"):
+            prevValue = tryint(self._xml.tdcoff)
+        
+        self.replaceOffset(prevValue+value)
+    
+    def getChannelOffsetIndex(self, channel):
+        if hasattr(self._xml, "choff"):
+            for i, choff in enumerate(self._xml.choff):
+                if int(choff.attrib["id"])==channel:
+                    return i
+        return -1
+        
+    def replaceChannelOffset(self, channel, value):
+        self.channelOffset[channel] = value
+        
+        index = self.getChannelOffsetIndex(channel)
+        if index==-1:
+            objectify.SubElement(self._xml, "choff", id=str(channel))
+        else:
+            saveElement(self._xml.choff[index])
+            
+        self._xml.choff[index] = value
+        self._xml.choff[index].attrib["id"] = str(channel)
+        
+        objectify.deannotate(self._xml.choff[index], xsi_nil=True, cleanup_namespaces=True)
+    
+    def addToChannelOffset(self, channel, value):
+        index = self.getChannelOffsetIndex(channel)
+        
+        prevValue = 0
+        if index>=0:
+            prevValue = tryint(self._xml.choff[index])
+        
+        self.replaceChannelOffset(channel, prevValue+value)
+                
 class TDCB(object):
     '''
     Class representing a TDCB configuration
@@ -238,6 +318,8 @@ class PP(object):
         self.lastSlot = None
         self.countMode = None
         
+        self._xml = xml
+        
         self._decode(xml)
     
     def _decode(self, xml):
@@ -282,6 +364,34 @@ class PP(object):
         """
         return fmt.format(ppTemplate, **self.__dict__)
     
+    def replaceTDCCPhase(self, value):
+        self.tdccPhase = value
+        if hasattr(self._xml, "tdccphase"):
+            saveElement(self._xml.tdccphase)
+        self._xml.tdccphase = "{:#x}".format(self.tdccPhase)
+        objectify.deannotate(self._xml.tdccphase, xsi_nil=True, cleanup_namespaces=True)
+    
+    def addToTDCCPhase(self, value):
+        prevValue = 0
+        if hasattr(self._xml, "tdccphase")>=0:
+            prevValue = tryint(self._xml.tdccphase)
+        
+        self.replaceTDCCPhase(prevValue+value)
+        
+    def replaceTrigrXPhase(self, value):
+        self.trigrxPhase = value
+        if hasattr(self._xml, "trigrxphase"):
+            saveElement(self._xml.trigrxphase)
+        self._xml.trigrxphase = "{:#x}".format(self.trigrxPhase)
+        objectify.deannotate(self._xml.trigrxphase, xsi_nil=True, cleanup_namespaces=True)
+
+    def addToTrigrXPhase(self, value):
+        prevValue = 0
+        if hasattr(self._xml, "trigrxphase")>=0:
+            prevValue = tryint(self._xml.trigrxphase)
+        
+        self.replaceTrigrXPhase(prevValue+value)
+        
 class GBEPort(object):
     '''
     Class representing a Gigabit Ethernet port configuration
@@ -436,6 +546,34 @@ class SL(object):
                                  GBEList=gbeListS,
                                  **self.__dict__)
     
+    def getPPIndex(self, pp):
+        if hasattr(self._xml, "ppphase"):
+            for i, ppphase in enumerate(self._xml.pphase):
+                if ppphase.attrib["id"]==pp:
+                    return i
+        return -1
+        
+    def replacePPPhase(self, pp, value):
+        self.ppPhases[pp] = value
+        
+        index = self.getPPPhaseIndex(pp)
+        if index==-1:
+            objectify.SubElement(self._xml, "ppphase", id=str(pp))
+        else:
+            saveElement(self._xml.ppphase[index])
+            
+        self._xml.ppphase[index] = "{:#x}".format(value)
+        objectify.deannotate(self._xml.ppphase[index], xsi_nil=True, cleanup_namespaces=True)
+        
+    def addToPPPhase(self, pp, value):
+        index = self.getPPIndex(pp)
+        
+        prevValue = 0
+        if index>=0:
+            prevValue = tryint(self._xml.ppphase[index])
+        
+        self.replacePPPhase(pp, prevValue+value)
+        
 class TEL62Decoder(xmlDocument):
     '''
     Class representing a TEL62 configuration
@@ -508,3 +646,37 @@ class TEL62Decoder(xmlDocument):
 
         if hasattr(self._xml, "sl"):
             self.sl = SL(self._xml.sl)
+        
+        self._xml.pp[1].rcphase = 56
+
+    def navigate(self, path):
+        listPath = path.split(".")
+        
+        currentXMLEl = self._xml
+        parentName = "root"
+        for el in listPath:
+            index,el = getArrayIndex(el)
+            
+            if index == -1:
+                currentXMLEl = currentXMLEl.find(el)
+            else:
+                elList = currentXMLEl.findall(el)
+                currentXMLEl = None
+                for xmlel in elList:
+                    if int(xmlel.attrib["id"]) == index:
+                        currentXMLEl = xmlel
+                        break
+            if currentXMLEl is None:
+                print "Element {} not found under {}".format(el, parentName)
+                return
+            parentName = el
+        
+        return currentXMLEl
+
+    def replacePath(self, path, value):
+        xmlEl = self.navigate(path)
+        if xmlEl is None:
+            print "{} not found. Ignoring".format(path)
+        else:
+            xmlEl._setText(value)
+    
