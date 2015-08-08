@@ -88,7 +88,7 @@ class termManip():
     @staticmethod
     def setCursorBottomLeft():
         termHeight = int(os.popen('stty size', 'r').read().split()[0])
-        print "\033[{};0f".format(termHeight),
+        print "\033[{0};0f".format(termHeight),
         
     @staticmethod
     def clearScreen():

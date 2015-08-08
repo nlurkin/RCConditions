@@ -73,7 +73,7 @@ def formatIP(l):
     if len(l[-1])==1:
         ret.append("")
     else:
-        ret.append("{:>3}.{:>3}".format(*l[-1]))
+        ret.append("{0:>3}.{1:>3}".format(*l[-1]))
     return ret
 
 # ------------------------------------
@@ -197,7 +197,7 @@ class TDC(object):
         """
         Build pretty string printing of the class following the template
         """
-        stringChoff = ['{:>2}: {:}  '.format(*k) for k in self.channelOffset.items()]
+        stringChoff = ['{0:>2}: {1:}  '.format(*k) for k in self.channelOffset.items()]
         stringChoff = zip(*[iter(stringChoff)]*8)
         stringChoff = map(toLine, stringChoff)
         stringChoff = "\n      ".join(stringChoff)
@@ -209,7 +209,8 @@ class TDC(object):
         if hasattr(self._xml, "tdcoff"):
             saveElement(self._xml.tdcoff)
         self._xml.tdcoff = self.Offset
-        objectify.deannotate(self._xml.tdcoff, xsi_nil=True, cleanup_namespaces=True)
+        objectify.deannotate(self._xml.tdcoff, xsi_nil=True)
+	etree.cleanup_namespaces(self._xml.tdcoff)
     
     def addToOffset(self, value):
         prevValue = 0
@@ -368,7 +369,7 @@ class PP(object):
         self.tdccPhase = value
         if hasattr(self._xml, "tdccphase"):
             saveElement(self._xml.tdccphase)
-        self._xml.tdccphase = "{:#x}".format(self.tdccPhase)
+        self._xml.tdccphase = "{0:#x}".format(self.tdccPhase)
         objectify.deannotate(self._xml.tdccphase, xsi_nil=True, cleanup_namespaces=True)
     
     def addToTDCCPhase(self, value):
@@ -382,7 +383,7 @@ class PP(object):
         self.trigrxPhase = value
         if hasattr(self._xml, "trigrxphase"):
             saveElement(self._xml.trigrxphase)
-        self._xml.trigrxphase = "{:#x}".format(self.trigrxPhase)
+        self._xml.trigrxphase = "{0:#x}".format(self.trigrxPhase)
         objectify.deannotate(self._xml.trigrxphase, xsi_nil=True, cleanup_namespaces=True)
 
     def addToTrigrXPhase(self, value):
@@ -573,8 +574,9 @@ class SL(object):
         else:
             saveElement(self._xml.ppphase[index])
             
-        self._xml.ppphase[index] = "{:#x}".format(value)
-        objectify.deannotate(self._xml.ppphase[index], xsi_nil=True, cleanup_namespaces=True)
+        self._xml.ppphase[index] = "{0:#x}".format(value)
+        objectify.deannotate(self._xml.ppphase[index], xsi_nil=True)
+	etree.cleanup_namespaces(self._xml.ppphase[index])
         
     def addToPPPhase(self, pp, value):
         index = self.getPPIndex(pp)

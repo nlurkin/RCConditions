@@ -94,7 +94,7 @@ def selectDevice(xml):
         printArray[-1].append("")
         
     for line in printArray:
-        print "{: <30} {: <30} {: <30}".format(*line)
+        print "{0: <30} {1: <30} {2: <30}".format(*line)
     
     value = requestInput("Select one entry")
     selected = XMLDoc.tryint(value)
