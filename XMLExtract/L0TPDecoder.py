@@ -12,13 +12,76 @@ L0TPTemplate = """
 L0TP (Torino) Configuration file decoding
 -----------------------------------------
 
-{globalParamS}
+{globalParam}
+{NIMTriggerS}
+{PrimTriggerS}
 {lutParamS}
 {lutNIMParamS}
 """
 
 GlobalTemplate = """
-  # of events/MEP: {numEvtMEP:>5}
+  MEP factor     :  {numEvtMEP:>5}
+  Latency        :  {fixLatency:>5}
+  Shift register :  {shiftReg:>5}
+  Max delay det. :  {maxDelayDetector:>5}
+  
+  Periodic trigger:
+    Primitive    :  {periodicTrgPrimitive:>5}
+    Period       :  {periodicTrgTime:>5} ({periodicTimeNS} ns)
+  
+  Calibration trigger:
+    Latency      :  {calibLatency:>5}
+    Direction    :  {calibLatencyDirection:>5}
+    Word         :  {calibTriggerWord:>5}
+"""
+
+GlobalNIMString = """
+  NIM trigger:
+    Ref. Detector: {referenceDetNIM:>5}
+    Mask         : {enableMaskNIM:>#5x}
+    Dead time    : {nimDT:>5}
+"""
+
+NIMString = """
+                  Mask0     Mask1     Mask2     Mask3     Mask4     Mask5     Mask6     Mask7
+    Address     : {lutNimAddress}
+    DetA        : {lutNimDetA}
+    DetB        : {lutNimDetB}
+    DetC        : {lutNimDetC}
+    DetD        : {lutNimDetD}
+    DetE        : {lutNimDetE}
+    Downscaling : {lutNimDownscaling}
+"""
+
+GlobalPrimString = """
+  Primitive trigger:
+    Ref. Detector: {referenceDet:>5}
+    Mask         : {enableMask:>#5x}
+    Dead time    : {primitiveDT:>5}
+"""
+
+PrimString = """
+                         Mask0           Mask1           Mask2           Mask3           Mask4
+    Address     :  {lutAddress[0]}
+    DetA        :  {lutDetA[0]}
+    DetB        :  {lutDetB[0]}
+    DetC        :  {lutDetC[0]}
+    DetD        :  {lutDetD[0]}
+    DetE        :  {lutDetE[0]}
+    DetE        :  {lutDetF[0]}
+    DetE        :  {lutDetF[0]}
+    Downscaling :  {lutDownscaling[0]}
+    
+                         Mask5           Mask6           Mask7
+    Address     :  {lutAddress[1]}
+    DetA        :  {lutDetA[1]}
+    DetB        :  {lutDetB[1]}
+    DetC        :  {lutDetC[1]}
+    DetD        :  {lutDetD[1]}
+    DetE        :  {lutDetE[1]}
+    DetE        :  {lutDetF[1]}
+    DetE        :  {lutDetF[1]}
+    Downscaling :  {lutDownscaling[1]}
 """
 
 fmt = PartialFormatter()
@@ -128,27 +191,45 @@ class Global(object):
         if hasattr(xml, "downScal_mask"):
             lDownMask = xmlDocument.getTagRefsStatic("item", xml.downScal_mask)
             for el in lDownMask:
-                self.downscalMask.append(el.hex)
+                self.downscalMask.append(tryint(el.hex))
         if hasattr(xml, "downScal_NIM_mask"):
             lDownMask = xmlDocument.getTagRefsStatic("item", xml.downScal_NIM_mask)
             for el in lDownMask:
-                self.downscalNIMMask.append(el.hex)
+                self.downscalNIMMask.append(tryint(el.hex))
         if hasattr(xml, "offset_det"):
             lOffset = xmlDocument.getTagRefsStatic("item", xml.offset_det)
             for el in lOffset:
-                self.offsetDet.append(el.hex)
+                self.offsetDet.append(tryint(el.hex))
         
         if hasattr(xml, "maxDelayDetector"):
             self.maxDelayDetector = tryint(xml.maxDelayDetector.hex)
     
     def __str__(self):
+        periodNS = self.periodicTrgTime*25
         return fmt.format(GlobalTemplate, 
+                          periodicTimeNS=periodNS,
                           **self.__dict__)
 
+    def getNIMGlobalString(self):
+        return fmt.format(GlobalNIMString,
+                          **self.__dict__)
+
+    def getPrimGlobalString(self):
+        return fmt.format(GlobalPrimString,
+                          **self.__dict__)
+    
+    def getNIMDownscalingString(self):
+        return "     ".join(["{0:>5}".format(down) for down in self.downscalNIMMask])
+
+    def getPrimDownscalingString(self):
+        listDown = ["{0:>11}".format(down) for down in self.downscalMask]
+        nElem = 5
+        return ["     ".join(listDown[i:i+nElem]) for i in range(0, len(listDown), nElem)]
+    
 class LUT(object):
     
-    def __init__(self, xml):
-        self.id = None
+    def __init__(self, xml, lutId):
+        self.id = lutId
         self.addressLUT = None
         self.lut_detAmask = None
         self.lut_detBmask = None
@@ -162,15 +243,30 @@ class LUT(object):
 
     
     def _decode(self, xml):
-        pass
+        if hasattr(xml, "addressLUT"):
+            self.addressLUT = tryint(xml.addressLUT.hex)
+        if hasattr(xml, "lut_detAmask"):
+            self.lut_detAmask = tryint(xml.lut_detAmask.hex)
+        if hasattr(xml, "lut_detBmask"):
+            self.lut_detBmask = tryint(xml.lut_detBmask.hex)
+        if hasattr(xml, "lut_detCmask"):
+            self.lut_detCmask = tryint(xml.lut_detCmask.hex)
+        if hasattr(xml, "lut_detDmask"):
+            self.lut_detDmask = tryint(xml.lut_detDmask.hex)
+        if hasattr(xml, "lut_detEmask"):
+            self.lut_detEmask = tryint(xml.lut_detEmask.hex)
+        if hasattr(xml, "lut_detFmask"):
+            self.lut_detFmask = tryint(xml.lut_detFmask.hex)
+        if hasattr(xml, "lut_detGmask"):
+            self.lut_detGmask = tryint(xml.lut_detGmask.hex)
     
     def __str__(self):
         return ""
 
 class LUTNIM(object):
     
-    def __init__(self, xml):
-        self.id = None
+    def __init__(self, xml, lutId):
+        self.id = lutId
         self.addressLUT = None
         self.lut_detAmask = None
         self.lut_detBmask = None
@@ -181,7 +277,18 @@ class LUTNIM(object):
         self._decode(xml)
     
     def _decode(self, xml):
-        pass
+        if hasattr(xml, "addressLUT"):
+            self.addressLUT = tryint(xml.addressLUT.hex)
+        if hasattr(xml, "lut_detAmask"):
+            self.lut_detAmask = tryint(xml.lut_detAmask.hex)
+        if hasattr(xml, "lut_detBmask"):
+            self.lut_detBmask = tryint(xml.lut_detBmask.hex)
+        if hasattr(xml, "lut_detCmask"):
+            self.lut_detCmask = tryint(xml.lut_detCmask.hex)
+        if hasattr(xml, "lut_detDmask"):
+            self.lut_detDmask = tryint(xml.lut_detDmask.hex)
+        if hasattr(xml, "lut_detEmask"):
+            self.lut_detEmask = tryint(xml.lut_detEmask.hex)
     
     def __str__(self):
         return ""
@@ -199,13 +306,21 @@ class L0TPDecoder(xmlDocument):
         super(L0TPDecoder, self).__init__(xml)
         self._runNumber = runNumber
         self.globalParam = None
-        self.lutParam = None
-        self.lutNIMParam = None
+        self.lutParam = []
+        self.lutNIMParam = []
         
         self._decode()
     
     def _decode(self):
         self.globalParam = Global(self._xml.global_parameters)
+        
+        listLUT = self.getTagRefs("item", self._xml.LUT_parameters)
+        for i,el in enumerate(listLUT):
+            self.lutParam.append(LUT(el,i))
+
+        listLUTNIM = self.getTagRefs("item", self._xml.LUT_parameters_NIM)
+        for i,el in enumerate(listLUTNIM):
+            self.lutNIMParam.append(LUTNIM(el,i))
     
     def getPeriodicPeriod(self):
         return int(readValue(self._xml.global_parameters.periodicTrgTime), 0)
@@ -368,6 +483,52 @@ class L0TPDecoder(xmlDocument):
         return int(readValue(self._xml.global_parameters.referenceDet), 0)
     
     def __str__(self):
+        NIMTriggerS = self.globalParam.getNIMGlobalString()
+        lutNimAddress = "     ".join(["{0:>#5x}".format(mask.addressLUT) for mask in self.lutNIMParam])
+        lutNimDetA = "     ".join(["{0:>#5x}".format(mask.lut_detAmask) for mask in self.lutNIMParam])
+        lutNimDetB = "     ".join(["{0:>#5x}".format(mask.lut_detBmask) for mask in self.lutNIMParam])
+        lutNimDetC = "     ".join(["{0:>#5x}".format(mask.lut_detCmask) for mask in self.lutNIMParam])
+        lutNimDetD = "     ".join(["{0:>#5x}".format(mask.lut_detDmask) for mask in self.lutNIMParam])
+        lutNimDetE = "     ".join(["{0:>#5x}".format(mask.lut_detEmask) for mask in self.lutNIMParam])
+        lutNimDownscaling = self.globalParam.getNIMDownscalingString()
+        NIMTriggerS += fmt.format(NIMString, 
+                                  lutNimAddress=lutNimAddress,
+                                  lutNimDetA=lutNimDetA,
+                                  lutNimDetB=lutNimDetB,
+                                  lutNimDetC=lutNimDetC,
+                                  lutNimDetD=lutNimDetD,
+                                  lutNimDetE=lutNimDetE, 
+                                  lutNimDownscaling=lutNimDownscaling)
+        PrimTriggerS = self.globalParam.getPrimGlobalString()
+        lutList = ["{0:>#11x}".format(mask.addressLUT) for mask in self.lutParam]
+        detAList = ["{0:>#11x}".format(mask.lut_detAmask) for mask in self.lutParam]
+        detBList = ["{0:>#11x}".format(mask.lut_detBmask) for mask in self.lutParam]
+        detCList = ["{0:>#11x}".format(mask.lut_detCmask) for mask in self.lutParam]
+        detDList = ["{0:>#11x}".format(mask.lut_detDmask) for mask in self.lutParam]
+        detEList = ["{0:>#11x}".format(mask.lut_detEmask) for mask in self.lutParam]
+        detFList = ["{0:>#11x}".format(mask.lut_detFmask) for mask in self.lutParam]
+        detGList = ["{0:>#11x}".format(mask.lut_detGmask) for mask in self.lutParam]
+        nElem = 5
+        lutAddress = ["     ".join(lutList[i:i+nElem]) for i in range(0,len(lutList),nElem)]
+        lutDetA = ["     ".join(detAList[i:i+nElem]) for i in range(0,len(detAList),nElem)]
+        lutDetB = ["     ".join(detBList[i:i+nElem]) for i in range(0,len(detBList),nElem)]
+        lutDetC = ["     ".join(detCList[i:i+nElem]) for i in range(0,len(detCList),nElem)]
+        lutDetD = ["     ".join(detDList[i:i+nElem]) for i in range(0,len(detDList),nElem)]
+        lutDetE = ["     ".join(detEList[i:i+nElem]) for i in range(0,len(detEList),nElem)]
+        lutDetF = ["     ".join(detFList[i:i+nElem]) for i in range(0,len(detFList),nElem)]
+        lutDetG = ["     ".join(detGList[i:i+nElem]) for i in range(0,len(detGList),nElem)]
+        lutDownscaling = self.globalParam.getPrimDownscalingString()
+        PrimTriggerS += fmt.format(PrimString,
+                                   lutAddress=lutAddress,
+                                   lutDetA=lutDetA,
+                                   lutDetB=lutDetB,
+                                   lutDetC=lutDetC,
+                                   lutDetD=lutDetD,
+                                   lutDetE=lutDetE,
+                                   lutDetF=lutDetF,
+                                   lutDetG=lutDetG,
+                                   lutDownscaling=lutDownscaling)
         return fmt.format(L0TPTemplate,
-                          globalParamS = str(self.globalParam), 
+                          NIMTriggerS = NIMTriggerS, 
+                          PrimTriggerS=PrimTriggerS,
                           **self.__dict__)
