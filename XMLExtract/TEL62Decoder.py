@@ -208,9 +208,9 @@ class TDC(object):
         self.Offset = value
         if hasattr(self._xml, "tdcoff"):
             saveElement(self._xml.tdcoff)
-        self._xml.tdcoff = self.Offset
+        self._xml.tdcoff = "{0:#x}".format(self.Offset)
         objectify.deannotate(self._xml.tdcoff, xsi_nil=True)
-	etree.cleanup_namespaces(self._xml.tdcoff)
+        etree.cleanup_namespaces(self._xml.tdcoff)
     
     def addToOffset(self, value):
         prevValue = 0
@@ -235,10 +235,11 @@ class TDC(object):
         else:
             saveElement(self._xml.choff[index])
             
-        self._xml.choff[index] = value
+        self._xml.choff[index] = "{0:#x}".format(value)
         self._xml.choff[index].attrib["id"] = str(channel)
         
-        objectify.deannotate(self._xml.choff[index], xsi_nil=True, cleanup_namespaces=True)
+        objectify.deannotate(self._xml.choff[index], xsi_nil=True)
+        etree.cleanup_namespaces(self._xml.choff[index])
     
     def addToChannelOffset(self, channel, value):
         index = self.getChannelOffsetIndex(channel)
@@ -370,7 +371,9 @@ class PP(object):
         if hasattr(self._xml, "tdccphase"):
             saveElement(self._xml.tdccphase)
         self._xml.tdccphase = "{0:#x}".format(self.tdccPhase)
-        objectify.deannotate(self._xml.tdccphase, xsi_nil=True, cleanup_namespaces=True)
+        objectify.deannotate(self._xml.tdccphase, xsi_nil=True)
+        etree.cleanup_namespaces(self._xml.tdccphase)
+        
     
     def addToTDCCPhase(self, value):
         prevValue = 0
@@ -384,7 +387,8 @@ class PP(object):
         if hasattr(self._xml, "trigrxphase"):
             saveElement(self._xml.trigrxphase)
         self._xml.trigrxphase = "{0:#x}".format(self.trigrxPhase)
-        objectify.deannotate(self._xml.trigrxphase, xsi_nil=True, cleanup_namespaces=True)
+        objectify.deannotate(self._xml.trigrxphase, xsi_nil=True)
+        etree.cleanup_namespaces(self._xml.triggrxphase)
 
     def addToTrigrXPhase(self, value):
         prevValue = 0
@@ -576,7 +580,7 @@ class SL(object):
             
         self._xml.ppphase[index] = "{0:#x}".format(value)
         objectify.deannotate(self._xml.ppphase[index], xsi_nil=True)
-	etree.cleanup_namespaces(self._xml.ppphase[index])
+        etree.cleanup_namespaces(self._xml.ppphase[index])
         
     def addToPPPhase(self, pp, value):
         index = self.getPPIndex(pp)
@@ -678,7 +682,7 @@ class TEL62Decoder(xmlDocument):
                         currentXMLEl = xmlel
                         break
             if currentXMLEl is None:
-                print "Element {} not found under {}".format(el, parentName)
+                print "Element {0} not found under {1}".format(el, parentName)
                 return
             parentName = el
         
@@ -687,7 +691,7 @@ class TEL62Decoder(xmlDocument):
     def replacePath(self, path, value):
         xmlEl = self.navigate(path)
         if xmlEl is None:
-            print "{} not found. Ignoring".format(path)
+            print "{0} not found. Ignoring".format(path)
         else:
             xmlEl._setText(value)
     

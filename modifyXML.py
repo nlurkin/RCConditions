@@ -81,6 +81,9 @@ USAGE
     if args.mode == "replace":
         replace = True
     else:
+        if not args.tag is None:
+            print "Error: --tag is only valid with the replace command"
+            sys.exit(-1)
         replace = False
     
     fileList = [item for sublist in args.file for item in sublist]
