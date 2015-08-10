@@ -36,6 +36,7 @@ def main(argv=None):
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-f", "--file", dest="file", help="File to process")
     group.add_argument("-r", "--run", dest="run", help="Run number to extract", type=int)
+    parser.add_argument("-g", "--get", action="store_true", dest="get", help="Get the file locally")
     parser.add_argument('-V', '--version', action='version', version=program_version_message)
 
     # Process arguments
@@ -51,7 +52,11 @@ def main(argv=None):
             print e
             return -1
         data = bz2.decompress(html)
-        Extractor.startReading(data)
+        if args.get == True:
+            with open("run_%i.xml" % args.run, "w") as fd:
+                fd.write(data)
+        else:
+            Extractor.startReading(data)
     return 0
 
 if __name__ == "__main__":

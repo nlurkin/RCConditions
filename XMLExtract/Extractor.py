@@ -147,7 +147,34 @@ def selectTimeStamp(xml, selectedDevice):
             if selected < len(listTs):
                 retList.append(sorted(listTs.items())[selected])
         return retList
-        
+
+def printRaw(xmlNode, path, TS):
+    _, text = XMLDoc.getSplitElementText(xmlNode)
+    if text == "\"\"":
+        print "This file is empty"
+    else:
+        ret = BufferPrint.displayBuffer(text)
+        if ret==BufferPrint.OperationType.WRITE:
+            with open("{devName}_{ts}.corrupt.xml".format(devName=path, ts=TS), "w") as fd:
+                fd.write(text)    
+
+def printKnownXML(xmlDoc, path, TS):
+    if xmlDoc._type=="TEL":
+        xmlDoc = TEL62Decoder(xmlDoc)
+    elif xmlDoc._type=="L0TP":
+        xmlDoc = L0TPDecoder(xmlDoc)
+    ret = BufferPrint.displayBuffer(str(xmlDoc))
+    if ret==BufferPrint.OperationType.WRITE:
+        with open("{devName}_{ts}.xml".format(devName=path, ts=TS), "w") as fd:
+            fd.write(etree.tostring(xmlDoc._xml, pretty_print=True))
+
+def printGenericXML(xmlDoc, path, TS):
+    ret = BufferPrint.displayBuffer(str(xmlDoc))
+    if ret==BufferPrint.OperationType.WRITE:
+        with open("{devName}_{ts}.xml".format(devName=path, ts=TS), "w") as fd:
+            fd.write(etree.tostring(xmlDoc._xml, pretty_print=True))
+            
+            
 def writeFile(elementDict, TS):
     """
     Write node text content in file. Either as XML if possible
@@ -161,26 +188,14 @@ def writeFile(elementDict, TS):
     """
     path = elementDict["node"].tag
     if elementDict["bad"]:
-        _, text = XMLDoc.getSplitElementText(elementDict["node"])
-        if text == "\"\"":
-            print "This file is empty"
-        else:
-            ret = BufferPrint.displayBuffer(text)
-            if ret==BufferPrint.OperationType.WRITE:
-                with open("{devName}_{ts}.corrupt.xml".format(devName=path, ts=TS), "w") as fd:
-                    fd.write(text)
+        printRaw(elementDict["node"], path, TS)
     else:
         _, xmlDoc = XMLDoc.parseSplitElementText(elementDict["node"])
         xmlDoc.identifyFileType()
-        if xmlDoc._type=="TEL":
-            xmlDoc = TEL62Decoder(xmlDoc)
-        elif xmlDoc._type=="L0TP":
-            xmlDoc = L0TPDecoder(xmlDoc)
-        #ret=BufferPrint.OperationType.WRITE
-        ret = BufferPrint.displayBuffer(str(xmlDoc))
-        if ret==BufferPrint.OperationType.WRITE:
-            with open("{devName}_{ts}.xml".format(devName=path, ts=TS), "w") as fd:
-                fd.write(etree.tostring(xmlDoc._xml, pretty_print=True))
+        if xmlDoc._type == "Other":
+            printGenericXML(xmlDoc, path, TS)
+        else:
+            printKnownXML(xmlDoc, path, TS)
 
 def startReading(filePath):
     """

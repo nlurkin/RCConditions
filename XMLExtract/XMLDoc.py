@@ -118,7 +118,7 @@ class xmlDocument(object):
         self.__dict__ = xml.__dict__
         
     def __str__(self):
-        objectify.dump(self._xml)
+        return etree.tostring(self._xml, pretty_print=True)
     
     def printXML(self, nFirst, nLast):
         print self._xmlstring[0:nFirst]
@@ -161,6 +161,8 @@ class xmlDocument(object):
                 -> I   (Initialize command)
             L0TP       (L0TP file)
                 -> S   (Start command)
+            CREAM      (CREAM file)
+                -> I   (Initialize command)
             Other      (Undefined device)
                 -> U   (Unknown command)
         """
