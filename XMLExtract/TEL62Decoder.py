@@ -15,6 +15,11 @@ from XMLDoc import xmlDocument, tryint
 
 
 fmt = PartialFormatter()
+_history = False 
+
+def setHistory(bValue):
+    global _history
+    _history = bValue
 
 def getArrayIndex(el):
     """
@@ -36,11 +41,12 @@ def getArrayIndex(el):
         return int(m.group(2)), m.group(1)
     
 def saveElement(el):
-    parent = el.getparent()
-    cpy = copy.deepcopy(el)
-    cpy.attrib["date"] = str(datetime.datetime.now())
-    cmt = etree.Comment(etree.tostring(cpy))
-    parent.append(cmt)
+    if _history:
+        parent = el.getparent()
+        cpy = copy.deepcopy(el)
+        cpy.attrib["date"] = str(datetime.datetime.now())
+        cmt = etree.Comment(etree.tostring(cpy))
+        parent.append(cmt)
 
 def toLine(l):
     """
@@ -614,6 +620,8 @@ class TEL62Decoder(xmlDocument):
         self.pp = {}
         self.sl = None
         
+        self._history = False
+        
         if not self._bad:
             self._decode()
     
@@ -693,4 +701,3 @@ class TEL62Decoder(xmlDocument):
             print "{0} not found. Ignoring".format(path)
         else:
             xmlEl._setText(value)
-    
