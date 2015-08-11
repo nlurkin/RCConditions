@@ -153,6 +153,11 @@ class TDC(object):
     '''
     Class representing a TDC configuration
     '''
+
+    global slotBin 
+    slotBin = 24.951059536
+    global fineBin 
+    fineBin = slotBin/256
     
     def __init__(self, xml):
         """
@@ -197,8 +202,8 @@ class TDC(object):
         
         lOffset = xmlDocument.getTagRefsStatic("choff", xml)
         for el in lOffset:
-            self.channelOffset[tryint(el.attrib["id"])] = el
-            self.channelOffsetNS[tryint(el.attrib["id"])] = fineBin*el
+            self.channelOffset[tryint(el.attrib["id"])] = tryint(el)
+            self.channelOffsetNS[tryint(el.attrib["id"])] = fineBin*tryint(el)
         if hasattr(xml, "chena"):
             self.channelEnabled = tryint(xml.chena)   
     
