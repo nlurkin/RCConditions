@@ -1,38 +1,31 @@
 #!/bin/env python
 # encoding: utf-8
 '''
-modifyXML -- shortdesc
+modifyXML -- Simple command line script to modify TEL62 XML file content
 
-modifyXML is a description
+Multiple files can be modified simultaneously. 
+In the case of --tags, multiple values can be modified simultaneously.
 
-It defines classes_and_methods
-
-@author:     user_name
-
-@copyright:  2015 organization_name. All rights reserved.
-
-@license:    license
-
-@contact:    user_email
-@deffield    updated: Updated
+Examples:
+- Increment tdcOffset of tdc 2 of tdcb 1 of 25 for 2 files:
+    ./modifyXML.py my_file1 my_file2 add --tdcb 1 --tdc 2 --tdcoff 25 --tdc 3 --tdcoff 25
+  
+- Replace channel offset of channel 13 of tdc 2 of tdcb 0 with 42 and 
+number of slots with 6 for all pp for 1 file:
+    ./modifyXML.py my_file1 replace --tdcb 0 ---tdc 2 --channel 13 --choff 42 
+                 --tag pp[0].nslots=6 --tag pp[1].nslots=6 --tags pp[2].nslots=6 
+                 --tags pp[3].nslots=6
 '''
 
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
-import os
 import sys
 
 from lxml import etree
 
 from XMLExtract import TEL62Decoder
-import shutil
 from XMLExtract.XMLDoc import xmlDocument
-
-
-__all__ = []
-__version__ = 0.1
-__date__ = '2015-08-07'
-__updated__ = '2015-08-07'
+import XMLExtract
 
 def main(argv=None): # IGNORE:C0111
     '''Command line options.'''
@@ -42,27 +35,10 @@ def main(argv=None): # IGNORE:C0111
     else:
         sys.argv.extend(argv)
 
-    program_name = os.path.basename(sys.argv[0])
-    program_version = "v%s" % __version__
-    program_build_date = str(__updated__)
-    program_version_message = '%%(prog)s %s (%s)' % (program_version, program_build_date)
-    program_shortdesc = __import__('__main__').__doc__.split("\n")[1]
-    program_license = '''%s
-
-  Created by user_name on %s.
-  Copyright 2015 organization_name. All rights reserved.
-
-  Licensed under the Apache License 2.0
-  http://www.apache.org/licenses/LICENSE-2.0
-
-  Distributed on an "AS IS" basis without warranties
-  or conditions of any kind, either express or implied.
-
-USAGE
-''' % (program_shortdesc, str(__date__))
+    program_shortdesc = __import__('__main__').__doc__
 
     # Setup argument parser
-    parser = ArgumentParser(description=program_license, formatter_class=RawDescriptionHelpFormatter)
+    parser = ArgumentParser(description=program_shortdesc, formatter_class=RawDescriptionHelpFormatter)
     parser.add_argument("file", action="append", nargs="+")
     parser.add_argument("mode", choices=["add", "replace"])
     parser.add_argument("--pp", type=int)
@@ -77,6 +53,10 @@ USAGE
 
     # Process arguments
     args = parser.parse_args()
+    
+    
+    #Activate value history
+    XMLExtract.setHistory(True)
     
     if args.mode == "replace":
         replace = True
@@ -166,7 +146,6 @@ USAGE
                 [path, value] = pathEl.split("=")
                 xmldoc.replacePath(path, value)
             
-        shutil.copyfile(xmlFile, "%s.bckp" % xmlFile)
         with open(xmlFile, "w") as fd:
             fd.write(etree.tostring(xmldoc._xml, pretty_print=True))
     return 0
