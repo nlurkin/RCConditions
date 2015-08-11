@@ -47,15 +47,14 @@ Network configuration:
   Ethernet Length  : {ethLength:>11}
   Base Multicast   : {baseMCastAddrS:>15}
   Source: 
-  {baseMACAddr:#x}
+    SDE Port       : {sdeSrcPort:>11}
     Base MAC       : {baseMACAddrS:>15}
     Base IP        : {baseIPAddrS:>15}
-    SDE Port       : {sdeSrcPort:>11}
   Destination:
     Mode:        IP:{ipDestMode:>2}   MAC:{macDestMode:>2}
+    SDE Port       : {sdeDstPort:>11}
     Base MAC       : {baseMACDestAddrS:>15}
     IP             : {ipDestAddrS:>15}
-    SDE Port       : {sdeDstPort:>11}
 """
 
 class TSL(object):
@@ -153,8 +152,8 @@ class CREAMDecoder(xmlDocument):
         """
         Build pretty string printing of the class following the template
         """
-        masksList = [["  Mask {0:>2} ".format(k), "{0:>#10x}".format(elem)] for k,elem in self.creamMask.items()]
         nElem = 5
+        masksList = [["  Mask {0:>2} ".format(k), "{0:>#10x}".format(elem)] for k,elem in self.creamMask.items()]
         maskHeaderS = ["    ".join(x for [x,_] in masksList[i:i+nElem]) for i in range(0,len(masksList),nElem)]
         maskValueS = ["    ".join(x for [_,x] in masksList[i:i+nElem]) for i in range(0,len(masksList),nElem)]
         maskS = "\n\n".join("{0}\n{1}".format(h,v) for h,v in zip(maskHeaderS, maskValueS))
