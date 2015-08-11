@@ -79,8 +79,6 @@ def checkElementsXMLValidity(listTs):
             if test._type == "TEL":
                 listTs[k]["cmd"] = test._cmd
 
-
-
 class xmlDocument(object):
     def __init__(self, xml):
         '''
@@ -113,6 +111,9 @@ class xmlDocument(object):
                 self._bad = True
             else:
                 self._bad = False
+                
+            self._type = None
+            self._cmd = None
     
     def _copy_construct(self, xml):
         self.__dict__ = xml.__dict__
@@ -175,6 +176,9 @@ class xmlDocument(object):
         elif self._xml.tag == "conf":
             self._type = "L0TP"
             self._cmd = "S"
+        elif self._xml.tag == "Lkr":
+            self._type = "CREAM"
+            self._cmd = "I"
         else:
             self._type = "Other"
             self._cmd = "U"    

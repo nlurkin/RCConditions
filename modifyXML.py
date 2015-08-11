@@ -24,7 +24,7 @@ import sys
 
 from lxml import etree
 
-from XMLExtract.TEL62Decoder import TEL62Decoder
+from XMLExtract import TEL62Decoder
 import shutil
 from XMLExtract.XMLDoc import xmlDocument
 

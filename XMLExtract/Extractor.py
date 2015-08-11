@@ -15,8 +15,20 @@ from string import replace
 import sys
 from lxml import etree
 import XMLDoc
-from XMLExtract import BufferPrint, TEL62Decoder, L0TPDecoder
+from XMLExtract import BufferPrint
+from XMLExtract import TEL62Decoder, L0TPDecoder, CREAMDecoder
 
+def generateSystemSpecificDecoder(xmlDoc):
+    if xmlDoc._type==None:
+        xmlDoc.identifyFileType()
+    if xmlDoc._type=="TEL":
+        return TEL62Decoder(xmlDoc)
+    elif xmlDoc._type=="L0TP":
+        return L0TPDecoder(xmlDoc)
+    elif xmlDoc._type=="CREAM":
+        return CREAMDecoder(xmlDoc)
+    else:
+        return xmlDoc
 
 class abortException(Exception):
     """
@@ -158,17 +170,8 @@ def printRaw(xmlNode, path, TS):
             with open("{devName}_{ts}.corrupt.xml".format(devName=path, ts=TS), "w") as fd:
                 fd.write(text)    
 
-def printKnownXML(xmlDoc, path, TS):
-    if xmlDoc._type=="TEL":
-        xmlDoc = TEL62Decoder(xmlDoc)
-    elif xmlDoc._type=="L0TP":
-        xmlDoc = L0TPDecoder(xmlDoc)
-    ret = BufferPrint.displayBuffer(str(xmlDoc))
-    if ret==BufferPrint.OperationType.WRITE:
-        with open("{devName}_{ts}.xml".format(devName=path, ts=TS), "w") as fd:
-            fd.write(etree.tostring(xmlDoc._xml, pretty_print=True))
-
 def printGenericXML(xmlDoc, path, TS):
+    generateSystemSpecificDecoder(xmlDoc)
     ret = BufferPrint.displayBuffer(str(xmlDoc))
     if ret==BufferPrint.OperationType.WRITE:
         with open("{devName}_{ts}.xml".format(devName=path, ts=TS), "w") as fd:
@@ -191,11 +194,7 @@ def writeFile(elementDict, TS):
         printRaw(elementDict["node"], path, TS)
     else:
         _, xmlDoc = XMLDoc.parseSplitElementText(elementDict["node"])
-        xmlDoc.identifyFileType()
-        if xmlDoc._type == "Other":
-            printGenericXML(xmlDoc, path, TS)
-        else:
-            printKnownXML(xmlDoc, path, TS)
+        printGenericXML(xmlDoc, path, TS)
 
 def startReading(filePath):
     """

@@ -4,7 +4,6 @@ Created on Aug 5, 2015
 @author: nlurkin
 '''
 
-from __builtin__ import True
 import copy
 import datetime
 import re
