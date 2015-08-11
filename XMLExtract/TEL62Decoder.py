@@ -170,8 +170,10 @@ class TDC(object):
         self.useTrailing = None
         self.Offset = None
         self.OffsetNS = None
+        self.Modify = False
         self.channelOffset = {}
         self.channelOffsetNS = {}
+        self.channelModify = [False]*32
         self.channelEnabled = 0
         
         self._xml = xml
@@ -227,7 +229,8 @@ class TDC(object):
         etree.cleanup_namespaces(self._xml.tdcoff)
 
         self.OffsetNS = slotBin*value
-        
+        self.Modify = True
+
     def replaceOffsetNS(self, valueNS):
         self.OffsetNS = valueNS
         value = int(valueNS/slotBin + 0.5) 
@@ -237,7 +240,9 @@ class TDC(object):
         self._xml.tdcoff = "{0:#x}".format(self.Offset)
         objectify.deannotate(self._xml.tdcoff, xsi_nil=True)
         etree.cleanup_namespaces(self._xml.tdcoff)
-    
+
+        self.Modify = True
+
     def addToOffset(self, value):
         prevValue = 0
         if hasattr(self._xml, "tdcoff"):
@@ -275,6 +280,7 @@ class TDC(object):
         etree.cleanup_namespaces(self._xml.choff[index])
 
         self.channelOffsetNS[channel] = fineBin*value
+        self.channelModify[channel] = True
 
     def replaceChannelOffsetNS(self, channel, valueNS):
         self.channelOffsetNS[channel] = valueNS
@@ -291,6 +297,8 @@ class TDC(object):
         
         objectify.deannotate(self._xml.choff[index], xsi_nil=True)
         etree.cleanup_namespaces(self._xml.choff[index])
+
+        self.channelModify[channel] = True
     
     def addToChannelOffset(self, channel, value):
         index = self.getChannelOffsetIndex(channel)
