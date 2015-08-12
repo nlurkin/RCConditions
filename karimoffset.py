@@ -33,6 +33,21 @@ def parseCorrections(xml, filePath, currentTEL62):
                 print splitArray, TEL62, TDCB, TDC, CH, value
                 xml.tdcb[TDCB].tdc[TDC].addToChannelOffset(CH, value)
                    
+def parseGlobal(xml, filePath, currentTEL62):
+    with open(filePath, "r") as fd:
+        for line in fd:
+            if line[0] =="#":
+                continue
+            splitArray = line.split()
+            value = (float(splitArray[currentTEL62+4])/clockPeriod * 256)
+            value = int(-1*copysign(fabs(value)+0.5, value))
+            
+            print splitArray, currentTEL62, value
+            for tdcb in xml.tdcb:
+                for tdc in xml.tdcb[tdcb].tdc:
+                    for ch in xml.tdcb[tdcb].tdc[tdc].channelOffset:
+                        if ch % 8 ==0:
+                            xml.tdcb[tdcb].tdc[tdc].addToChannelOffset(ch, value)
 
 if __name__ == '__main__':
     inputXMLFile = sys.argv[2]
@@ -45,6 +60,7 @@ if __name__ == '__main__':
         sys.exit(0)
         
     xml = TEL62Decoder(inputXMLFile)
-    parseCorrections(xml, sys.argv[1], currentTEL62)
+    #parseCorrections(xml, sys.argv[1], currentTEL62)
+    parseGlobal(xml, sys.argv[1], currentTEL62)
     with open(inputXMLFile, "w") as fd:
         fd.write(etree.tostring(xml._xml, pretty_print=True))
