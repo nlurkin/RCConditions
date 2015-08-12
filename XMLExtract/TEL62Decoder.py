@@ -17,7 +17,7 @@ from XMLDoc import xmlDocument, tryint
 fmt = PartialFormatter()
 _history = False 
 
-def setHistory(self, bValue):
+def setHistory(bValue):
     global _history
     _history = bValue
 
@@ -153,6 +153,11 @@ class TDC(object):
     '''
     Class representing a TDC configuration
     '''
+
+    global slotBin 
+    slotBin = 24.951059536
+    global fineBin 
+    fineBin = slotBin/256
     
     def __init__(self, xml):
         """
@@ -164,7 +169,11 @@ class TDC(object):
         self.useLeading = None
         self.useTrailing = None
         self.Offset = None
+        self.OffsetNS = None
+        self.Modify = False
         self.channelOffset = {}
+        self.channelOffsetNS = {}
+        self.channelModify = [False]*32
         self.channelEnabled = 0
         
         self._xml = xml
@@ -191,10 +200,13 @@ class TDC(object):
             self.useTrailing = bool(xml.usetrailing)
         if hasattr(xml, "tdcoff"):
             self.Offset = tryint(xml.tdcoff)
+            self.OffsetNS = slotBin*self.Offset
         
         lOffset = xmlDocument.getTagRefsStatic("choff", xml)
         for el in lOffset:
             self.channelOffset[tryint(el.attrib["id"])] = el
+            self.channelOffset[tryint(el.attrib["id"])] = tryint(el)
+            self.channelOffsetNS[tryint(el.attrib["id"])] = fineBin*tryint(el)
         if hasattr(xml, "chena"):
             self.channelEnabled = tryint(xml.chena)   
     
@@ -216,13 +228,36 @@ class TDC(object):
         self._xml.tdcoff = "{0:#x}".format(self.Offset)
         objectify.deannotate(self._xml.tdcoff, xsi_nil=True)
         etree.cleanup_namespaces(self._xml.tdcoff)
-    
+
+
+        self.OffsetNS = slotBin*value
+        self.Modify = True
+
+    def replaceOffsetNS(self, valueNS):
+        self.OffsetNS = valueNS
+        value = int(valueNS/slotBin + 0.5) 
+
+        if hasattr(self._xml, "tdcoff"):
+            saveElement(self._xml.tdcoff)
+        self._xml.tdcoff = "{0:#x}".format(self.Offset)
+        objectify.deannotate(self._xml.tdcoff, xsi_nil=True)
+        etree.cleanup_namespaces(self._xml.tdcoff)
+
+        self.Modify = True
+
     def addToOffset(self, value):
         prevValue = 0
         if hasattr(self._xml, "tdcoff"):
             prevValue = tryint(self._xml.tdcoff)
         
         self.replaceOffset(prevValue+value)
+
+    def addToOffsetNS(self, valueNS):
+        prevValueNS = 0
+        if hasattr(self._xml, "tdcoff"):
+            prevValueNS = self.OffsetNS
+        
+        self.replaceOffsetNS(prevValueNS+valueNS)
     
     def getChannelOffsetIndex(self, channel):
         if hasattr(self._xml, "choff"):
@@ -245,6 +280,28 @@ class TDC(object):
         
         objectify.deannotate(self._xml.choff[index], xsi_nil=True)
         etree.cleanup_namespaces(self._xml.choff[index])
+
+
+        self.channelOffsetNS[channel] = fineBin*value
+        self.channelModify[channel] = True
+
+    def replaceChannelOffsetNS(self, channel, valueNS):
+        self.channelOffsetNS[channel] = valueNS
+        value = int(valueNS/fineBin + 0.5)
+        
+        index = self.getChannelOffsetIndex(channel)
+        if index==-1:
+            objectify.SubElement(self._xml, "choff", id=str(channel))
+        else:
+            saveElement(self._xml.choff[index])
+            
+        self._xml.choff[index] = "{0:#x}".format(value)
+        self._xml.choff[index].attrib["id"] = str(channel)
+        
+        objectify.deannotate(self._xml.choff[index], xsi_nil=True)
+        etree.cleanup_namespaces(self._xml.choff[index])
+
+        self.channelModify[channel] = True
     
     def addToChannelOffset(self, channel, value):
         index = self.getChannelOffsetIndex(channel)
@@ -254,6 +311,15 @@ class TDC(object):
             prevValue = tryint(self._xml.choff[index])
         
         self.replaceChannelOffset(channel, prevValue+value)
+
+    def addToChannelOffsetNS(self, channel, valueNS):
+        index = self.getChannelOffsetIndex(channel)
+        
+        prevValueNS = 0
+        if index>=0:
+            prevValueNS = self.channelOffsetNS[channel]
+        
+        self.replaceChannelOffsetNS(channel, prevValueNS+valueNS)
                 
 class TDCB(object):
     '''
