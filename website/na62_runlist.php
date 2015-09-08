@@ -692,12 +692,12 @@ else if ($_GET ['view'] == "details") {
 					<tr>
 						<td>Average L0/Burst</td>
 						<td><?php 
-						if($runDetails['totalburst']!=0) echo $runDetails['totalL0']/$runDetails['totalburst']?></td>
+						if($runDetails['totalburst']!=0) echo (int)($runDetails['totalL0']/$runDetails['totalburst'])?></td>
 					</tr>
 					<tr>
 						<td>Average L0 rate</td>
 						<td><?php 
-						if($runDetails['totalburst']!=0) echo $runDetails['totalL0']/$runDetails['totalburst']/3.3?></td>
+						if($runDetails['totalburst']!=0) echo humanReadable ( $runDetails['totalL0']/$runDetails['totalburst']/3.3, $frequencyUnits, 2) ?></td>
 					</tr>
 					<tr>
 						<td>Number of L1</td>
