@@ -308,8 +308,9 @@ class L0TPDecoder(xmlDocument):
         self.globalParam = None
         self.lutParam = []
         self.lutNIMParam = []
-        
-        self._decode()
+       
+        if not self._bad:
+	        self._decode()
     
     def _decode(self):
         self.globalParam = Global(self._xml.global_parameters)
