@@ -63,13 +63,14 @@ class DBConnect {
 }
 
 // Some useful functions
-function humanReadable($value, $units){
+function humanReadable($value, $units, $precision=-1){
 	$i=0;
 	while($value >= 1000 and $i<count($units)-1){
 		$value /= 1000.;
 		$i=$i+1;
 	}
 	
+	if($precision!=-1) $value = round($value, $precision);
 	return $value." ".$units[$i];
 }
 
