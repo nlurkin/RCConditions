@@ -113,7 +113,7 @@ class PrimitiveInfo(TriggerInfo):
         self.MaskNumber = None
     
     def __str__(self):
-        return self.MaskNumber + ")" + self.detA + "," + self.detB + "," + self.detC + \
+        return str(self.MaskNumber) + ")" + self.detA + "," + self.detB + "," + self.detC + \
             "," + self.detD + "," + self.detE + "," + self.detF + \
             "," + self.detG + ":" + str(self.Downscaling)
 

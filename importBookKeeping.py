@@ -208,16 +208,19 @@ def exportFile(myconn, filePath):
     totalL0 = getAttribute(rootNode, "totalL0")
     totalL1 = getAttribute(rootNode, "totalL1")
     totalL2 = getAttribute(rootNode, "totalL2")
+    totalMerger = getAttribute(rootNode, "totalMerger")
     runInfoList = doc.getElementsByTagName("RunInfo")
-    
+
     runInfo = retrieveAllRunInfos(runInfoList, int(runNumber))
     
     runInfo['TotalBurst'] = None if totalBurst==None else int(totalBurst)
     runInfo['TotalL0'] = None if totalL0==None else int(totalL0)
     runInfo['TotalL1'] = None if totalL1==None else int(totalL1)
     runInfo['TotalL2'] = None if totalL2==None else int(totalL2)
-    
-    
+    runInfo['TotalMerger'] = None if totalMerger==None else int(totalMerger)
+   
+    if runInfo['RunNumber']=='':
+        return
     ## Get Trigger info
     l0tpList = doc.getElementsByTagName("L0TP")
     triggerDict = getTriggerEnabled(l0tpList)
@@ -240,7 +243,7 @@ def exportFile(myconn, filePath):
     ## Get detector enabled info
     enabledList = doc.getElementsByTagName("Enabled")
     detEnabled = getDetectorEnabled(enabledList)
-    detMap = {"KTAG":4, "GTK":8, "CHANTI":12, "LAV":16, "STRAW": 20, "CHOD":24, "RICH":28, "IRC_SAC":32, "LKR":36, "MUV1":40, "MUV2":44, "MUV3":48, "SAC":52}
+    detMap = {"KTAG":4, "GTK":8, "CHANTI":12, "LAV":16, "STRAW": 20, "CHOD":24, "RICH":28, "IRC_SAC":32, "LKR":36, "MUV1":40, "MUV2":44, "MUV3":48, "SAC":52, "L0TP":64}
     for det in detEnabled:
         detID = getDetectorID(doc.getElementsByTagName(det))
         if detID==None:
@@ -286,6 +289,8 @@ def exportFile(myconn, filePath):
         return True
 
 def setPrimitivesReferences(prim):
+    if myconn is None:
+       return
     l0 = L0TPDecoder
     startTS = 1435701600
     
