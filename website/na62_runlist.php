@@ -441,11 +441,11 @@ else {
 			);
 			foreach ( $dataArray as $row ) {
 				if (! isset ( $_GET ['view'] ) || $_GET ['view'] == "") {
-					$triggerstring = prepare_trigger ( "all", $row );
+					$triggerstring = "";//prepare_trigger ( "all", $row );
 					$enabledstring = prepare_enabled ( "all", $row );
 				} else if ($_GET ['view'] == "search") {
 					$enabledstring = prepare_enabled ( "search", $row );
-					$triggerstring = prepare_trigger ( "search", $row );
+					$triggerstring = "";//prepare_trigger ( "search", $row );
 				}
 				echo "<tr class='d0 " . $css [$i % 2] . "' id='" . $row ['id'] . "'>";
 				echo "<td>" . $row ['number'] . "</td><td>" . $row ['runtypename'] . "</td>";
@@ -648,6 +648,7 @@ else if ($_GET ['view'] == "details") {
 			else
 				$end = $prim ["validityend"];
 			$primNameArr = Array ();
+			na62_primToNameAll($db, $prim);
 			if (! is_null ( $prim ["maskA"] ))
 				array_push ( $primNameArr, $prim ["maskA"] );
 			if (! is_null ( $prim ["maskB"] ))

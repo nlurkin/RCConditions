@@ -1,7 +1,7 @@
 <?php
 function fetch_all($db) {
 	// Get all data from DB using full views
-	$sql = "SELECT run.id, run.number, run.startcomment, runtype.runtypename,
+	/*$sql = "SELECT run.id, run.number, run.startcomment, runtype.runtypename,
 		run.timestart, run.timestop, viewtriggerfull.triggerstring,
         viewenableddet.enabledstring, run.endcomment, run.totalburst, run.totalL0
         FROM run
@@ -9,7 +9,16 @@ function fetch_all($db) {
         LEFT JOIN viewenableddet ON (viewenableddet.run_id = run.id)
         LEFT JOIN viewtriggerfull ON (run.id = viewtriggerfull.run_id)
         GROUP BY run.id
+        ORDER BY run.number DESC";*/
+	$sql = "SELECT run.id, run.number, run.startcomment, runtype.runtypename,
+		run.timestart, run.timestop,
+        viewenableddet.enabledstring, run.endcomment, run.totalburst, run.totalL0
+        FROM run
+        LEFT JOIN runtype ON (runtype.id = run.runtype_id)
+        LEFT JOIN viewenableddet ON (viewenableddet.run_id = run.id)
+        GROUP BY run.id
         ORDER BY run.number DESC";
+
 	if ($db->executeGet ( $sql ) > 0) {
 		// Fill the array with data
 		$jsonArray = Array ();
@@ -269,16 +278,13 @@ function fetch_run_details($db, $runID) {
 			}
 		}
 		
-		$sql = "SELECT DISTINCT viewprimitivename.validitystart,
-			viewprimitivename.validityend, viewprimitivename.maskA,
-			viewprimitivename.maskB, viewprimitivename.maskC,
-			viewprimitivename.maskD, viewprimitivename.maskE,
-			viewprimitivename.maskF, viewprimitivename.maskG,
-			viewprimitivename.triggerprimitivedownscaling,
-			viewprimitivename.triggerprimitivereference,
-			viewprimitivename.masknumber
-			FROM viewprimitivename
-			WHERE viewprimitivename.run_id=" . $runID . " ORDER BY validitystart";
+		$sql = "SELECT DISTINCT viewprimitivetype.run_id, viewprimitivetype.triggerprimitivedownscaling,
+			viewprimitivetype.triggerprimitivereference, viewprimitivetype.validitystart,
+			viewprimitivetype.validityend, viewprimitivetype.masknumber,
+			viewprimitivetype.maskA, viewprimitivetype.maskB, viewprimitivetype.maskC, viewprimitivetype.maskD,
+			viewprimitivetype.maskE, viewprimitivetype.maskF, viewprimitivetype.maskG
+		   FROM viewprimitivetype
+			WHERE viewprimitivetype.run_id=" . $runID . " ORDER BY validitystart";
 		// Fill the array with data
 		$mainrow ["primitive"] = Array ();
 		if ($db->executeGet ( $sql ) > 0) {
@@ -485,4 +491,29 @@ function fetch_PrimitiveMaskTypes($db) {
 	// $triggerArray = invert2DArrray ( $detArray );
 	
 	return $detArray;
+}
+
+function na62_primToNameAll($db, &$prim){
+	na62_primToName($db, $prim, "maskA", 0);
+	na62_primToName($db, $prim, "maskB", 1);
+	na62_primToName($db, $prim, "maskC", 2);
+	na62_primToName($db, $prim, "maskD", 3);
+	na62_primToName($db, $prim, "maskE", 4);
+	na62_primToName($db, $prim, "maskF", 5);
+	na62_primToName($db, $prim, "maskG", 6);
+}
+
+function na62_primToName($db, &$prim, $mask, $detNumber){
+	if($prim[$mask]=='0x7fff7fff'){
+		$prim[$mask] = NULL;
+		return;
+	}
+	$sql = "SELECT detname FROM primitivedetname WHERE detnumber=" . $detNumber . " AND detmask='" . $prim[$mask] . "' AND validitystart<'" . $prim["validitystart"] . "'";
+	// Fill the array with data
+	$mainrow ["primitive"] = Array ();
+	if ($db->executeGet ( $sql ) > 0) {
+		while ( $row = $db->next () ) {
+			$prim[$mask] = $row["detname"];
+		}
+	}
 }
