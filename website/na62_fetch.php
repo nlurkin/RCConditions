@@ -1,5 +1,5 @@
 <?php
-function fetch_all($db) {
+function fetch_all($db, $from=0, $max=10) {
 	// Get all data from DB using full views
 	/*$sql = "SELECT run.id, run.number, run.startcomment, runtype.runtypename,
 		run.timestart, run.timestop, viewtriggerfull.triggerstring,
@@ -15,7 +15,8 @@ function fetch_all($db) {
         FROM run
         LEFT JOIN runtype ON (runtype.id = run.runtype_id)
         GROUP BY run.id
-        ORDER BY run.number DESC LIMIT 10";
+        ORDER BY run.number DESC LIMIT " . $max;
+	if($from>0) $sql = $sql . " OFFSET " . $from;
 
 	if ($db->executeGet ( $sql ) > 0) {
 		// Fill the array with data
