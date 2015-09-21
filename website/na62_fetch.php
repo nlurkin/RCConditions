@@ -11,19 +11,36 @@ function fetch_all($db) {
         GROUP BY run.id
         ORDER BY run.number DESC";*/
 	$sql = "SELECT run.id, run.number, run.startcomment, runtype.runtypename,
-		run.timestart, run.timestop,
-        viewenableddet.enabledstring, run.endcomment, run.totalburst, run.totalL0
+		run.timestart, run.timestop, run.endcomment, run.totalburst, run.totalL0
         FROM run
         LEFT JOIN runtype ON (runtype.id = run.runtype_id)
-        LEFT JOIN viewenableddet ON (viewenableddet.run_id = run.id)
         GROUP BY run.id
-        ORDER BY run.number DESC";
+        ORDER BY run.number DESC LIMIT 10";
 
 	if ($db->executeGet ( $sql ) > 0) {
 		// Fill the array with data
 		$jsonArray = Array ();
+		$i=0;
 		while ( $row = $db->next () ) {
 			array_push ( $jsonArray, $row );
+		}
+		foreach($jsonArray as $el){
+			$en = fetch_enabled($db, $el["id"], $el["timestart"], $el["timestop"]);
+			$jsonArray[$i]["enabledstring"] = implode("+", $en);
+			$periodic = fetch_periodic($db, $el["id"], $el["timestart"], $el["timestop"]);
+			$jsonArray[$i]["periodic"] = $periodic;
+			$sync = fetch_sync($db, $el["id"], $el["timestart"], $el["timestop"]);
+			$jsonArray[$i]["sync"] = $sync;
+			$calib = fetch_calib($db, $el["id"], $el["timestart"], $el["timestop"]);
+			$jsonArray[$i]["calibration"] = $calib;
+			$nim = fetch_nim($db, $el["id"], $el["timestart"], $el["timestop"]);
+			$jsonArray[$i]["NIM"] = $nim;
+			$prim = fetch_primitives($db, $el["id"], $el["timestart"], $el["timestop"]);
+			foreach($prim as &$p){
+				na62_primToNameAll($db, $p);
+			}
+			$jsonArray[$i]["Primitive"] = $prim;
+			$i++;
 		}
 		return $jsonArray;
 	} else {
@@ -121,16 +138,24 @@ function fetch_nim($db, $runID, $tsStart, $tsStop) {
 	return $NIMArray;
 }
 function fetch_primitives($db, $runID, $tsStart, $tsStop) {
-	$sql = "SELECT DISTINCT viewprimitivename.triggerprimitivedownscaling, viewprimitivename.triggerprimitivereference, viewprimitivename.maskA,
+	/*$sql = "SELECT DISTINCT viewprimitivename.triggerprimitivedownscaling, viewprimitivename.triggerprimitivereference, viewprimitivename.maskA,
 		viewprimitivename.maskB, viewprimitivename.maskC, viewprimitivename.maskD, viewprimitivename.maskE, viewprimitivename.maskF,
 		viewprimitivename.maskG
 		FROM viewprimitivename
 		WHERE viewprimitivename.run_id = " . $runID . "
 		AND (viewprimitivename.validityend > '" . $tsStart . "'
-		OR viewprimitivename.validityend is NULL)";
+		OR viewprimitivename.validityend is NULL)";*/
+	$sql = "SELECT DISTINCT viewprimitivetype.run_id, viewprimitivetype.triggerprimitivedownscaling,
+			viewprimitivetype.triggerprimitivereference, viewprimitivetype.validitystart,
+			viewprimitivetype.validityend, viewprimitivetype.masknumber,
+			viewprimitivetype.maskA, viewprimitivetype.maskB, viewprimitivetype.maskC, viewprimitivetype.maskD,
+			viewprimitivetype.maskE, viewprimitivetype.maskF, viewprimitivetype.maskG
+		   FROM viewprimitivetype
+			WHERE viewprimitivetype.run_id=" . $runID . " ORDER BY validitystart";
 	
-	if (! empty ( $tsStop ))
-		$sql = $sql . " AND viewprimitivename.validitystart < '" . $tsStop . "'";
+	
+	//if (! empty ( $tsStop ))
+	//	$sql = $sql . " AND viewprimitivename.validitystart < '" . $tsStop . "'";
 	$db->executeGet ( $sql );
 	
 	$PrimArray = Array ();
@@ -365,7 +390,7 @@ function prepare_trigger($type, $record) {
 			array_push ( $NIMArray, implode ( "x", $detArray ) . "/" . $value ["triggernimdownscaling"] . "(" . $value ["triggernimreference"] . ")" );
 		}
 		if (sizeof ( $NIMArray ) > 0)
-			array_push ( $trigger, "NIM:" . implode ( "+", $NIMArray ) );
+			array_push ( $trigger, "NIM:" . implode ( "<br>", $NIMArray ) );
 			// Primitive trigger
 		$PrimArray = Array ();
 		foreach ( $record ['Primitive'] as $value ) {

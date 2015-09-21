@@ -400,7 +400,7 @@ else {
     <table border=1 style="table-layout: fixed;">
 		<tr>
 			<th width='50px'>Run #</th>
-			<th width='80px'>Type</th>
+			<th width='120px'>Type</th>
 			<th width='150px'>Start</th>
 			<th width='150px'>End</th>
 			<?php
@@ -441,11 +441,11 @@ else {
 			);
 			foreach ( $dataArray as $row ) {
 				if (! isset ( $_GET ['view'] ) || $_GET ['view'] == "") {
-					$triggerstring = "";//prepare_trigger ( "all", $row );
+					$triggerstring = prepare_trigger ( "search", $row );
 					$enabledstring = prepare_enabled ( "all", $row );
 				} else if ($_GET ['view'] == "search") {
 					$enabledstring = prepare_enabled ( "search", $row );
-					$triggerstring = "";//prepare_trigger ( "search", $row );
+					$triggerstring = prepare_trigger ( "search", $row );
 				}
 				echo "<tr class='d0 " . $css [$i % 2] . "' id='" . $row ['id'] . "'>";
 				echo "<td>" . $row ['number'] . "</td><td>" . $row ['runtypename'] . "</td>";
