@@ -2,6 +2,7 @@ table {
 	font: 11px/24px Verdana, Arial, Helvetica, sans-serif;
 	border-collapse: collapse;
 	width: 100%;
+	min-width: 1300px;
 }
 
 table.autoalternate tr:nth-child(even){ background-color: #b8d1f3; }
