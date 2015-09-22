@@ -236,4 +236,12 @@ input[type=button]:hover{
 	float: right;
 }
 
+
+.loading{
+	text-align: center;
+	vertical-align: middle;
+	height: 40px;
+	font-weight: bold;
+	background: #FB7A31;
+}
 </style>

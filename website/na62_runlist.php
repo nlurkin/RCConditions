@@ -111,7 +111,7 @@ loading = false;
 jQuery(window).scroll(function(){
 	if (jQuery(window).scrollTop() == jQuery(document).height() - jQuery(window).height() && loading==false){
 		loading = true;
-		$('#tbl_lst_runs > tbody > tr:last').after("<tr><td colspan='9' style='loading'>Loading more runs</td></tr>");
+		$('#tbl_lst_runs > tbody > tr:last').after("<tr><td colspan='9' class='loading'>Loading more runs</td></tr>");
 		$.ajax({
 	        url : "na62_getdata.php?from=" + currentLast + "&max=" + max,
 	        type : 'GET',
@@ -136,7 +136,7 @@ function initWindow(){
 	intervalID = setInterval(function(){
 		if(loading) return;
 		if(i>=currentLast) clearInterval(intervalID);
-		$('#tbl_lst_runs > tbody > tr:last').after("<tr><td colspan='9' style='loading'>Loading more runs</td></tr>");
+		$('#tbl_lst_runs > tbody > tr:last').after("<tr><td colspan='9' class='loading'><img alt='loader' src='ajax-loader.gif'>Loading more runs</td></tr>");
 		loading = true
 		$.ajax({
 	        url : "na62_getdata.php?from=" + i + "&max=" + max,
@@ -477,7 +477,6 @@ function initWindow(){
 			<th colspan=5></th>
 			<th>Offline comment</th>
 		</tr>-->
-		<tr><td colspan='9' style='loading'>Loading more runs</td></tr>
 <?php
 		}
 		if (count ( $dataArray ) > 0) {
@@ -526,7 +525,7 @@ function initWindow(){
 		?>
     </table>
     <script type="text/javascript">
-		//initWindow();
+		initWindow();
     </script>
 <?php
 		// End of table views
