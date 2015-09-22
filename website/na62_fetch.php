@@ -66,7 +66,7 @@ function fetch_enabled($db, $runID, $tsStart, $tsStop) {
 		OR enableddetectors.validityend is NULL)";
 	if (! empty ( $tsStop ))
 		$sql = $sql . " AND enableddetectors.validitystart < '" . $tsStop . "'";
-	$sql = $sql . "ORDER BY enableddetectorse.detectorname";
+	$sql = $sql . "ORDER BY enableddetectors.detectorname";
 	$db->executeGet ( $sql );
 	
 	$enabledArray = Array ();

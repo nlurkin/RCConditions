@@ -109,7 +109,7 @@ currentLast = <?php echo $currentLast;?>;
 max = <?php echo $maxLoading;?>;
 loading = false;
 
-<?php if(isset($_GET['view']) && $_GET['view']!="search"){?>
+<?php if(!isset($_GET['view']) || $_GET['view']!="search"){?>
 jQuery(window).scroll(function(){
 	if (jQuery(window).scrollTop() == jQuery(document).height() - jQuery(window).height() && loading==false){
 		loading = true;
