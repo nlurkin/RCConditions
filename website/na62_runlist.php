@@ -111,7 +111,7 @@ loading = false;
 jQuery(window).scroll(function(){
 	if (jQuery(window).scrollTop() == jQuery(document).height() - jQuery(window).height() && loading==false){
 		loading = true;
-		$('#tbl_lst_runs > tbody > tr:last').after("<tr><td colspan='9' class='loading'>Loading more runs</td></tr>");
+		$('#tbl_lst_runs > tbody > tr:last').after("<tr><td colspan='9' class='loading'><img alt='loader' src='ajax-loader.gif'>Loading more runs</td></tr>");
 		$.ajax({
 	        url : "na62_getdata.php?from=" + currentLast + "&max=" + max,
 	        type : 'GET',
