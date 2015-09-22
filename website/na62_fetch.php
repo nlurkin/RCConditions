@@ -169,6 +169,7 @@ function generate_search_sql($searchParams) {
 	// Get and verify search parameters
 	$whereArray = Array ();
 	$joinArray = Array ();
+	date_default_timezone_set('UTC');
 	if (isset ( $searchParams ["run_from"] )) {
 		if (is_numeric ( $searchParams ["run_from"] ))
 			array_push ( $whereArray, "run.number >= " . $searchParams ["run_from"] );
@@ -179,11 +180,13 @@ function generate_search_sql($searchParams) {
 	}
 	if (isset ( $searchParams ["date_from"] )) {
 		if (strtotime ( $searchParams ["date_from"] ) !== false)
-			array_push ( $whereArray, "run.timestart >= " . $searchParams ["date_from"] );
+			$date = strtotime($searchParams ["date_from"]);
+			array_push ( $whereArray, "run.timestart >= '" . date("Y-m-d H:i:s", $date) . "'");
 	}
 	if (isset ( $searchParams ["date_to"] )) {
 		if (strtotime ( $searchParams ["date_to"] ) !== false)
-			array_push ( $whereArray, "run.timestart <= " . $searchParams ["date_to"] );
+			$date = strtotime($searchParams ["date_to"]);
+			array_push ( $whereArray, "run.timestart <= '" . date("Y-m-d H:i:s", $date) . "'");
 	}
 	if (isset ( $searchParams ["detectors_en"] )) {
 		foreach ( $searchParams ["detectors_en"] as $key => $det ) {
@@ -224,6 +227,7 @@ function fetch_search($db, $offset, $limits, $sqlwhere) {
 	$sql = $sql . " runtype.id = run.runtype_id GROUP BY run.id
         ORDER BY run.number DESC LIMIT " . $limits . " OFFSET " . $offset;
 	
+	echo "<br>" . $sql;
 	// Fill the array with data
 	$jsonArray = Array ();
 	if ($db->executeGet ( $sql ) > 0) {
@@ -249,6 +253,9 @@ function fetch_search($db, $offset, $limits, $sqlwhere) {
 			
 			// Fetch Primitive triggers
 			$jsonArray [$key] ["Primitive"] = fetch_primitives ( $db, $value ["id"], $value ["timestart"], $value ["timestop"] );
+			foreach($jsonArray[$key]["Primitive"] as &$p){
+				na62_primToNameAll($db, $p);
+			}
 		}
 	}
 	/*

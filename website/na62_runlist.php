@@ -108,6 +108,8 @@ else {
 currentLast = <?php echo $currentLast;?>;
 max = <?php echo $maxLoading;?>;
 loading = false;
+
+<?php if(isset($_GET['view']) && $_GET['view']!="search"){?>
 jQuery(window).scroll(function(){
 	if (jQuery(window).scrollTop() == jQuery(document).height() - jQuery(window).height() && loading==false){
 		loading = true;
@@ -130,7 +132,7 @@ jQuery(window).scroll(function(){
 		
 	}
 });
-
+<?php }?>
 function initWindow(){
 	i=0;
 	intervalID = setInterval(function(){
@@ -524,9 +526,11 @@ function initWindow(){
 		}
 		?>
     </table>
+    <?php if(sizeof($dataArray)==0){?>
     <script type="text/javascript">
 		initWindow();
     </script>
+    <?php }?>
 <?php
 		// End of table views
 	}  // Run details view
