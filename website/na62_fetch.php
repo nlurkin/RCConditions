@@ -66,7 +66,7 @@ function fetch_enabled($db, $runID, $tsStart, $tsStop) {
 		OR enableddetectors.validityend is NULL)";
 	if (! empty ( $tsStop ))
 		$sql = $sql . " AND enableddetectors.validitystart < '" . $tsStop . "'";
-	$sql = $sql . "ORDER BY enableddetectors.detectorname";
+	$sql = $sql . "ORDER BY enableddetectorse.detectorname";
 	$db->executeGet ( $sql );
 	
 	$enabledArray = Array ();
@@ -227,7 +227,6 @@ function fetch_search($db, $offset, $limits, $sqlwhere) {
 	$sql = $sql . " runtype.id = run.runtype_id GROUP BY run.id
         ORDER BY run.number DESC LIMIT " . $limits . " OFFSET " . $offset;
 	
-	echo "<br>" . $sql;
 	// Fill the array with data
 	$jsonArray = Array ();
 	if ($db->executeGet ( $sql ) > 0) {
