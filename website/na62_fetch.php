@@ -165,7 +165,7 @@ function fetch_primitives($db, $runID, $tsStart, $tsStop) {
 	}
 	return $PrimArray;
 }
-function generate_search_sql($searchParams) {
+function generate_search_sql($db, $searchParams) {
 	// Get and verify search parameters
 	$whereArray = Array ();
 	$joinArray = Array ();
@@ -202,8 +202,10 @@ function generate_search_sql($searchParams) {
 		}
 	}
 	if (isset ( $searchParams ["primitive"] )) {
-		array_push ( $joinArray, "viewprimitive" );
-		array_push ( $whereArray, "viewprimitive.run_id = run.id AND viewprimitive.triggerstring LIKE '" . $searchParams ["primitive"] . "/%'" );
+		array_push ( $joinArray, "viewprimitivetype" );
+		$listPrim = explode("x", $searchParams["primitive"]);
+		$primArray = na62_nameToPrim($db, $listPrim);
+		array_push ( $whereArray, "viewprimitivetype.run_id = run.id AND " . implode(" AND ", $primArray));
 	}
 	
 	$sql = "";
@@ -455,14 +457,16 @@ function fetch_PrimitivesTypes($db) {
 }
 function prepare_PrimCorrelationSQL($db, $nCombi) {
 	$fieldsArray = array ();
+	$numberArray = array ();
 	$tablesArray = array ();
 	$stCond = array ();
 	for($i = 0; $i < $nCombi; $i ++) {
 		$fieldsArray ["d" . $i] = "d" . $i . ".detname";
+		$numberArray ["d" . $i] = "d" . $i . ".detnumber";
 		$tablesArray ["d" . $i] = "primitivedetname AS d" . $i;
 	}
-	for($i = 0; $i < sizeof ( $fieldsArray ) - 1; $i ++) {
-		array_push ( $stCond, $fieldsArray ["d" . $i] . "<" . $fieldsArray ["d" . ($i + 1)] );
+	for($i = 0; $i < sizeof ( $numberArray ) - 1; $i ++) {
+		array_push ( $stCond, $numberArray ["d" . $i] . "<" . $numberArray ["d" . ($i + 1)]);
 	}
 	$sql = "SELECT CONCAT_WS('x', " . implode ( ",", $fieldsArray ) . ") AS triggertype " . "FROM " . implode ( " JOIN ", $tablesArray ) . " ON " . implode ( "<>'' AND ", $fieldsArray ) . "<>'' AND " . implode ( " AND ", $stCond );
 	
@@ -548,4 +552,67 @@ function na62_primToName($db, &$prim, $mask, $detNumber){
 			$prim[$mask] = $row["detname"];
 		}
 	}
+}
+
+function na62_nameToPrim($db, &$primList){
+	$retArray = array();
+	$joinArray = array();
+	$onArray = array();
+	$selectArray = array();
+	$i = 0;
+	foreach($primList as $prim){
+		array_push($joinArray, "primitivedetname as L" . $i);
+		array_push($onArray, "L" . $i . ".detname='" . $prim . "'");
+		array_push($selectArray, "L" . $i . ".detmask AS detmask" . $i . ", L" . $i . ".detnumber AS detnumber" . $i);
+		$i++;
+	}
+	$sql = "SELECT " . implode(",", $selectArray) . " FROM " . implode(" JOIN ", $joinArray) . " ON " . implode(" AND ", $onArray);
+	
+	if( $db->executeGet( $sql ) > 0) {
+		while ( $row = $db->next() ) {
+			$i = 0;
+			$maskArray = array(
+				"maskA" => "0x7fff7fff",
+				"maskB" => "0x7fff7fff",
+				"maskC" => "0x7fff7fff",
+				"maskD" => "0x7fff7fff",
+				"maskE" => "0x7fff7fff",
+				"maskF" => "0x7fff7fff",
+				"maskG" => "0x7fff7fff"
+			);
+			for($i=0; $i<sizeof($primList); $i++){
+				$mask = "";
+				switch($row["detnumber" . $i]){
+					case 0:
+						$mask = "maskA";
+						break;
+					case 1:
+						$mask = "maskB";
+						break;
+					case 2:
+						$mask = "maskC";
+						break;
+					case 3:
+						$mask = "maskD";
+						break;
+					case 4:
+						$mask = "maskE";
+						break;
+					case 5:
+						$mask = "maskF";
+						break;
+					case 6:
+						$mask = "maskG";
+						break;
+				}
+				$maskArray[$mask] = $row["detmask" . $i];
+			}
+		}
+		$rowArray = array();
+		while(list($k, $v) = each($maskArray)){
+			array_push($rowArray, "viewprimitivetype." . $k . "='" . $v . "'");
+		}
+		array_push($retArray, "(" . implode(" AND ", $rowArray) . ")");
+	}
+	return $retArray;
 }

@@ -52,7 +52,7 @@ if (! isset ( $_GET ['view'] ) || $_GET ['view'] == '' || $_GET ['view'] == 'csv
 		$searchParams ["triggers_en"] = $_GET ["triggers_en"];
 	if (isset ( $_GET ["primitive"] ))
 		$searchParams ["primitive"] = $_GET ["primitive"];
-	$sqlwhere = generate_search_sql ( $searchParams );
+	$sqlwhere = generate_search_sql ( $db, $searchParams );
 	$dataArray = fetch_search ( $db, $rowOffset, $runLimits, $sqlwhere );
 	
 	$nPages = ( int ) (fetch_nRuns ( $db, $sqlwhere ) / $runLimits) + 1;
@@ -391,7 +391,12 @@ function initWindow(){
 		$searchLine = "";
 		if (sizeof ( $_GET ) > 0)
 			$searchLine = "?" . implode ( "&", array_map ( function ($v, $k) {
-				return $k . '=' . $v;
+				$retArray = array();
+				if(is_array($v)){
+					foreach($v as $vvalue) array_push($retArray, $k . "[]=" . $vvalue);
+				}
+				else array_push($retArray, $k . "=" . $v);
+				return implode("&", $retArray);
 			}, $_GET, array_keys ( $_GET ) ) );
 		
 		if ($moreInfo)
@@ -526,7 +531,7 @@ function initWindow(){
 		}
 		?>
     </table>
-    <?php if(sizeof($dataArray)==0){?>
+    <?php if((!isset($_GET['view']) || $_GET['view']!='search') && sizeof($dataArray)==0){?>
     <script type="text/javascript">
 		initWindow();
     </script>
