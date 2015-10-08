@@ -259,7 +259,6 @@ class LUT(object):
             self.lut_detFmask = tryint(xml.lut_detFmask.hex)
         if hasattr(xml, "lut_detGmask"):
             self.lut_detGmask = tryint(xml.lut_detGmask.hex)
-            print xml.lut_detGmask.hex
     
     def __str__(self):
         return ""
@@ -362,12 +361,10 @@ class L0TPDecoder(xmlDocument):
         return int(readValue(self._xml.global_parameters.referenceDet_NIM), 0)
     
     def getPrimitiveMasks(self):
-        print "Get Primitive"
         masksList = []
         if self._runNumber > 1307:
             primEnabled = int(readValue(self._xml.global_parameters.enableMask), 0)
-            for i in range(0, 7):
-                print i + "\n\n\n"
+            for i in range(0, 8):
                 if (primEnabled & (1<<i)) != 0:
                     prim = PrimitiveInfo()
                     prim.Downscaling = int(readValue(self._xml.global_parameters.downScal_mask.item[i]), 0)
@@ -389,10 +386,8 @@ class L0TPDecoder(xmlDocument):
                     else:
                         prim.detF = "0x7fff7fff"
                     if hasattr(self._xml.LUT_parameters.item[i], "lut_detGmask"):
-                        print "has G"
                         prim.detG = readValue(self._xml.LUT_parameters.item[i].lut_detGmask).lower()
                     else:
-                        print "not has G"
                         prim.detG = "0x7fff7fff"
                     
                     masksList.append(prim)
