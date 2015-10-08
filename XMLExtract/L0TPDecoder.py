@@ -474,7 +474,10 @@ class L0TPDecoder(xmlDocument):
                 meaning = "MO2"
             if mask == "0x00006000":
                 meaning = "M2" 
-            
+        
+        if detector == "E":
+            if mask == "0x6fff7fff":
+                meaning = "IRC"
         if detector == "G":
             if mask == "0x7fef7fff":
                 meaning = "LKr"
