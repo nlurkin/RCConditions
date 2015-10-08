@@ -450,7 +450,7 @@ function initWindow(){
 			$commentSize = "300px";
 		}
 		?>
-    <table border=1 style="table-layout: fixed;" id="tbl_lst_runs">
+    <table border=1 style="table-layout: fixed;" id="tbl_lst_runs" class="big">
 		<tr>
 			<th width='50px'>Run #</th>
 			<th width='120px'>Type</th>
