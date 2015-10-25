@@ -342,13 +342,13 @@ class DBConnector(object):
         
         runTypeID = self._setRunType(runInfo["RunType"])
         if runID==False:
-            self.executeInsert("INSERT INTO run (number, timestart, timestop, startcomment, endcomment, runtype_id, totalburst, totalL0, totalL1, totalL2) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", 
+            self.executeInsert("INSERT INTO run (number, timestart, timestop, startcomment, endcomment, runtype_id, totalburst, totalL0, totalL1, totalL2, totalMerger) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", 
                             [int(runInfo["RunNumber"]), runInfo["RunStartTime"], runInfo["RunStopTime"], 
-                            runInfo["StartRunComment"], runInfo["EndRunComment"], runTypeID, runInfo["TotalBurst"], runInfo["TotalL0"], runInfo["TotalL1"], runInfo["TotalL2"]])
+                            runInfo["StartRunComment"], runInfo["EndRunComment"], runTypeID, runInfo["TotalBurst"], runInfo["TotalL0"], runInfo["TotalL1"], runInfo["TotalL2"], runInfo["TotalMerger"]])
         else:
-            self.executeInsert("UPDATE run SET timestart=%s, timestop=%s, startcomment=%s, endcomment=%s, runtype_id=%s, totalburst=%s, totalL0=%s, totalL1=%s, totalL2=%s WHERE id=%s", 
+            self.executeInsert("UPDATE run SET timestart=%s, timestop=%s, startcomment=%s, endcomment=%s, runtype_id=%s, totalburst=%s, totalL0=%s, totalL1=%s, totalL2=%s, totalMerger=%s WHERE id=%s", 
                             [runInfo["RunStartTime"], runInfo["RunStopTime"], runInfo["StartRunComment"], runInfo["EndRunComment"], runTypeID, runInfo["TotalBurst"], 
-                            runInfo["TotalL0"], runInfo["TotalL1"], runInfo["TotalL2"], runID])
+                            runInfo["TotalL0"], runInfo["TotalL1"], runInfo["TotalL2"], runInfo["TotalMerger"], runID])
             
         
     def setPeriodicTriggerList(self, trigger, runNumber):

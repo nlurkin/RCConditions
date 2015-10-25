@@ -17,26 +17,19 @@ $frequencyUnits = Array (
 );
 $db = new DBConnect ();
 $dataArray = Array ();
+$currentLast = 20;
+$maxLoading = 10;
 
 if (! $db->init ( $_na62dbHost, $_na62dbUser, $_na62dbPassword, $_na62dbName, $_na62dbPort )) {
 	die ( "Connection failed: " . $db->getError () . "<br>" );
 }
 
-// Multi-line display
-if (isset ( $_POST ["displaymoreset"] )) {
-	if (isset ( $_POST ["displaymore"] ))
-		$moreInfo = true;
-	else
-		$moreInfo = false;
-	setcookie ( "displaymore", ( int ) $moreInfo, time () + (60 * 60 * 24 * 365) );
-} else if (isset ( $_COOKIE ["displaymore"] ))
-	$moreInfo = ( bool ) $_COOKIE ["displaymore"];
-else
-	$moreInfo = false;
-	
+include("na62_getglobals.php");
+
 	// Get data from Database
 if (! isset ( $_GET ['view'] ) || $_GET ['view'] == '' || $_GET ['view'] == 'csv') {
-	$dataArray = fetch_all ( $db );
+	//$dataArray = fetch_all ( $db , 0, $currentLast);
+	$dataArray = Array();
 } else if (isset ( $_GET ['view'] ) && $_GET ['view'] == "search") {
 	$runLimits = 100;
 	$rowOffset = 0;
@@ -59,7 +52,7 @@ if (! isset ( $_GET ['view'] ) || $_GET ['view'] == '' || $_GET ['view'] == 'csv
 		$searchParams ["triggers_en"] = $_GET ["triggers_en"];
 	if (isset ( $_GET ["primitive"] ))
 		$searchParams ["primitive"] = $_GET ["primitive"];
-	$sqlwhere = generate_search_sql ( $searchParams );
+	$sqlwhere = generate_search_sql ( $db, $searchParams );
 	$dataArray = fetch_search ( $db, $rowOffset, $runLimits, $sqlwhere );
 	
 	$nPages = ( int ) (fetch_nRuns ( $db, $sqlwhere ) / $runLimits) + 1;
@@ -102,6 +95,7 @@ else if (isset ( $_GET ['view'] ) && $_GET ['view'] == "downxml") {
 }  // Multi-run table views (normal and search)
 else {
 	?>
+<!DOCTYPE html>
 <html>
 <head>
 <title>NA62 Run Infos</title>
@@ -110,6 +104,60 @@ else {
 <script src="https://code.jquery.com/jquery-1.11.2.min.js"></script>
 <script src="https://code.jquery.com/ui/1.11.2/jquery-ui.min.js"></script>
 <script type="text/javascript" src="drag_collapse.js"></script>
+<script type="text/javascript">
+currentLast = <?php echo $currentLast;?>;
+max = <?php echo $maxLoading;?>;
+loading = false;
+
+<?php if(!isset($_GET['view']) || $_GET['view']!="search"){?>
+jQuery(window).scroll(function(){
+	if (jQuery(window).scrollTop() == jQuery(document).height() - jQuery(window).height() && loading==false){
+		loading = true;
+		$('#tbl_lst_runs > tbody > tr:last').after("<tr><td colspan='9' class='loading'><img alt='loader' src='ajax-loader.gif'>Loading more runs</td></tr>");
+		$.ajax({
+	        url : "na62_getdata.php?from=" + currentLast + "&max=" + max,
+	        type : 'GET',
+	        dataType : 'text',
+	        success : function(data) {
+	        	$('#tbl_lst_runs >tbody > tr:last').remove();
+	        	$('#tbl_lst_runs > tbody > tr:last').after(data);
+	        	currentLast += max;
+	        	loading = false;
+	        },
+	        error : function() {
+	            console.log('error');
+	            loading = false;
+	        }
+	    });
+		
+	}
+});
+<?php }?>
+function initWindow(){
+	i=0;
+	intervalID = setInterval(function(){
+		if(loading) return;
+		if(i>=currentLast) clearInterval(intervalID);
+		$('#tbl_lst_runs > tbody > tr:last').after("<tr><td colspan='9' class='loading'><img alt='loader' src='ajax-loader.gif'>Loading more runs</td></tr>");
+		loading = true
+		$.ajax({
+	        url : "na62_getdata.php?from=" + i + "&max=" + max,
+	        type : 'GET',
+	        dataType : 'text',
+	        success : function(data) {
+	        	$('#tbl_lst_runs >tbody > tr:last').remove();
+	        	$('#tbl_lst_runs > tbody > tr:last').after(data);
+	        	i += max;
+	        	loading = false;
+	        },
+	        error : function() {
+	            console.log('error');
+	            loading = false;
+	        }
+	    });
+	}, 500);
+}
+</script>
 </head>
 <body>
 <?php
@@ -343,7 +391,12 @@ else {
 		$searchLine = "";
 		if (sizeof ( $_GET ) > 0)
 			$searchLine = "?" . implode ( "&", array_map ( function ($v, $k) {
-				return $k . '=' . $v;
+				$retArray = array();
+				if(is_array($v)){
+					foreach($v as $vvalue) array_push($retArray, $k . "[]=" . $vvalue);
+				}
+				else array_push($retArray, $k . "=" . $v);
+				return implode("&", $retArray);
 			}, $_GET, array_keys ( $_GET ) ) );
 		
 		if ($moreInfo)
@@ -397,10 +450,10 @@ else {
 			$commentSize = "300px";
 		}
 		?>
-    <table border=1 style="table-layout: fixed;">
+    <table border=1 style="table-layout: fixed;" id="tbl_lst_runs" class="big">
 		<tr>
 			<th width='50px'>Run #</th>
-			<th width='80px'>Type</th>
+			<th width='120px'>Type</th>
 			<th width='150px'>Start</th>
 			<th width='150px'>End</th>
 			<?php
@@ -441,7 +494,7 @@ else {
 			);
 			foreach ( $dataArray as $row ) {
 				if (! isset ( $_GET ['view'] ) || $_GET ['view'] == "") {
-					$triggerstring = prepare_trigger ( "all", $row );
+					$triggerstring = prepare_trigger ( "search", $row );
 					$enabledstring = prepare_enabled ( "all", $row );
 				} else if ($_GET ['view'] == "search") {
 					$enabledstring = prepare_enabled ( "search", $row );
@@ -478,6 +531,11 @@ else {
 		}
 		?>
     </table>
+    <?php if((!isset($_GET['view']) || $_GET['view']!='search') && sizeof($dataArray)==0){?>
+    <script type="text/javascript">
+		initWindow();
+    </script>
+    <?php }?>
 <?php
 		// End of table views
 	}  // Run details view
@@ -648,6 +706,7 @@ else if ($_GET ['view'] == "details") {
 			else
 				$end = $prim ["validityend"];
 			$primNameArr = Array ();
+			na62_primToNameAll($db, $prim);
 			if (! is_null ( $prim ["maskA"] ))
 				array_push ( $primNameArr, $prim ["maskA"] );
 			if (! is_null ( $prim ["maskB"] ))
@@ -688,6 +747,16 @@ else if ($_GET ['view'] == "details") {
 					<tr>
 						<td>Number of L0</td>
 						<td><?php echo $runDetails['totalL0']?></td>
+					</tr>
+					<tr>
+						<td>Average L0/Burst</td>
+						<td><?php 
+						if($runDetails['totalburst']!=0) echo (int)($runDetails['totalL0']/$runDetails['totalburst'])?></td>
+					</tr>
+					<tr>
+						<td>Average L0 rate</td>
+						<td><?php 
+						if($runDetails['totalburst']!=0) echo humanReadable ( $runDetails['totalL0']/$runDetails['totalburst']/3.3, $frequencyUnits, 2) ?></td>
 					</tr>
 					<tr>
 						<td>Number of L1</td>
@@ -746,248 +815,6 @@ else if ($_GET ['view'] == "comment") {
 		// End of comment view
 	}
 	?>
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 </body>
 </html>
 <?php

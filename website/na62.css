@@ -4,6 +4,10 @@ table {
 	width: 100%;
 }
 
+table.big {
+	min-width: 1300px;
+}
+
 table.autoalternate tr:nth-child(even){ background-color: #b8d1f3; }
 table.autoalternate tr:nth-child(odd){ background-color: #dae5f4; }
 
@@ -235,4 +239,12 @@ input[type=button]:hover{
 	float: right;
 }
 
+
+.loading{
+	text-align: center;
+	vertical-align: middle;
+	height: 40px;
+	font-weight: bold;
+	background: #FB7A31;
+}
 </style>

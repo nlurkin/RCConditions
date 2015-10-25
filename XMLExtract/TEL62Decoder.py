@@ -204,6 +204,7 @@ class TDC(object):
         
         lOffset = xmlDocument.getTagRefsStatic("choff", xml)
         for el in lOffset:
+            self.channelOffset[tryint(el.attrib["id"])] = el
             self.channelOffset[tryint(el.attrib["id"])] = tryint(el)
             self.channelOffsetNS[tryint(el.attrib["id"])] = fineBin*tryint(el)
         if hasattr(xml, "chena"):
@@ -227,6 +228,7 @@ class TDC(object):
         self._xml.tdcoff = "{0:#x}".format(self.Offset)
         objectify.deannotate(self._xml.tdcoff, xsi_nil=True)
         etree.cleanup_namespaces(self._xml.tdcoff)
+
 
         self.OffsetNS = slotBin*value
         self.Modify = True
@@ -278,6 +280,7 @@ class TDC(object):
         
         objectify.deannotate(self._xml.choff[index], xsi_nil=True)
         etree.cleanup_namespaces(self._xml.choff[index])
+
 
         self.channelOffsetNS[channel] = fineBin*value
         self.channelModify[channel] = True

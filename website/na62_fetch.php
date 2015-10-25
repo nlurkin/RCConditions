@@ -1,7 +1,7 @@
 <?php
-function fetch_all($db) {
+function fetch_all($db, $from=0, $max=10) {
 	// Get all data from DB using full views
-	$sql = "SELECT run.id, run.number, run.startcomment, runtype.runtypename,
+	/*$sql = "SELECT run.id, run.number, run.startcomment, runtype.runtypename,
 		run.timestart, run.timestop, viewtriggerfull.triggerstring,
         viewenableddet.enabledstring, run.endcomment, run.totalburst, run.totalL0
         FROM run
@@ -9,12 +9,39 @@ function fetch_all($db) {
         LEFT JOIN viewenableddet ON (viewenableddet.run_id = run.id)
         LEFT JOIN viewtriggerfull ON (run.id = viewtriggerfull.run_id)
         GROUP BY run.id
-        ORDER BY run.number DESC";
+        ORDER BY run.number DESC";*/
+	$sql = "SELECT run.id, run.number, run.startcomment, runtype.runtypename,
+		run.timestart, run.timestop, run.endcomment, run.totalburst, run.totalL0
+        FROM run
+        LEFT JOIN runtype ON (runtype.id = run.runtype_id)
+        GROUP BY run.id
+        ORDER BY run.number DESC LIMIT " . $max;
+	if($from>0) $sql = $sql . " OFFSET " . $from;
+
 	if ($db->executeGet ( $sql ) > 0) {
 		// Fill the array with data
 		$jsonArray = Array ();
+		$i=0;
 		while ( $row = $db->next () ) {
 			array_push ( $jsonArray, $row );
+		}
+		foreach($jsonArray as $el){
+			$en = fetch_enabled($db, $el["id"], $el["timestart"], $el["timestop"]);
+			$jsonArray[$i]["enabledstring"] = implode("+", $en);
+			$periodic = fetch_periodic($db, $el["id"], $el["timestart"], $el["timestop"]);
+			$jsonArray[$i]["periodic"] = $periodic;
+			$sync = fetch_sync($db, $el["id"], $el["timestart"], $el["timestop"]);
+			$jsonArray[$i]["sync"] = $sync;
+			$calib = fetch_calib($db, $el["id"], $el["timestart"], $el["timestop"]);
+			$jsonArray[$i]["calibration"] = $calib;
+			$nim = fetch_nim($db, $el["id"], $el["timestart"], $el["timestop"]);
+			$jsonArray[$i]["NIM"] = $nim;
+			$prim = fetch_primitives($db, $el["id"], $el["timestart"], $el["timestop"]);
+			foreach($prim as &$p){
+				na62_primToNameAll($db, $p);
+			}
+			$jsonArray[$i]["Primitive"] = $prim;
+			$i++;
 		}
 		return $jsonArray;
 	} else {
@@ -112,16 +139,24 @@ function fetch_nim($db, $runID, $tsStart, $tsStop) {
 	return $NIMArray;
 }
 function fetch_primitives($db, $runID, $tsStart, $tsStop) {
-	$sql = "SELECT DISTINCT viewprimitivename.triggerprimitivedownscaling, viewprimitivename.triggerprimitivereference, viewprimitivename.maskA,
+	/*$sql = "SELECT DISTINCT viewprimitivename.triggerprimitivedownscaling, viewprimitivename.triggerprimitivereference, viewprimitivename.maskA,
 		viewprimitivename.maskB, viewprimitivename.maskC, viewprimitivename.maskD, viewprimitivename.maskE, viewprimitivename.maskF,
 		viewprimitivename.maskG
 		FROM viewprimitivename
 		WHERE viewprimitivename.run_id = " . $runID . "
 		AND (viewprimitivename.validityend > '" . $tsStart . "'
-		OR viewprimitivename.validityend is NULL)";
+		OR viewprimitivename.validityend is NULL)";*/
+	$sql = "SELECT DISTINCT viewprimitivetype.run_id, viewprimitivetype.triggerprimitivedownscaling,
+			viewprimitivetype.triggerprimitivereference, viewprimitivetype.validitystart,
+			viewprimitivetype.validityend, viewprimitivetype.masknumber,
+			viewprimitivetype.maskA, viewprimitivetype.maskB, viewprimitivetype.maskC, viewprimitivetype.maskD,
+			viewprimitivetype.maskE, viewprimitivetype.maskF, viewprimitivetype.maskG
+		   FROM viewprimitivetype
+			WHERE viewprimitivetype.run_id=" . $runID . " ORDER BY validitystart";
 	
-	if (! empty ( $tsStop ))
-		$sql = $sql . " AND viewprimitivename.validitystart < '" . $tsStop . "'";
+	
+	//if (! empty ( $tsStop ))
+	//	$sql = $sql . " AND viewprimitivename.validitystart < '" . $tsStop . "'";
 	$db->executeGet ( $sql );
 	
 	$PrimArray = Array ();
@@ -130,10 +165,11 @@ function fetch_primitives($db, $runID, $tsStart, $tsStop) {
 	}
 	return $PrimArray;
 }
-function generate_search_sql($searchParams) {
+function generate_search_sql($db, $searchParams) {
 	// Get and verify search parameters
 	$whereArray = Array ();
 	$joinArray = Array ();
+	date_default_timezone_set('UTC');
 	if (isset ( $searchParams ["run_from"] )) {
 		if (is_numeric ( $searchParams ["run_from"] ))
 			array_push ( $whereArray, "run.number >= " . $searchParams ["run_from"] );
@@ -144,11 +180,13 @@ function generate_search_sql($searchParams) {
 	}
 	if (isset ( $searchParams ["date_from"] )) {
 		if (strtotime ( $searchParams ["date_from"] ) !== false)
-			array_push ( $whereArray, "run.timestart >= " . $searchParams ["date_from"] );
+			$date = strtotime($searchParams ["date_from"]);
+			array_push ( $whereArray, "run.timestart >= '" . date("Y-m-d H:i:s", $date) . "'");
 	}
 	if (isset ( $searchParams ["date_to"] )) {
 		if (strtotime ( $searchParams ["date_to"] ) !== false)
-			array_push ( $whereArray, "run.timestart <= " . $searchParams ["date_to"] );
+			$date = strtotime($searchParams ["date_to"]);
+			array_push ( $whereArray, "run.timestart <= '" . date("Y-m-d H:i:s", $date) . "'");
 	}
 	if (isset ( $searchParams ["detectors_en"] )) {
 		foreach ( $searchParams ["detectors_en"] as $key => $det ) {
@@ -164,8 +202,10 @@ function generate_search_sql($searchParams) {
 		}
 	}
 	if (isset ( $searchParams ["primitive"] )) {
-		array_push ( $joinArray, "viewprimitive" );
-		array_push ( $whereArray, "viewprimitive.run_id = run.id AND viewprimitive.triggerstring LIKE '" . $searchParams ["primitive"] . "/%'" );
+		array_push ( $joinArray, "viewprimitivetype" );
+		$listPrim = explode("x", $searchParams["primitive"]);
+		$primArray = na62_nameToPrim($db, $listPrim);
+		array_push ( $whereArray, "viewprimitivetype.run_id = run.id AND " . implode(" AND ", $primArray));
 	}
 	
 	$sql = "";
@@ -214,6 +254,9 @@ function fetch_search($db, $offset, $limits, $sqlwhere) {
 			
 			// Fetch Primitive triggers
 			$jsonArray [$key] ["Primitive"] = fetch_primitives ( $db, $value ["id"], $value ["timestart"], $value ["timestop"] );
+			foreach($jsonArray[$key]["Primitive"] as &$p){
+				na62_primToNameAll($db, $p);
+			}
 		}
 	}
 	/*
@@ -269,16 +312,13 @@ function fetch_run_details($db, $runID) {
 			}
 		}
 		
-		$sql = "SELECT DISTINCT viewprimitivename.validitystart,
-			viewprimitivename.validityend, viewprimitivename.maskA,
-			viewprimitivename.maskB, viewprimitivename.maskC,
-			viewprimitivename.maskD, viewprimitivename.maskE,
-			viewprimitivename.maskF, viewprimitivename.maskG,
-			viewprimitivename.triggerprimitivedownscaling,
-			viewprimitivename.triggerprimitivereference,
-			viewprimitivename.masknumber
-			FROM viewprimitivename
-			WHERE viewprimitivename.run_id=" . $runID . " ORDER BY validitystart";
+		$sql = "SELECT DISTINCT viewprimitivetype.run_id, viewprimitivetype.triggerprimitivedownscaling,
+			viewprimitivetype.triggerprimitivereference, viewprimitivetype.validitystart,
+			viewprimitivetype.validityend, viewprimitivetype.masknumber,
+			viewprimitivetype.maskA, viewprimitivetype.maskB, viewprimitivetype.maskC, viewprimitivetype.maskD,
+			viewprimitivetype.maskE, viewprimitivetype.maskF, viewprimitivetype.maskG
+		   FROM viewprimitivetype
+			WHERE viewprimitivetype.run_id=" . $runID . " ORDER BY validitystart";
 		// Fill the array with data
 		$mainrow ["primitive"] = Array ();
 		if ($db->executeGet ( $sql ) > 0) {
@@ -359,7 +399,7 @@ function prepare_trigger($type, $record) {
 			array_push ( $NIMArray, implode ( "x", $detArray ) . "/" . $value ["triggernimdownscaling"] . "(" . $value ["triggernimreference"] . ")" );
 		}
 		if (sizeof ( $NIMArray ) > 0)
-			array_push ( $trigger, "NIM:" . implode ( "+", $NIMArray ) );
+			array_push ( $trigger, "NIM:" . implode ( "<br>", $NIMArray ) );
 			// Primitive trigger
 		$PrimArray = Array ();
 		foreach ( $record ['Primitive'] as $value ) {
@@ -417,14 +457,16 @@ function fetch_PrimitivesTypes($db) {
 }
 function prepare_PrimCorrelationSQL($db, $nCombi) {
 	$fieldsArray = array ();
+	$numberArray = array ();
 	$tablesArray = array ();
 	$stCond = array ();
 	for($i = 0; $i < $nCombi; $i ++) {
 		$fieldsArray ["d" . $i] = "d" . $i . ".detname";
+		$numberArray ["d" . $i] = "d" . $i . ".detnumber";
 		$tablesArray ["d" . $i] = "primitivedetname AS d" . $i;
 	}
-	for($i = 0; $i < sizeof ( $fieldsArray ) - 1; $i ++) {
-		array_push ( $stCond, $fieldsArray ["d" . $i] . "<" . $fieldsArray ["d" . ($i + 1)] );
+	for($i = 0; $i < sizeof ( $numberArray ) - 1; $i ++) {
+		array_push ( $stCond, $numberArray ["d" . $i] . "<" . $numberArray ["d" . ($i + 1)]);
 	}
 	$sql = "SELECT CONCAT_WS('x', " . implode ( ",", $fieldsArray ) . ") AS triggertype " . "FROM " . implode ( " JOIN ", $tablesArray ) . " ON " . implode ( "<>'' AND ", $fieldsArray ) . "<>'' AND " . implode ( " AND ", $stCond );
 	
@@ -485,4 +527,92 @@ function fetch_PrimitiveMaskTypes($db) {
 	// $triggerArray = invert2DArrray ( $detArray );
 	
 	return $detArray;
+}
+
+function na62_primToNameAll($db, &$prim){
+	na62_primToName($db, $prim, "maskA", 0);
+	na62_primToName($db, $prim, "maskB", 1);
+	na62_primToName($db, $prim, "maskC", 2);
+	na62_primToName($db, $prim, "maskD", 3);
+	na62_primToName($db, $prim, "maskE", 4);
+	na62_primToName($db, $prim, "maskF", 5);
+	na62_primToName($db, $prim, "maskG", 6);
+}
+
+function na62_primToName($db, &$prim, $mask, $detNumber){
+	if($prim[$mask]=='0x7fff7fff'){
+		$prim[$mask] = NULL;
+		return;
+	}
+	$sql = "SELECT detname FROM primitivedetname WHERE detnumber=" . $detNumber . " AND detmask='" . $prim[$mask] . "' AND validitystart<'" . $prim["validitystart"] . "'";
+	// Fill the array with data
+	$mainrow ["primitive"] = Array ();
+	if ($db->executeGet ( $sql ) > 0) {
+		while ( $row = $db->next () ) {
+			$prim[$mask] = $row["detname"];
+		}
+	}
+}
+
+function na62_nameToPrim($db, &$primList){
+	$retArray = array();
+	$joinArray = array();
+	$onArray = array();
+	$selectArray = array();
+	$i = 0;
+	foreach($primList as $prim){
+		array_push($joinArray, "primitivedetname as L" . $i);
+		array_push($onArray, "L" . $i . ".detname='" . $prim . "'");
+		array_push($selectArray, "L" . $i . ".detmask AS detmask" . $i . ", L" . $i . ".detnumber AS detnumber" . $i);
+		$i++;
+	}
+	$sql = "SELECT " . implode(",", $selectArray) . " FROM " . implode(" JOIN ", $joinArray) . " ON " . implode(" AND ", $onArray);
+	
+	if( $db->executeGet( $sql ) > 0) {
+		while ( $row = $db->next() ) {
+			$i = 0;
+			$maskArray = array(
+				"maskA" => "0x7fff7fff",
+				"maskB" => "0x7fff7fff",
+				"maskC" => "0x7fff7fff",
+				"maskD" => "0x7fff7fff",
+				"maskE" => "0x7fff7fff",
+				"maskF" => "0x7fff7fff",
+				"maskG" => "0x7fff7fff"
+			);
+			for($i=0; $i<sizeof($primList); $i++){
+				$mask = "";
+				switch($row["detnumber" . $i]){
+					case 0:
+						$mask = "maskA";
+						break;
+					case 1:
+						$mask = "maskB";
+						break;
+					case 2:
+						$mask = "maskC";
+						break;
+					case 3:
+						$mask = "maskD";
+						break;
+					case 4:
+						$mask = "maskE";
+						break;
+					case 5:
+						$mask = "maskF";
+						break;
+					case 6:
+						$mask = "maskG";
+						break;
+				}
+				$maskArray[$mask] = $row["detmask" . $i];
+			}
+		}
+		$rowArray = array();
+		while(list($k, $v) = each($maskArray)){
+			array_push($rowArray, "viewprimitivetype." . $k . "='" . $v . "'");
+		}
+		array_push($retArray, "(" . implode(" AND ", $rowArray) . ")");
+	}
+	return $retArray;
 }
