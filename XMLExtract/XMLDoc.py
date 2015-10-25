@@ -265,7 +265,8 @@ class rcXML(xmlDocument):
         for ts in listStartRun:
             if abs(ts-self._runStart)<5:
                 listRunNumber = self.getTagRefs("RunNumber", listStartRun[ts]["node"])
-                self._runNumber = listRunNumber[0]
+		if len(listRunNumber)>0:
+	                self._runNumber = listRunNumber[0]
     
     def __str__(self):
         ret =  "RunNumber: " + str(self._runNumber) + "\n"
