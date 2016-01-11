@@ -487,7 +487,12 @@ class L0TPDecoder(xmlDocument):
     def getPrimitiveRefDetector(self):
         if readValue(self._xml.global_parameters.referenceDet)=="":
             return -1
-        return int(readValue(self._xml.global_parameters.referenceDet), 0)
+        value = -1
+        try:
+            value = int(readValue(self._xml.global_parameters.referenceDet), 0)
+        except:
+            pass
+        return value
     
     def __str__(self):
         NIMTriggerS = self.globalParam.getNIMGlobalString()

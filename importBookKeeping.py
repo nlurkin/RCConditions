@@ -218,7 +218,7 @@ def exportFile(myconn, filePath):
     runInfo['TotalL1'] = None if totalL1==None else int(totalL1)
     runInfo['TotalL2'] = None if totalL2==None else int(totalL2)
     runInfo['TotalMerger'] = None if totalMerger==None else int(totalMerger)
-   
+
     if runInfo['RunNumber']=='':
         return
     ## Get Trigger info
