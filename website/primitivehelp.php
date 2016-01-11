@@ -47,7 +47,64 @@ $detArray = fetch_PrimitiveMaskTypes ( $db );
 			echo "</tr>";
 		}
 		?>
-	</table>
+			</table>
+			<h2>Detector C (LAV)</h2>
+			<table border=1 style="table-layout: fixed; width: 450px">
+				<tr>
+					<th width="100px">Mask (hex)</th>
+					<th width="250px">Mask (bin)</th>
+					<th width="100px">Trigger</th>
+				</tr>
+		<?php
+		$css = Array (
+				"r1",
+				"r2" 
+		);
+		foreach ( $detArray [2] as $key => $trigg ) {
+			echo "<tr class='d0 " . $css [$key % 2] . "'>";
+			echo "<td>" . implode ( "</td><td>", $trigg ) . "</td>";
+			echo "</tr>";
+		}
+		?>
+			</table>
+			<h2>Detector E (None)</h2>
+			<table border=1 style="table-layout: fixed; width: 450px">
+				<tr>
+					<th width="100px">Mask (hex)</th>
+					<th width="250px">Mask (bin)</th>
+					<th width="100px">Trigger</th>
+				</tr>
+		<?php
+		$css = Array (
+				"r1",
+				"r2" 
+		);
+		foreach ( $detArray [4] as $key => $trigg ) {
+			echo "<tr class='d0 " . $css [$key % 2] . "'>";
+			echo "<td>" . implode ( "</td><td>", $trigg ) . "</td>";
+			echo "</tr>";
+		}
+		?>
+			</table>
+			<h2>Detector G (None)</h2>
+			<table border=1 style="table-layout: fixed; width: 450px">
+				<tr>
+					<th width="100px">Mask (hex)</th>
+					<th width="250px">Mask (bin)</th>
+					<th width="100px">Trigger</th>
+				</tr>
+		<?php
+		$css = Array (
+				"r1",
+				"r2" 
+		);
+		foreach ( $detArray [6] as $key => $trigg ) {
+			echo "<tr class='d0 " . $css [$key % 2] . "'>";
+			echo "<td>" . implode ( "</td><td>", $trigg ) . "</td>";
+			echo "</tr>";
+		}
+		?>
+			</table>
 		</div>
 		<div class="right_column">
 			<h2>Detector B (RICH)</h2>
@@ -68,30 +125,7 @@ $detArray = fetch_PrimitiveMaskTypes ( $db );
 			echo "</tr>";
 		}
 		?>
-	</table>
-		</div>
-		<div class="left_column">
-			<h2>Detector C (LAV)</h2>
-			<table border=1 style="table-layout: fixed; width: 450px">
-				<tr>
-					<th width="100px">Mask (hex)</th>
-					<th width="250px">Mask (bin)</th>
-					<th width="100px">Trigger</th>
-				</tr>
-		<?php
-		$css = Array (
-				"r1",
-				"r2" 
-		);
-		foreach ( $detArray [2] as $key => $trigg ) {
-			echo "<tr class='d0 " . $css [$key % 2] . "'>";
-			echo "<td>" . implode ( "</td><td>", $trigg ) . "</td>";
-			echo "</tr>";
-		}
-		?>
-	</table>
-		</div>
-		<div class="right_column">
+			</table>
 			<h2>Detector D (MUV)</h2>
 			<table border=1 style="table-layout: fixed; width: 450px">
 				<tr>
@@ -110,30 +144,7 @@ $detArray = fetch_PrimitiveMaskTypes ( $db );
 			echo "</tr>";
 		}
 		?>
-	</table>
-		</div>
-		<div class="left_column">
-			<h2>Detector E (None)</h2>
-			<table border=1 style="table-layout: fixed; width: 450px">
-				<tr>
-					<th width="100px">Mask (hex)</th>
-					<th width="250px">Mask (bin)</th>
-					<th width="100px">Trigger</th>
-				</tr>
-		<?php
-		$css = Array (
-				"r1",
-				"r2" 
-		);
-		foreach ( $detArray [4] as $key => $trigg ) {
-			echo "<tr class='d0 " . $css [$key % 2] . "'>";
-			echo "<td>" . implode ( "</td><td>", $trigg ) . "</td>";
-			echo "</tr>";
-		}
-		?>
-	</table>
-		</div>
-		<div class="right_column">
+			</table>
 			<h2>Detector F (TALK)</h2>
 			<table border=1 style="table-layout: fixed; width: 450px">
 				<tr>
@@ -152,28 +163,7 @@ $detArray = fetch_PrimitiveMaskTypes ( $db );
 			echo "</tr>";
 		}
 		?>
-	</table>
-		</div>
-		<div class="left_column">
-			<h2>Detector G (None)</h2>
-			<table border=1 style="table-layout: fixed; width: 450px">
-				<tr>
-					<th width="100px">Mask (hex)</th>
-					<th width="250px">Mask (bin)</th>
-					<th width="100px">Trigger</th>
-				</tr>
-		<?php
-		$css = Array (
-				"r1",
-				"r2" 
-		);
-		foreach ( $detArray [6] as $key => $trigg ) {
-			echo "<tr class='d0 " . $css [$key % 2] . "'>";
-			echo "<td>" . implode ( "</td><td>", $trigg ) . "</td>";
-			echo "</tr>";
-		}
-		?>
-	</table>
+			</table>
 		</div>
 	</div>
 </body>
