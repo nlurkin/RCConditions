@@ -180,7 +180,13 @@ class DBConnector(object):
         if endTS==None:
             return self.getResultSingle("SELECT id FROM primitivedetname WHERE detnumber=%s AND detmask=%s AND validitystart=%s AND validityend IS NULL", [detector, mask, startT])
         else:
-            return self.getResultSingle("SELECT id FROM primitivedetname WHERE detnumber=%s AND detmask=%s AND validitystart=%s AND validityend=%s", [detector, mask, startT, endT])  
+            return self.getResultSingle("SELECT id FROM primitivedetname WHERE detnumber=%s AND detmask=%s AND validitystart=%s AND validityend=%s", [detector, mask, startT, endT])
+    
+    def _getIntensityID(self, startTS):
+        startT = self.toSQLTime(startTS)
+        
+        return self.getResultSingle("SELECT id FROM T10_intensity WHERE time=%s", [startT])
+          
     ##---------------------------------------
     #    Get INDEX ID from database table, create the entry if does not exist
     ##---------------------------------------
@@ -333,7 +339,13 @@ class DBConnector(object):
                 return self.executeInsert("INSERT INTO primitivedetname (detnumber, detmask, detname, validitystart, validityend) VALUES (%s, %s, %s, %s, %s)",
                                           [detector, mask, meaning, self.toSQLTime(startTS), self.toSQLTime(endTS)])
         return detID
+    
+    def _setT10Intensity(self, startTS, value):
+        intensityID = self._getIntensityID(startTS)
+        if intensityID==False:
+                return self.executeInsert("INSERT INTO T10_intensity (time, value) VALUES (%s, %s)", [self.toSQLTime(startTS), value])
         
+        return intensityID
     ##---------------------------------------
     #    Create new run entries in database
     ##---------------------------------------
@@ -438,4 +450,8 @@ class DBConnector(object):
         self._setPrimitiveDetName(startTS, endTS, "E", mask.detE, detNames.detE)
         self._setPrimitiveDetName(startTS, endTS, "F", mask.detF, detNames.detF)
         self._setPrimitiveDetName(startTS, endTS, "G", mask.detG, detNames.detG)
+    
+    def setT10IntensityList(self, intensity):
+        for startTS, value in intensity:
+            self._setT10Intensity(startTS, value)
             
