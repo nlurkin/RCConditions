@@ -41,6 +41,8 @@ function fetch_all($db, $from=0, $max=10) {
 				na62_primToNameAll($db, $p);
 			}
 			$jsonArray[$i]["Primitive"] = $prim;
+			$T10Max = fetch_RunT10Max($db, $el["timestart"], $el["timestop"]);
+			$jsonArray[$i]["T10Max"] = $T10Max;
 			$i++;
 		}
 		return $jsonArray;
@@ -257,6 +259,9 @@ function fetch_search($db, $offset, $limits, $sqlwhere) {
 			foreach($jsonArray[$key]["Primitive"] as &$p){
 				na62_primToNameAll($db, $p);
 			}
+			
+			$T10Max = fetch_RunT10Max($db, $value["timestart"], $value["timestop"]);
+			$jsonArray[$key]["T10Max"] = $T10Max;
 		}
 	}
 	/*
@@ -615,4 +620,14 @@ function na62_nameToPrim($db, &$primList){
 		array_push($retArray, "(" . implode(" AND ", $rowArray) . ")");
 	}
 	return $retArray;
+}
+
+function fetch_RunT10Max($db, $tStart, $tStop){
+	$sql = "SELECT max(value) as value FROM T10_intensity WHERE time > '" . $tStart . "' AND time < '" . $tStop . "'";
+	if($db->executeGet( $sql ) > 0) {
+		if ( $row = $db->next() ) {
+			return round($row["value"], 2);
+		}
+	}
+	return -1;
 }
