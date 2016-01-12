@@ -631,3 +631,14 @@ function fetch_RunT10Max($db, $tStart, $tStop){
 	}
 	return -1;
 }
+
+function fetch_RunT10($db, $tStart, $tStop){
+	$sql = "SELECT UNIX_TIMESTAMP(time) as time, value FROM T10_intensity WHERE time > '" . $tStart . "' AND time < '" . $tStop . "'";
+	$rArray = array();
+	if($db->executeGet( $sql ) > 0) {
+		while( $row = $db->next() ) {
+			array_push($rArray, $row);
+		}
+	}
+	return $rArray;
+}
