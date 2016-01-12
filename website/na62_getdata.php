@@ -66,7 +66,7 @@ if (count ( $dataArray ) > 0) {
 		echo "</tr>\n";
 		if ($moreInfo) {
 			echo "<tr class='d0 " . $css [$i % 2] . "'>";
-			echo "<td colspan=1></td>";
+			echo "<td colspan=1>" . $row["T10Max"] . "</td>";
 			echo "<td>" . $row ["totalburst"] . "</td>";
 			echo "<td>" . $row ["totalL0"] . "</td>";
 			echo "<td class='wrappable'>" . $enabledstring . "</td>";
