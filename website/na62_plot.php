@@ -44,6 +44,7 @@ function doT10Plot($db, $tstart, $tstop, $width){
 
 	// Create the first line
 	$p1 = new LinePlot($datay1, $lArray);
+	$p1->SetStepStyle();
 	$graph->Add($p1);
 	$p1->SetColor("#6495ED");
 	//$p1->SetLegend('I [E11]');
