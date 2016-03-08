@@ -169,6 +169,7 @@ function fetch_primitives($db, $runID, $tsStart, $tsStop) {
 }
 function generate_search_sql($db, $searchParams) {
 	// Get and verify search parameters
+	
 	$whereArray = Array ();
 	$joinArray = Array ();
 	date_default_timezone_set('UTC');
@@ -209,7 +210,6 @@ function generate_search_sql($db, $searchParams) {
 		$primArray = na62_nameToPrim($db, $listPrim);
 		array_push ( $whereArray, "viewprimitivetype.run_id = run.id AND " . implode(" AND ", $primArray));
 	}
-	
 	$sql = "";
 	if (sizeof ( $joinArray ) > 0)
 		$sql = $sql . " JOIN " . implode ( " JOIN ", $joinArray );
@@ -571,7 +571,10 @@ function na62_nameToPrim($db, &$primList){
 		array_push($selectArray, "L" . $i . ".detmask AS detmask" . $i . ", L" . $i . ".detnumber AS detnumber" . $i);
 		$i++;
 	}
-	$sql = "SELECT " . implode(",", $selectArray) . " FROM " . implode(" JOIN ", $joinArray) . " ON " . implode(" AND ", $onArray);
+	if(sizeof($joinArray)>1)
+		$sql = "SELECT " . implode(",", $selectArray) . " FROM " . implode(" JOIN ", $joinArray) . " ON " . implode(" AND ", $onArray);
+	else 
+		$sql = "SELECT " . implode(",", $selectArray) . " FROM " . implode(" JOIN ", $joinArray) . " WHERE " . implode(" AND ", $onArray);
 	
 	if( $db->executeGet( $sql ) > 0) {
 		while ( $row = $db->next() ) {
