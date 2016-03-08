@@ -163,7 +163,8 @@ function fetch_primitives($db, $runID, $tsStart, $tsStop) {
 	
 	$PrimArray = Array ();
 	while ( $row = $db->next () ) {
-		array_push ( $PrimArray, $row );
+		if(date_create($row["validityend"])->getTimestamp() -date_create($tsStart)->getTimestamp()>5)
+			array_push ( $PrimArray, $row );
 	}
 	return $PrimArray;
 }
@@ -289,7 +290,8 @@ function fetch_run_details($db, $runID) {
 		$mainrow ["periodic"] = Array ();
 		if ($db->executeGet ( $sql ) > 0) {
 			while ( $row = $db->next () ) {
-				array_push ( $mainrow ["periodic"], $row );
+				if(date_create($row["validityend"])->getTimestamp() -date_create($mainrow["timestart"])->getTimestamp()>5)
+					array_push ( $mainrow ["periodic"], $row );
 			}
 		}
 		
@@ -299,7 +301,8 @@ function fetch_run_details($db, $runID) {
 		$mainrow ["calibration"] = Array ();
 		if ($db->executeGet ( $sql ) > 0) {
 			while ( $row = $db->next () ) {
-				array_push ( $mainrow ["calibration"], $row );
+				if(date_create($row["validityend"])->getTimestamp() -date_create($mainrow["timestart"])->getTimestamp()>5)
+					array_push ( $mainrow ["calibration"], $row );
 			}
 		}
 		
@@ -313,7 +316,8 @@ function fetch_run_details($db, $runID) {
 		$mainrow ["nim"] = Array ();
 		if ($db->executeGet ( $sql ) > 0) {
 			while ( $row = $db->next () ) {
-				array_push ( $mainrow ["nim"], $row );
+				if(date_create($row["validityend"])->getTimestamp() -date_create($mainrow["timestart"])->getTimestamp()>5)
+					array_push ( $mainrow ["nim"], $row );
 			}
 		}
 		
@@ -328,7 +332,8 @@ function fetch_run_details($db, $runID) {
 		$mainrow ["primitive"] = Array ();
 		if ($db->executeGet ( $sql ) > 0) {
 			while ( $row = $db->next () ) {
-				array_push ( $mainrow ["primitive"], $row );
+				if(date_create($row["validityend"])->getTimestamp() -date_create($mainrow["timestart"])->getTimestamp()>5)
+					array_push ( $mainrow ["primitive"], $row );
 			}
 		}
 		
