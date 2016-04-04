@@ -141,6 +141,7 @@ If you have any special request or need to book a slot for a sessions that appea
 <?php
 $trainingTS = 0;
 $i = 0;
+$j = 0;
 $css = Array (
 		"r1",
 		"r2"
@@ -150,8 +151,10 @@ $startDate = mktime(0, 0, 0, 04, 19, 2016);
 while($trainingTS<$endTS){
 	$trainingTS = strtotime("Tuesday + ".$i." week", $startDate);
 	$availSlots = getNamesForSlotSlots($db, $trainingTS);
-	if(sizeof($availSlots)>0)
-		echo "<tr class='".$css [$i % 2]."'><td>".date("Y-m-d", $trainingTS)."</td><td>".implode($availSlots, ", ")."</td></tr>";
+	if(sizeof($availSlots)>0){
+		echo "<tr class='".$css [$j % 2]."'><td>".date("Y-m-d", $trainingTS)."</td><td>".implode($availSlots, ", ")."</td></tr>";
+		$j++;
+	}
 	$i++;
 }
 ?>
