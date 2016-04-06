@@ -7,6 +7,7 @@ ini_set ( 'display_startup_errors', TRUE );
 // Get site specific configuration
 include ("config.php");
 include ("na62_helper.php");
+include ("na62_training_lib.php");
 
 $db = new DBConnect ();
 
@@ -33,55 +34,8 @@ if(isset($_POST["submit"])){
 		$bad = true;
 	}
 	
-	if(!$bad){
-		$db->executeGet("SELECT * FROM shifter_training WHERE Name LIKE '".$_POST["name"]."' AND Surname LIKE '". $_POST["surname"]."'");
-		if($db->next()){
-			echo "<script>alert('A training request with this name has already been recorded. Please write us at na62-shiftertraining@cern.ch')</script>";
-		}
-		else{
-			if(!$db->executeUpdate("INSERT INTO shifter_training (Name, Surname, Email, Date, Attended) VALUES (?,?,?,?,?)", "ssssi", $_POST["name"], $_POST["surname"], $_POST["email"], date("Y-m-d", $_POST["date"]), 0)){
-				die("Error! Unable to update database");
-			}
-			else{
-				echo "<script>alert('Your request has been recorded and a confirmation e-mail\\nhas been sent to the address you provided.\\nThank you')</script>";
-				$text = "Dear ".$_POST["name"]." ".$_POST["surname"].",\n\nYour booking for a shifter training session on the ".date("Y-m-d", $_POST["date"])." has been recorded.\n\nWe remind you that the session starts at 14h on the day and is expected to finish around 17h30. The session takes place in the conference room in building 918.\n\nBest regards,\nThe Shift Training Crew.";
-				mail($_POST["email"], "Booking confirmation for shifter training session", $text,"From: na62-shiftertraining@cern.ch" );
-			}
-		}
-	}
-}
-
-function echoIfSet($varName){
-	if(isset($_POST[$varName])){
-		echo $_POST[$varName];
-	}
-}
-
-function getAvailableSlots($db, $date){
-	$booked = 0;
-	$db->executeGet("SELECT COUNT(*) as tot FROM shifter_training WHERE Date BETWEEN '".date("Y-m-d", $date)." 00:00:00' AND '".date("Y-m-d", $date). " 23:59:59'");
-	if($row = $db->next()){
-		$booked = $row["tot"];
-	}
-	return 12-$booked;
-}
-
-function getNamesForSlotSlots($db, $date){
-	$booked = array();
-	$db->executeGet("SELECT Name,Surname FROM shifter_training WHERE Date BETWEEN '".date("Y-m-d", $date)." 00:00:00' AND '".date("Y-m-d", $date). " 23:59:59'");
-	while($row = $db->next()){
-		array_push($booked, $row["Name"]." ".$row["Surname"]);
-	}
-	return $booked;
-}
-
-function getListSlots($db){
-	$slots = array();
-	$db->executeGet("SELECT * FROM shifter_sessions ORDER BY Date");
-	while($row = $db->next()){
-		array_push($slots, array("Date"=>strtotime($row["Date"]), "Message"=>$row["Message"]));
-	}
-	return $slots;
+	if(!$bad)
+		insertUser($db, $_POST["name"], $_POST["surname"], $_POST["email"], $_POST["date"]);
 }
 ?>
 <!DOCTYPE html>
@@ -113,16 +67,9 @@ The training sessions are organised during the run every Tuesday starting at 14h
 <option value=0> Please select a date</option>
 <?php
 $listSlots = getListSlots($db);
-
-foreach($listSlots as $slot){
-	$availSlots = getAvailableSlots($db, $slot["Date"]);	
-	$selected = "";
-	$message = "";
-	if(isset($_POST["date"]) && $slot["Date"]==$_POST["date"]) $selected = "selected";
-	if($slot["Message"]!="") $message = " - " . $slot["Message"];
-	if($availSlots>0)
-		echo "<option value=".$slot["Date"]." ".$selected.">".date("d/m/y", $slot["Date"])." - ".$availSlots." slots available".$message."</option>";
-}
+$date = null;
+if(isset($_POST["date"])) $date = $_POST["date"];
+printOptionListSlots($db, $listSlots, $date, true);
 ?>
 </select></td>
 </tr>
@@ -155,7 +102,7 @@ $css = Array (
 $listSlots = getListSlots($db);
 
 foreach($listSlots as $slot){
-	$availSlots = getNamesForSlotSlots($db, $slot["Date"]);
+	$availSlots = getNamesForSlots($db, $slot["Date"]);
 	if(sizeof($availSlots)>0){
 		echo "<tr class='".$css [$j % 2]."'><td>".date("Y-m-d", $slot["Date"])."</td><td>".$slot["Message"]."</td><td>".implode($availSlots, ", ")."</td></tr>";
 		$j++;
