@@ -74,6 +74,15 @@ function getNamesForSlotSlots($db, $date){
 	}
 	return $booked;
 }
+
+function getListSlots($db){
+	$slots = array();
+	$db->executeGet("SELECT * FROM shifter_sessions ORDER BY Date");
+	while($row = $db->next()){
+		array_push($slots, array("Date"=>strtotime($row["Date"]), "Message"=>$row["Message"]));
+	}
+	return $slots;
+}
 ?>
 <!DOCTYPE html>
 <html>
@@ -103,28 +112,16 @@ The training sessions are organised during the run every Tuesday starting at 14h
 <td>Training date:</td><td><select name="date">
 <option value=0> Please select a date</option>
 <?php
-$trainingTS = 0;
+$listSlots = getListSlots($db);
 
-$trainingTS = mktime(0, 0, 0, 4, 8, 2016);
-$availSlots = getAvailableSlots($db, $trainingTS);
-$selected = "";
-if(isset($_POST["date"]) && $trainingTS==$_POST["date"]) $selected = "selected";
-if($availSlots>0)
-	echo "<option value=".$trainingTS." ".$selected.">".date("d/m/y", $trainingTS)." - ".$availSlots." slots available</option>";
-
-$i = 0;
-$endTS = mktime(0, 0, 0, 11, 07, 2016);
-$startDate = time();
-if($startDate<mktime(0, 0, 0, 04, 19, 2016))
-	$startDate = mktime(0, 0, 0, 04, 19, 2016);
-while($trainingTS<$endTS){
-	$trainingTS = strtotime("Tuesday + ".$i." week", $startDate);
-	$availSlots = getAvailableSlots($db, $trainingTS);
+foreach($listSlots as $slot){
+	$availSlots = getAvailableSlots($db, $slot["Date"]);	
 	$selected = "";
-	if(isset($_POST["date"]) && $trainingTS==$_POST["date"]) $selected = "selected";
+	$message = "";
+	if(isset($_POST["date"]) && $slot["Date"]==$_POST["date"]) $selected = "selected";
+	if($slot["Message"]!="") $message = " - " . $slot["Message"];
 	if($availSlots>0)
-		echo "<option value=".$trainingTS." ".$selected.">".date("d/m/y", $trainingTS)." - ".$availSlots." slots available</option>";
-	$i++;
+		echo "<option value=".$slot["Date"]." ".$selected.">".date("d/m/y", $slot["Date"])." - ".$availSlots." slots available".$message."</option>";
 }
 ?>
 </select></td>
@@ -143,11 +140,11 @@ If you have any special request or need to book a slot for a sessions that appea
 <br>
 
 
-<table border="1" style="width:600px">
+<table border="1" style="width:800px">
 <tr>
-<th style="width:100px">Session date</th><th style="width:500px">Registered shifter</th>
+<th style="width:100px">Session date</th><th style="width:300px">Comment</th><th style="width:500px">Registered shifter</th>
 <?php
-$trainingTS = 0;
+
 $i = 0;
 $j = 0;
 $css = Array (
@@ -155,23 +152,14 @@ $css = Array (
 		"r2"
 		);
 
-$trainingTS = mktime(0, 0, 0, 4, 8, 2016);
-$availSlots = getNamesForSlotSlots($db, $trainingTS);
-if(sizeof($availSlots)>0){
-	echo "<tr class='".$css [$j % 2]."'><td>".date("Y-m-d", $trainingTS)."</td><td>".implode($availSlots, ", ")."</td></tr>";
-	$j++;
-}
+$listSlots = getListSlots($db);
 
-$endTS = mktime(0, 0, 0, 11, 07, 2016);
-$startDate = mktime(0, 0, 0, 04, 19, 2016);
-while($trainingTS<$endTS){
-	$trainingTS = strtotime("Tuesday + ".$i." week", $startDate);
-	$availSlots = getNamesForSlotSlots($db, $trainingTS);
+foreach($listSlots as $slot){
+	$availSlots = getNamesForSlotSlots($db, $slot["Date"]);
 	if(sizeof($availSlots)>0){
-		echo "<tr class='".$css [$j % 2]."'><td>".date("Y-m-d", $trainingTS)."</td><td>".implode($availSlots, ", ")."</td></tr>";
+		echo "<tr class='".$css [$j % 2]."'><td>".date("Y-m-d", $slot["Date"])."</td><td>".$slot["Message"]."</td><td>".implode($availSlots, ", ")."</td></tr>";
 		$j++;
 	}
-	$i++;
 }
 ?>
 </table>
