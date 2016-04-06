@@ -39,7 +39,7 @@ if(isset($_POST["submit"])){
 			echo "<script>alert('A training request with this name has already been recorded. Please write us at na62-shiftertraining@cern.ch')</script>";
 		}
 		else{
-			if(!$db->executeUpdate("INSERT INTO shifter_training (Name, Surname, Date, Attended) VALUES (?,?,?,?)", "sssi", $_POST["name"], $_POST["surname"], date("Y-m-d", $_POST["date"]), 0)){
+			if(!$db->executeUpdate("INSERT INTO shifter_training (Name, Surname, Email, Date, Attended) VALUES (?,?,?,?,?)", "ssssi", $_POST["name"], $_POST["surname"], $_POST["email"], date("Y-m-d", $_POST["date"]), 0)){
 				die("Error! Unable to update database");
 			}
 			else{
@@ -104,6 +104,14 @@ The training sessions are organised during the run every Tuesday starting at 14h
 <option value=0> Please select a date</option>
 <?php
 $trainingTS = 0;
+
+$trainingTS = mktime(0, 0, 0, 4, 8, 2016);
+$availSlots = getAvailableSlots($db, $trainingTS);
+$selected = "";
+if(isset($_POST["date"]) && $trainingTS==$_POST["date"]) $selected = "selected";
+if($availSlots>0)
+	echo "<option value=".$trainingTS." ".$selected.">".date("d/m/y", $trainingTS)." - ".$availSlots." slots available</option>";
+
 $i = 0;
 $endTS = mktime(0, 0, 0, 11, 07, 2016);
 $startDate = time();
@@ -146,6 +154,14 @@ $css = Array (
 		"r1",
 		"r2"
 		);
+
+$trainingTS = mktime(0, 0, 0, 4, 8, 2016);
+$availSlots = getNamesForSlotSlots($db, $trainingTS);
+if(sizeof($availSlots)>0){
+	echo "<tr class='".$css [$j % 2]."'><td>".date("Y-m-d", $trainingTS)."</td><td>".implode($availSlots, ", ")."</td></tr>";
+	$j++;
+}
+
 $endTS = mktime(0, 0, 0, 11, 07, 2016);
 $startDate = mktime(0, 0, 0, 04, 19, 2016);
 while($trainingTS<$endTS){
