@@ -25,7 +25,7 @@ if (isset ( $_POST ["view"] ) && $_POST["view"]=="update_user") {
 		$email = $_POST ["email_" . $i];
 		$date = $_POST ["date_" . $i];
 		$attended = isset ( $_POST ["attended_" . $i] ) ? 1 : 0;
-		
+	
 		if (isset ( $_POST ["delete_" . $i] )) {
 			deleteUser ( $db, $id );
 		} else {
@@ -52,6 +52,16 @@ if (isset ( $_POST ["view"] ) && $_POST["view"]=="update_user") {
 	}
 }/// END UPDATE_USER_VIEW
 
+/// UPDATE_ATTENDED_VIEW
+if (isset ( $_POST ["view"] ) && $_POST["view"]=="update_attended") {
+	for($i = 0; $i < $_POST ["nMatch"]; $i ++) {
+		$id = $_POST ["userID_" . $i];
+		$attended = isset ( $_POST ["attended_" . $i] ) ? 1 : 0;
+		
+		echo $id." ".$attended."<br>";
+		updateAttended ( $db, $id, $attended );
+	}
+}/// END UPDATE_USER_VIEW
 
 /// ADD_USER_VIEW
 if (isset ( $_POST ["view"] ) && $_POST["view"]=="add_user") {
@@ -205,12 +215,15 @@ if (isset ( $_POST ["view"] ) && ($_POST ["view"] == "user" | $_POST ["view"] ==
 
 <?php
 // / SESSION_SEARCH VIEW
-if (isset ( $_POST ["view"] ) && ($_POST ["view"] == "session" || $_POST ["view"] == "send_mail")) {
+if (isset ( $_POST ["view"] ) && ($_POST ["view"] == "session" || $_POST ["view"] == "send_mail" || $_POST["view"] == "update_attended")) {
 	$date = $_POST["session_search"];
 ?>
 <div class="leftarea">
+<form method="POST" action="training_admin.php">
+		<input type="hidden" name="view" value="update_attended">
+		<input type="hidden" name="session_search" value="<?php echo $date;?>">
 <table border="1" style="width:500px">
-<tr><th colspan="2"><?php echo date("Y-m-d", $date); ?></th></tr>
+<tr><th colspan="2"><?php echo date("Y-m-d", $date); ?></th><th>Attended</th></tr>
 <?php 
 $attendees = getEntriesForSlots($db, $date);
 $i=0;
@@ -219,11 +232,17 @@ $css = Array (
 		"r2"
 		);
 foreach($attendees as $row){
-	echo "<tr class='".$css [$i % 2]."'><td>".$row["Name"]." ".$row["Surname"]."</td><td>".$row["Email"]."</td></tr>";
+	echo "<tr class='".$css [$i % 2]."'><td>".$row["Name"]." ".$row["Surname"]."</td><td>". 
+		$row["Email"]."</td><td>".
+		"<input type='hidden' name='userID_".$i."' value='".$row["idshifter_training"]."'>".
+		"<input type='checkbox' name='attended_" . $i . "' value='1' " . ($row ["Attended"] == 1 ? "checked" : "") . "></td></tr>";
 	$i++;
 }
 ?>
+<tr style='border:0px; border-style: none'><td colspan='2' style='border:0px; border-style: none'></td><td style='border:0px; border-style: none'><input type='submit' name='submit' value='Update'></td></tr>
 </table>
+<input type="hidden" name="nMatch" value="<?php echo sizeof($attendees);?>">
+</form>
 </div>
 <div class="rightarea">
 <div class="search-form">

@@ -92,6 +92,12 @@ function updateUser($db, $userID, $name, $surname, $email, $date, $attended){
 	}
 }
 
+function updateAttended($db, $userID, $attended){
+	if(!$db->executeUpdate("UPDATE shifter_training SET Attended=? WHERE idshifter_training=?", "ii", $attended, $userID)){
+		die("Error! Unable to update database");
+	}
+}
+
 function deleteUser($db, $userID){
 	if(!$db->executeUpdate("DELETE FROM shifter_training WHERE idshifter_training=?", "i", $userID)){
 				die("Error! Unable to update database");
