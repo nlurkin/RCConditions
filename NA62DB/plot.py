@@ -9,10 +9,11 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 
 from database import DBConnector
+from DBConfig import DBConfig as DB
 
 if __name__ == '__main__':
     myconn = DBConnector()
-    myconn.connectDB(passwd="2Kfole")
+    myconn.connectDB(passwd=sys.argv[1], host=DB.host, db=DB.dbName, user=DB.userName, port=DB.port)
     
     
     res = myconn.executeGet("SELECT totalMerger, timestop, totalL2, totalL0, totalL1, number  FROM run WHERE timestart>'2015-06-22T00:00:00.000' ORDER BY number")

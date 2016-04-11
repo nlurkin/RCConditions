@@ -35,11 +35,11 @@ class DBConnector(object):
     ##---------------------------------------
     #    Utility functions for DB actions
     ##---------------------------------------
-    def connectDB(self, host="nlurkinsql.cern.ch", user="nlurkin", passwd="", db="testRC"):
+    def connectDB(self, host="nlurkinsql.cern.ch", user="nlurkin", passwd="", db="testRC", port=3307):
         '''Create Database connection and cursor for SQL requests'''
         
         try:
-            self.db = MySQLdb.connect(host=host, user=user, passwd=passwd, db=db)
+            self.db = MySQLdb.connect(host=host, user=user, passwd=passwd, db=db, port=port)
             self.cursor = self.db.cursor()
         except MySQLdb.Error, e:
             print "Unable to initiate connection with database " + db + " at " + user + "@" + host

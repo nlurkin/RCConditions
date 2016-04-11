@@ -9,6 +9,7 @@ import sys
 
 from database import DBConnector
 from tabulate import tabulate
+from DBConfig import DBConfig as DB
 
 
 def getColName(myconn, table):
@@ -46,7 +47,7 @@ if __name__ == '__main__':
         sys.exit()
     
     myconn = DBConnector()
-    myconn.connectDB(passwd=sys.argv[1])
+    myconn.connectDB(passwd=sys.argv[1], host=DB.host, db=DB.dbName, user=DB.userName, port=DB.port)
     
     print "#################################  Run Info  ################################"
     printTable(myconn, "run", "number")

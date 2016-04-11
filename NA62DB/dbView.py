@@ -9,6 +9,7 @@ import sys
 
 from database import DBConnector
 from tabulate import tabulate
+from DBConfig import DBConfig as DB
 
 
 def getColName(myconn, table):
@@ -48,7 +49,7 @@ def printTable(myconn, table, order="", where=""):
 
 if __name__ == '__main__':
     myconn = DBConnector()
-    myconn.connectDB()
+    myconn.connectDB(passwd=sys.argv[1], host=DB.host, db=DB.dbName, user=DB.userName, port=DB.port)
     
     
     res = myconn.executeGet("SELECT table_name FROM information_schema.tables WHERE table_schema='testRC' AND table_type='BASE TABLE'")

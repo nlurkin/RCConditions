@@ -11,6 +11,7 @@ import smtplib
 from email.mime.text import MIMEText
 
 from database import DBConnector
+from DBConfig import DBConfig as DB
 
 body="""
 Dear Training Crew Members,
@@ -26,6 +27,7 @@ The Cron member of the Training Crew
 """
 
 dest_emails = ["na62-shiftertraining@cern.ch"]
+#dest_emails = ["nicolas.lurkin@cern.ch"]
 
 def next_weekday(d, weekday):
    days_ahead = weekday - d.weekday()
@@ -35,7 +37,7 @@ def next_weekday(d, weekday):
 
 if __name__ == '__main__':
     myconn = DBConnector()
-    myconn.connectDB(passwd=sys.argv[1])
+    myconn.connectDB(passwd=sys.argv[1], host=DB.host, db=DB.dbName, user=DB.userName, port=DB.port)
     
     first_date = datetime.datetime.now()
     if first_date < datetime.datetime(2016,04,15):
@@ -47,11 +49,12 @@ if __name__ == '__main__':
         shifter_list.append("{0} {1}".format(r[1],r[2]))
     
     nextNextTraining = next_weekday(first_date+datetime.timedelta(7), 1)
-    res = myconn.executeGet("SELECT COUNT(*) FROM shifter_training WHERE Date BETWEEN '{0}' AND '{1}'".format(nextTraining.strftime("%Y-%m-%dT00:00:00.000"), nextTraining.strftime("%Y-%m-%dT23:59:59.000")))
+    print nextNextTraining.strftime("%Y-%m-%dT00:00:00.000")
+    res = myconn.executeGet("SELECT COUNT(*) FROM shifter_training WHERE Date BETWEEN '{0}' AND '{1}'".format(nextNextTraining.strftime("%Y-%m-%dT00:00:00.000"), nextNextTraining.strftime("%Y-%m-%dT23:59:59.000")))
     next_number = 0
     if len(res)>0:
         next_number = res[0][0]
-    msg_body =  body.format(training_date=nextTraining.strftime("%d-%m-%Y"), shift_number=len(shifter_list), shifter_list="\n   ".join(shifter_list), next_number=next_number)
+    msg_body =  body.format(training_date=nextNextTraining.strftime("%d-%m-%Y"), shift_number=len(shifter_list), shifter_list="\n   ".join(shifter_list), next_number=next_number)
    
     msg = MIMEText(msg_body)
     msg['Subject'] = "Next Shifter Training Session"

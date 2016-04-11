@@ -18,6 +18,7 @@ import xml.dom.minidom as xmld
 from XMLExtract import Timeline, L0TPDecoder, tryint
 from XMLExtract.Timeline import TriggerObject, DetectorObject
 from NA62DB import DBConnector
+from NA62DB.DBConfig import DBConfig as DB
 from runConfig import runParam
 from XMLExtract.L0TPDecoder import PrimitiveInfo
 
@@ -314,7 +315,7 @@ if __name__ == '__main__':
     
     #myconn = None
     myconn = DBConnector(False)
-    myconn.connectDB(passwd=sys.argv[-1:][0])
+    myconn.connectDB(passwd=sys.argv[-1:][0], db=DB.dbName, user=DB.userName, host=DB.host, port=DB.port)
     #myconn.setNIMNames(1409529600, None, [[0,'Q1'], [1,'NHOD'], [2,'MUV2'], [3,'MUV3'], [4,'']])
     #myconn.setPrimitivesNames(1409529600, None, [[0,'Q1'], [1,'NHOD'], [2,'MUV2'], [3,'MUV3'], [4,'']])
 
