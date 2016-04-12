@@ -58,7 +58,6 @@ if (isset ( $_POST ["view"] ) && $_POST["view"]=="update_attended") {
 		$id = $_POST ["userID_" . $i];
 		$attended = isset ( $_POST ["attended_" . $i] ) ? 1 : 0;
 		
-		echo $id." ".$attended."<br>";
 		updateAttended ( $db, $id, $attended );
 	}
 }/// END UPDATE_USER_VIEW

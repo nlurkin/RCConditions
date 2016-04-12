@@ -54,7 +54,7 @@ if __name__ == '__main__':
     next_number = 0
     if len(res)>0:
         next_number = res[0][0]
-    msg_body =  body.format(training_date=nextNextTraining.strftime("%d-%m-%Y"), shift_number=len(shifter_list), shifter_list="\n   ".join(shifter_list), next_number=next_number)
+    msg_body =  body.format(training_date=nextTraining.strftime("%d-%m-%Y"), shift_number=len(shifter_list), shifter_list="\n   ".join(shifter_list), next_number=next_number)
    
     msg = MIMEText(msg_body)
     msg['Subject'] = "Next Shifter Training Session"
