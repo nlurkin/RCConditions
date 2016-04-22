@@ -144,7 +144,7 @@ if (isset ( $_POST ["view"] ) && $_POST["view"]=="send_mail") {
 			Surname : <input type='text' name='surname'>
 			Email : <input type='text' name='email'>
 			Session date : <select name='date'>
-			<?php printOptionListSlots ( $db, getListSlots ( $db ), null, true );?>
+			<?php printOptionListSlots ( $db, getListSlots ( $db ), null, false );?>
 			</select>
 			<input type="submit" name="submit" value="Add">
 		</form>
