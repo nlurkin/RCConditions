@@ -156,9 +156,9 @@ def getTriggerProperties(listNode):
             if not l0tpConfig._bad:
                 tobject = events['Periodic'].addTS(timestamp)
                 tobject.Propertie = l0tpConfig.getPeriodicPeriod()
-                tobject = events['NIM'].addTS(timestamp)
-                tobject.Propertie = l0tpConfig.getNIMMasks()
-                tobject.RefDetector = l0tpConfig.getNIMRefDetector()
+                #tobject = events['NIM'].addTS(timestamp)
+                #tobject.Propertie = l0tpConfig.getNIMMasks()
+                #tobject.RefDetector = l0tpConfig.getNIMRefDetector()
                 tobject = events['Primitive'].addTS(timestamp)
                 tobject.Propertie = l0tpConfig.getPrimitiveMasks()
                 tobject.RefDetector = l0tpConfig.getPrimitiveRefDetector()
@@ -233,7 +233,7 @@ def exportFile(myconn, filePath):
     refTriggerObject = TriggerObject()
     refTriggerObject.Propertie = -1;
     mergeTriggers(triggerDict['Periodic'], triggerProp['Periodic'], startTS, endTS)
-    mergeTriggers(triggerDict['NIM'], triggerProp['NIM'], startTS, endTS)
+    #mergeTriggers(triggerDict['NIM'], triggerProp['NIM'], startTS, endTS)
     mergeTriggers(triggerDict['Primitive'], triggerProp['Primitive'], startTS, endTS)
     triggerDict['Calib'].simplify(refTriggerObject)
     triggerDict['Sync'].simplify(refTriggerObject)
@@ -261,8 +261,8 @@ def exportFile(myconn, filePath):
         print "Periodic triggers"
         print triggerDict['Periodic'].getList()
 
-        print "NIM triggers"
-        print triggerDict['NIM'].getList()
+        #print "NIM triggers"
+        #print triggerDict['NIM'].getList()
 
         print "Primitive triggers"
         print triggerDict['Primitive'].getList()
@@ -279,7 +279,7 @@ def exportFile(myconn, filePath):
         
         ## Insert triggers into DB
         myconn.setPeriodicTriggerList(triggerDict['Periodic'], runNumber)
-        myconn.setNIMTriggerList(triggerDict['NIM'], runNumber)
+        #myconn.setNIMTriggerList(triggerDict['NIM'], runNumber)
         myconn.setPrimitiveTriggerList(triggerDict['Primitive'], runNumber)
         
         myconn.setSyncTriggerList(triggerDict['Sync'], runNumber)
@@ -291,7 +291,7 @@ def exportFile(myconn, filePath):
 
 def setPrimitivesReferences(prim):
     if myconn is None:
-       return
+        return
     l0 = L0TPDecoder
     startTS = 1435701600
     

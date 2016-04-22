@@ -13,7 +13,6 @@ L0TP (Torino) Configuration file decoding
 -----------------------------------------
 
 {globalParam}
-{NIMTriggerS}
 {PrimTriggerS}
 {lutParamS}
 {lutNIMParamS}
@@ -135,75 +134,110 @@ def readValue(node):
 class Global(object):
     
     def __init__(self, xml):
-        self.numEvtMEP = None
-        self.fixLatency = None
-        self.periodicTrgPrimitive = None
-        self.periodicTrgTime = None
+        self.bit_finetime = None
         self.calibLatency = None
         self.calibLatencyDirection = None
-        self.referenceDet = None
-        self.referenceDetNIM = None
-        self.enableMask = None
-        self.enableMaskNIM = None
-        self.primitiveDT = None
-        self.nimDT = None
-        self.shiftReg = None
         self.calibTriggerWord = None
+        self.chokeErrorMask = None
+        self.controlDetector = None
+        self.controlDownscaling = None
+        self.deltaPacket = None
         self.downscalMask = []
-        self.downscalNIMMask = []
+        self.enableMask = None
+        self.fixLatency = None
+        self.maskControlTrigger = None
+        self.max_delay_detector = None
+        self.nimCalib_triggerword = None
+        self.numEvtMEP = None
         self.offsetDet = []
-        self.maxDelayDetector = None
+        self.periodicEndTime = None
+        self.periodicEndTime1 = None
+        self.periodicStartTime = None
+        self.periodicStartTime1 = None
+        self.periodicTrgPrimitive = None
+        self.periodicTrgPrimitive1 = None
+        self.periodicTrgTime = None
+        self.periodicTrgTime1 = None
+        self.primitiveDT = None
+        self.randomEndTime = None
+        self.randomPeriod = None
+        self.randomStartTime = None
+        self.randomTriggerWord = None
+        self.referenceDet = None
+        self.timeCut = []
         
         self._decode(xml)
         
     def _decode(self, xml):
-        if hasattr(xml, "numEvtMEP"):
-            self.numEvtMEP = tryint(xml.numEvtMEP.hex)
-        if hasattr(xml, "fixLatency"):
-            self.fixLatency = tryint(xml.fixLatency.hex)
-        if hasattr(xml, "periodicTrgPrimitive"):
-            self.periodicTrgPrimitive = tryint(xml.periodicTrgPrimitive.hex)
-        if hasattr(xml, "periodicTrgTime"):
-            self.periodicTrgTime = tryint(xml.periodicTrgTime.hex)
+        if hasattr(xml, "bit_finetime"):
+            self.bit_finetime = tryint(xml.bit_finetime.hex)
         if hasattr(xml, "calibLatency"):
             self.calibLatency = tryint(xml.calibLatency.hex)
         if hasattr(xml, "calibLatencyDirection"):
             self.calibLatencyDirection = tryint(xml.calibLatencyDirection.hex)
-        if hasattr(xml, "referenceDet"):
-            self.referenceDet = tryint(xml.referenceDet.hex)
-        if hasattr(xml, "referenceDet_NIM"):
-            self.referenceDetNIM = tryint(xml.referenceDet_NIM.hex)
+        if hasattr(xml, "CalibTriggerWord"):
+            self.calibTriggerWord = tryint(xml.CalibTriggerWord.hex)
+        if hasattr(xml, "ChokeErrorMask"):
+            self.chokeErrorMask = tryint(xml.ChokeErrorMask.hex)
+        if hasattr(xml, "ControlDetector"):
+            self.controlDetector = tryint(xml.ControlDetector.hex)
+        if hasattr(xml, "ControlDownscaling"):
+            self.controlDownscaling = tryint(xml.ControlDownscaling.hex)
+        if hasattr(xml, "DeltaPacket"):
+            self.DeltaPacket = tryint(xml.DeltaPacket.hex)
+        if hasattr(xml, "downScal_mask"):
+                lDownMaskList = xmlDocument.getTagRefsStatic("item", xml.downScal_mask)
+                for el in lDownMaskList:
+                    self.downscalMask.append(tryint(el.hex))
         if hasattr(xml, "enableMask"):
             self.enableMask = tryint(xml.enableMask.hex)
-        if hasattr(xml, "enableMask_NIM"):
-            self.enableMaskNIM = tryint(xml.enableMask_NIM.hex)
+        if hasattr(xml, "fixLatency"):
+            self.fixLatency = tryint(xml.fixLatency.hex)
+        if hasattr(xml, "MaskControltrigger"):
+            self.maskControltrigger = tryint(xml.MaskControltrigger.hex)
+        if hasattr(xml, "max_delay_detector"):
+            self.max_delay_detector = tryint(xml.max_delay_detector.hex)
+        if hasattr(xml, "nimCalib_triggerword"):
+            self.nimCalib_triggerword = tryint(xml.nimCalib_triggerword.hex)
+        if hasattr(xml, "numEvtMEP"):
+            self.numEvtMEP = tryint(xml.numEvtMEP.hex)
+        for letter in ["A", "B", "C", "D", "E", "F", "G"]:
+            if hasattr(xml, "offset_det{0}".format(letter)):
+                lOffset = xmlDocument.getTagRefsStatic("offset_det{0}".format(letter), xml)
+                self.offsetDet.append(tryint(lOffset[0].hex))
+        if hasattr(xml, "PeriodicEndTime"):
+            self.periodicEndTime = tryint(xml.PeriodicEndTime.hex)
+        if hasattr(xml, "PeriodicEndTime1"):
+            self.periodicEndTime1 = tryint(xml.PeriodicEndTime1.hex)
+        if hasattr(xml, "PeriodicStartTime"):
+            self.periodicStartTime = tryint(xml.PeriodicStartTime.hex)
+        if hasattr(xml, "PeriodicStartTime1"):
+            self.periodicStartTime1 = tryint(xml.PeriodicStartTime1.hex)
+        if hasattr(xml, "periodicTrgPrimitive"):
+            self.periodicTrgPrimitive = tryint(xml.periodicTrgPrimitive.hex)
+        if hasattr(xml, "periodicTrgPrimitive1"):
+            self.periodicTrgPrimitive1 = tryint(xml.periodicTrgPrimitive1.hex)
+        if hasattr(xml, "periodicTrgTime"):
+            self.periodicTrgTime = tryint(xml.periodicTrgTime.hex)
+        if hasattr(xml, "periodicTrgTime1"):
+            self.periodicTrgTime1 = tryint(xml.periodicTrgTime1.hex)
         if hasattr(xml, "primitiveDT"):
             self.primitiveDT = tryint(xml.primitiveDT.hex)
-        if hasattr(xml, "nimDT"):
-            self.nimDT = tryint(xml.nimDT.hex)
-        if hasattr(xml, "shift_reg"):
-            self.shiftReg = tryint(xml.shift_reg.hex)
-        if hasattr(xml, "calib_triggerword"):
-            self.calibTriggerWord = tryint(xml.calib_triggerword.hex)
-        if hasattr(xml, "bit_finetime"):
-            self.bitFineTime = tryint(xml.bit_finetime.hex)
-        
-        if hasattr(xml, "downScal_mask"):
-            lDownMask = xmlDocument.getTagRefsStatic("item", xml.downScal_mask)
-            for el in lDownMask:
-                self.downscalMask.append(tryint(el.hex))
-        if hasattr(xml, "downScal_NIM_mask"):
-            lDownMask = xmlDocument.getTagRefsStatic("item", xml.downScal_NIM_mask)
-            for el in lDownMask:
-                self.downscalNIMMask.append(tryint(el.hex))
-        if hasattr(xml, "offset_det"):
-            lOffset = xmlDocument.getTagRefsStatic("item", xml.offset_det)
-            for el in lOffset:
-                self.offsetDet.append(tryint(el.hex))
-        
-        if hasattr(xml, "maxDelayDetector"):
-            self.maxDelayDetector = tryint(xml.maxDelayDetector.hex)
-    
+        if hasattr(xml, "RandomEndTime"):
+            self.randomEndTime = tryint(xml.RandomEndTime.hex)
+        if hasattr(xml, "RandomPeriod"):
+            self.randomPeriod = tryint(xml.RandomPeriod.hex)
+        if hasattr(xml, "RandomStartTime"):
+            self.randomStartTime = tryint(xml.RandomStartTime.hex)
+        if hasattr(xml, "RandomTriggerWord"):
+            self.randomTriggerWord = tryint(xml.RandomTriggerWord.hex)
+        if hasattr(xml, "referenceDet"):
+            self.referenceDet = tryint(xml.referenceDet.hex)
+        for i in range(0, 7):
+            if hasattr(xml, "timeCut{0}".format(i)):
+                el = xmlDocument.getTagRefsStatic("timeCut{0}".format(i), xml)
+                self.timeCut.append(tryint(el[0].hex))
+
     def __str__(self):
         periodNS = self.periodicTrgTime*25
         return fmt.format(GlobalTemplate, 
@@ -228,68 +262,17 @@ class Global(object):
     
 class LUT(object):
     
-    def __init__(self, xml, lutId):
-        self.id = lutId
-        self.addressLUT = None
-        self.lut_detAmask = None
-        self.lut_detBmask = None
-        self.lut_detCmask = None
-        self.lut_detDmask = None
-        self.lut_detEmask = None
-        self.lut_detFmask = None
-        self.lut_detGmask = None
+    def __init__(self, xml):
+        self.masks = []
         
         self._decode(xml)
 
     
     def _decode(self, xml):
-        if hasattr(xml, "addressLUT"):
-            self.addressLUT = tryint(xml.addressLUT.hex)
-        if hasattr(xml, "lut_detAmask"):
-            self.lut_detAmask = tryint(xml.lut_detAmask.hex)
-        if hasattr(xml, "lut_detBmask"):
-            self.lut_detBmask = tryint(xml.lut_detBmask.hex)
-        if hasattr(xml, "lut_detCmask"):
-            self.lut_detCmask = tryint(xml.lut_detCmask.hex)
-        if hasattr(xml, "lut_detDmask"):
-            self.lut_detDmask = tryint(xml.lut_detDmask.hex)
-        if hasattr(xml, "lut_detEmask"):
-            self.lut_detEmask = tryint(xml.lut_detEmask.hex)
-        if hasattr(xml, "lut_detFmask"):
-            self.lut_detFmask = tryint(xml.lut_detFmask.hex)
-        if hasattr(xml, "lut_detGmask"):
-            self.lut_detGmask = tryint(xml.lut_detGmask.hex)
-    
-    def __str__(self):
-        return ""
+        listMask = xmlDocument.getTagRefsStatic("item", xml)
+        for el in listMask:
+            self.masks.append(tryint(el.hex))
 
-class LUTNIM(object):
-    
-    def __init__(self, xml, lutId):
-        self.id = lutId
-        self.addressLUT = None
-        self.lut_detAmask = None
-        self.lut_detBmask = None
-        self.lut_detCmask = None
-        self.lut_detDmask = None
-        self.lut_detEmask = None
-        
-        self._decode(xml)
-    
-    def _decode(self, xml):
-        if hasattr(xml, "addressLUT"):
-            self.addressLUT = tryint(xml.addressLUT.hex)
-        if hasattr(xml, "lut_detAmask"):
-            self.lut_detAmask = tryint(xml.lut_detAmask.hex)
-        if hasattr(xml, "lut_detBmask"):
-            self.lut_detBmask = tryint(xml.lut_detBmask.hex)
-        if hasattr(xml, "lut_detCmask"):
-            self.lut_detCmask = tryint(xml.lut_detCmask.hex)
-        if hasattr(xml, "lut_detDmask"):
-            self.lut_detDmask = tryint(xml.lut_detDmask.hex)
-        if hasattr(xml, "lut_detEmask"):
-            self.lut_detEmask = tryint(xml.lut_detEmask.hex)
-    
     def __str__(self):
         return ""
 
@@ -307,7 +290,6 @@ class L0TPDecoder(xmlDocument):
         self._runNumber = runNumber
         self.globalParam = None
         self.lutParam = []
-        self.lutNIMParam = []
        
         if not self._bad:
             self._decode()
@@ -315,14 +297,11 @@ class L0TPDecoder(xmlDocument):
     def _decode(self):
         self.globalParam = Global(self._xml.global_parameters)
         
-        listLUT = self.getTagRefs("item", self._xml.LUT_parameters)
-        for i,el in enumerate(listLUT):
-            self.lutParam.append(LUT(el,i))
+        for letter in ["A", "B", "C", "D", "E", "F", "G"]:
+            if hasattr(self._xml.LUT_parameters, "lut_det{0}mask".format(letter)):
+                lLUT = xmlDocument.getTagRefsStatic("lut_det{0}mask".format(letter), self._xml)
+                self.lutParam.append(LUT(lLUT[0]))
 
-        listLUTNIM = self.getTagRefs("item", self._xml.LUT_parameters_NIM)
-        for i,el in enumerate(listLUTNIM):
-            self.lutNIMParam.append(LUTNIM(el,i))
-    
     def getPeriodicPeriod(self):
         return int(readValue(self._xml.global_parameters.periodicTrgTime), 0)
     
@@ -370,25 +349,13 @@ class L0TPDecoder(xmlDocument):
                     prim.Downscaling = int(readValue(self._xml.global_parameters.downScal_mask.item[i]), 0)
                     prim.MaskNumber = i
                     
-                    prim.detA = readValue(self._xml.LUT_parameters.item[i].lut_detAmask).lower()
-                    prim.detB = readValue(self._xml.LUT_parameters.item[i].lut_detBmask).lower()
-                    prim.detC = readValue(self._xml.LUT_parameters.item[i].lut_detCmask).lower()
-                    if hasattr(self._xml.LUT_parameters.item[i], "lut_detDmask"):
-                        prim.detD = readValue(self._xml.LUT_parameters.item[i].lut_detDmask).lower()
-                    else:
-                        prim.detD = "0x7fff7fff"
-                    if hasattr(self._xml.LUT_parameters.item[i], "lut_detEmask"):
-                        prim.detE = readValue(self._xml.LUT_parameters.item[i].lut_detEmask).lower()
-                    else:
-                        prim.detE = "0x7fff7fff"
-                    if hasattr(self._xml.LUT_parameters.item[i], "lut_detFmask"):
-                        prim.detF = readValue(self._xml.LUT_parameters.item[i].lut_detFmask).lower()
-                    else:
-                        prim.detF = "0x7fff7fff"
-                    if hasattr(self._xml.LUT_parameters.item[i], "lut_detGmask"):
-                        prim.detG = readValue(self._xml.LUT_parameters.item[i].lut_detGmask).lower()
-                    else:
-                        prim.detG = "0x7fff7fff"
+                    prim.detA = readValue(self._xml.LUT_parameters.lut_detAmask.item[i]).lower()
+                    prim.detB = readValue(self._xml.LUT_parameters.lut_detBmask.item[i]).lower()
+                    prim.detC = readValue(self._xml.LUT_parameters.lut_detCmask.item[i]).lower()
+                    prim.detD = readValue(self._xml.LUT_parameters.lut_detDmask.item[i]).lower()
+                    prim.detE = readValue(self._xml.LUT_parameters.lut_detEmask.item[i]).lower()
+                    prim.detF = readValue(self._xml.LUT_parameters.lut_detFmask.item[i]).lower()
+                    prim.detG = readValue(self._xml.LUT_parameters.lut_detGmask.item[i]).lower()
                     
                     masksList.append(prim)
         return masksList
@@ -495,41 +462,22 @@ class L0TPDecoder(xmlDocument):
         return value
     
     def __str__(self):
-        NIMTriggerS = self.globalParam.getNIMGlobalString()
-        lutNimAddress = "     ".join(["{0:>#5x}".format(mask.addressLUT) for mask in self.lutNIMParam])
-        lutNimDetA = "     ".join(["{0:>#5x}".format(mask.lut_detAmask) for mask in self.lutNIMParam])
-        lutNimDetB = "     ".join(["{0:>#5x}".format(mask.lut_detBmask) for mask in self.lutNIMParam])
-        lutNimDetC = "     ".join(["{0:>#5x}".format(mask.lut_detCmask) for mask in self.lutNIMParam])
-        lutNimDetD = "     ".join(["{0:>#5x}".format(mask.lut_detDmask) for mask in self.lutNIMParam])
-        lutNimDetE = "     ".join(["{0:>#5x}".format(mask.lut_detEmask) for mask in self.lutNIMParam])
-        lutNimDownscaling = self.globalParam.getNIMDownscalingString()
-        NIMTriggerS += fmt.format(NIMString, 
-                                  lutNimAddress=lutNimAddress,
-                                  lutNimDetA=lutNimDetA,
-                                  lutNimDetB=lutNimDetB,
-                                  lutNimDetC=lutNimDetC,
-                                  lutNimDetD=lutNimDetD,
-                                  lutNimDetE=lutNimDetE, 
-                                  lutNimDownscaling=lutNimDownscaling)
         PrimTriggerS = self.globalParam.getPrimGlobalString()
-        lutList = ["{0:>#11x}".format(mask.addressLUT) for mask in self.lutParam]
-        detAList = ["{0:>#11x}".format(mask.lut_detAmask) for mask in self.lutParam]
-        detBList = ["{0:>#11x}".format(mask.lut_detBmask) for mask in self.lutParam]
-        detCList = ["{0:>#11x}".format(mask.lut_detCmask) for mask in self.lutParam]
-        detDList = ["{0:>#11x}".format(mask.lut_detDmask) for mask in self.lutParam]
-        detEList = ["{0:>#11x}".format(mask.lut_detEmask) for mask in self.lutParam]
-        detFList = ["{0:>#11x}".format(mask.lut_detFmask) for mask in self.lutParam]
-        detGList = ["{0:>#11x}".format(mask.lut_detGmask) for mask in self.lutParam]
+        lutList = ["{0:>#11x}".format(i) for i in range(0, 16)]
+        detList = []
+        for det in self.lutParam:
+            detList.append(["{0:>#11x}".format(mask) for mask in det.masks])
         nElem = 5
         lutAddress = ["     ".join(lutList[i:i+nElem]) for i in range(0,len(lutList),nElem)]
-        lutDetA = ["     ".join(detAList[i:i+nElem]) for i in range(0,len(detAList),nElem)]
-        lutDetB = ["     ".join(detBList[i:i+nElem]) for i in range(0,len(detBList),nElem)]
-        lutDetC = ["     ".join(detCList[i:i+nElem]) for i in range(0,len(detCList),nElem)]
-        lutDetD = ["     ".join(detDList[i:i+nElem]) for i in range(0,len(detDList),nElem)]
-        lutDetE = ["     ".join(detEList[i:i+nElem]) for i in range(0,len(detEList),nElem)]
-        lutDetF = ["     ".join(detFList[i:i+nElem]) for i in range(0,len(detFList),nElem)]
-        lutDetG = ["     ".join(detGList[i:i+nElem]) for i in range(0,len(detGList),nElem)]
+        lutDetA = ["     ".join(detList[0][i:i+nElem]) for i in range(0,len(detList[0]),nElem)]
+        lutDetB = ["     ".join(detList[1][i:i+nElem]) for i in range(0,len(detList[1]),nElem)]
+        lutDetC = ["     ".join(detList[2][i:i+nElem]) for i in range(0,len(detList[2]),nElem)]
+        lutDetD = ["     ".join(detList[3][i:i+nElem]) for i in range(0,len(detList[3]),nElem)]
+        lutDetE = ["     ".join(detList[4][i:i+nElem]) for i in range(0,len(detList[4]),nElem)]
+        lutDetF = ["     ".join(detList[5][i:i+nElem]) for i in range(0,len(detList[5]),nElem)]
+        lutDetG = ["     ".join(detList[6][i:i+nElem]) for i in range(0,len(detList[6]),nElem)]
         lutDownscaling = self.globalParam.getPrimDownscalingString()
+        print lutDownscaling
         PrimTriggerS += fmt.format(PrimString,
                                    lutAddress=lutAddress,
                                    lutDetA=lutDetA,
@@ -541,6 +489,5 @@ class L0TPDecoder(xmlDocument):
                                    lutDetG=lutDetG,
                                    lutDownscaling=lutDownscaling)
         return fmt.format(L0TPTemplate,
-                          NIMTriggerS = NIMTriggerS, 
                           PrimTriggerS=PrimTriggerS,
                           **self.__dict__)
