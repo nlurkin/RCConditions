@@ -29,11 +29,33 @@ The Cron member of the Training Crew
 dest_emails = ["na62-shiftertraining@cern.ch"]
 #dest_emails = ["nicolas.lurkin@cern.ch"]
 
+def getSessionID(myconn, sess_date):
+    entries = myconn.executeGet("SELECT * FROM shifters.training_sessions WHERE date=%s", [sess_date])
+    if len(entries) > 1:
+        print "Problem: more than one sessions at the date {0}".format(sess_date)
+        return -1
+    elif len(entries) ==0:
+        print "Problem: no session at the date {0}".format(sess_date)
+        return -1        
+    else:
+        return entries[0]["session_id"]
+
+def getUserID(myconn, name, surname):
+    entries = myconn.executeGet("SELECT * FROM shifters.shifter WHERE name like %s and surname like %s", [name, surname])
+    if len(entries) > 1:
+        print "Problem: more than one user matching {0} {1}".format(name, surname)
+        return -1
+    elif len(entries)==0:
+        print "User not found {0} {1}".format(name, surname)
+        return -1
+    else:
+        return entries[0]["id"]
+
 def next_weekday(d, weekday):
-   days_ahead = weekday - d.weekday()
-   if days_ahead <= 0: # Target day already happened this week
-      days_ahead += 7
-   return d + datetime.timedelta(days_ahead)
+    days_ahead = weekday - d.weekday()
+    if days_ahead <= 0: # Target day already happened this week
+        days_ahead += 7
+    return d + datetime.timedelta(days_ahead)
 
 if __name__ == '__main__':
     myconn = DBConnector()
@@ -43,17 +65,22 @@ if __name__ == '__main__':
     if first_date < datetime.datetime(2016,04,15):
         first_date = datetime.datetime(2016,04,15)
     nextTraining = next_weekday(first_date, 1)
-    res = myconn.executeGet("SELECT * FROM shifter_training WHERE Date BETWEEN '{0}' AND '{1}'".format(nextTraining.strftime("%Y-%m-%dT00:00:00.000"), nextTraining.strftime("%Y-%m-%dT23:59:59.000")))
+    nextTraining = nextTraining.replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    nextTrainingID = getSessionID(myconn, nextTraining)
+    res = myconn.executeGet("SELECT * FROM shifters.shifter_booking WHERE session_id={0}".format(nextTrainingID))
     shifter_list = []
     for r in res:
-        shifter_list.append("{0} {1}".format(r[1],r[2]))
+        shifter_list.append("{0} {1}".format(r["name"],r["surname"]))
     
     nextNextTraining = next_weekday(first_date+datetime.timedelta(7), 1)
-    print nextNextTraining.strftime("%Y-%m-%dT00:00:00.000")
-    res = myconn.executeGet("SELECT COUNT(*) FROM shifter_training WHERE Date BETWEEN '{0}' AND '{1}'".format(nextNextTraining.strftime("%Y-%m-%dT00:00:00.000"), nextNextTraining.strftime("%Y-%m-%dT23:59:59.000")))
+    nextNextTraining = nextNextTraining.replace(hour=0, minute=0, second=0, microsecond=0)
+    nextNextTrainingID = getSessionID(myconn, nextNextTraining)
+    
+    res = myconn.executeGet("SELECT COUNT(*) as tot FROM shifters.shifter_booking WHERE session_id={0}".format(nextNextTrainingID))
     next_number = 0
     if len(res)>0:
-        next_number = res[0][0]
+        next_number = res[0]["tot"]
     msg_body =  body.format(training_date=nextTraining.strftime("%d-%m-%Y"), shift_number=len(shifter_list), shifter_list="\n   ".join(shifter_list), next_number=next_number)
    
     msg = MIMEText(msg_body)

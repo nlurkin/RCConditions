@@ -66,7 +66,8 @@ class DBConnector(object):
         res = ()
         try:
             self.cursor.execute(sqlCommand, params)
-            res = self.cursor.fetchall()
+            fields = map(lambda x:x[0], self.cursor.description)
+            res = [dict(zip(fields,row)) for row in self.cursor.fetchall()]
         except MySQLdb.Error, e:
             print "Unable to execute select statement: " + (sqlCommand % tuple(params))
             print e
@@ -79,7 +80,7 @@ class DBConnector(object):
         if len(res)==0:
             return False
         
-        return res[0][0]
+        return res[0].itervalues().next()
 
     def getResultMultiple(self, sqlCommand, params=[]):
         res = self.executeGet(sqlCommand, params)
@@ -87,7 +88,7 @@ class DBConnector(object):
         if len(res)==0:
             return False
         
-        return [int(x[0]) for x in res]
+        return [int(x.itervalues().next()) for x in res]
     
     def toSQLTime(self, timestamp):
         if timestamp==None:
