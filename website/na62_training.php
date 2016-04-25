@@ -34,8 +34,11 @@ if(isset($_POST["submit"])){
 		$bad = true;
 	}
 	
-	if(!$bad)
-		insertUser($db, $_POST["name"], $_POST["surname"], $_POST["email"], $_POST["date"]);
+	if(!$bad){
+		insertShifter($db, $_POST["name"], $_POST["surname"], $_POST["email"]);
+		$shifterID = getUserID($db, $_POST["name"], $_POST["surname"]);
+		createBooking($db, $shifterID, $_POST["date"], $_POST["name"], $_POST["surname"], $_POST["email"]);
+	}
 }
 ?>
 <!DOCTYPE html>
@@ -102,9 +105,9 @@ $css = Array (
 $listSlots = getListSlots($db);
 
 foreach($listSlots as $slot){
-	$availSlots = getNamesForSlots($db, $slot["Date"]);
+	$availSlots = getNamesForSlots($db, $slot["date"]);
 	if(sizeof($availSlots)>0){
-		echo "<tr class='".$css [$j % 2]."'><td>".date("Y-m-d", $slot["Date"])."</td><td>".$slot["Message"]."</td><td>".implode($availSlots, ", ")."</td></tr>";
+		echo "<tr class='".$css [$j % 2]."'><td>".date("Y-m-d", $slot["date"])."</td><td>".$slot["message"]."</td><td>".implode($availSlots, ", ")."</td></tr>";
 		$j++;
 	}
 }

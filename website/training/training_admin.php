@@ -19,7 +19,8 @@ if (! $db->init ( $_na62dbHost, $_na62dbUser, $_na62dbPassword, $_na62dbName, $_
 /// UPDATE_USER_VIEW
 if (isset ( $_POST ["view"] ) && $_POST["view"]=="update_user") {
 	for($i = 0; $i < $_POST ["nMatch"]; $i ++) {
-		$id = $_POST ["id_" . $i];
+		$bookingID = $_POST ["id_booking_" . $i];
+		$shifterID = $_POST ["id_shifter_" . $i];
 		$name = $_POST ["name_" . $i];
 		$surname = $_POST ["surname_" . $i];
 		$email = $_POST ["email_" . $i];
@@ -27,7 +28,7 @@ if (isset ( $_POST ["view"] ) && $_POST["view"]=="update_user") {
 		$attended = isset ( $_POST ["attended_" . $i] ) ? 1 : 0;
 	
 		if (isset ( $_POST ["delete_" . $i] )) {
-			deleteUser ( $db, $id );
+			deleteBooking ( $db, $bookingID );
 		} else {
 			$bad = false;
 			if (empty ( $name )) {
@@ -46,8 +47,10 @@ if (isset ( $_POST ["view"] ) && $_POST["view"]=="update_user") {
 				echo "<div style='color:Red'>This (" . $email . ") email address does not appear to be valid.</div><br>";
 				$bad = true;
 			}
-			if (! $bad)
-				updateUser ( $db, $id, $name, $surname, $email, $date, $attended );
+			if (! $bad){
+				updateShifter( $db, $shifterID, $name, $surname, $email);
+				updateBooking ( $db, $bookingID, $date, $attended );
+			}
 		}
 	}
 }/// END UPDATE_USER_VIEW
@@ -55,7 +58,7 @@ if (isset ( $_POST ["view"] ) && $_POST["view"]=="update_user") {
 /// UPDATE_ATTENDED_VIEW
 if (isset ( $_POST ["view"] ) && $_POST["view"]=="update_attended") {
 	for($i = 0; $i < $_POST ["nMatch"]; $i ++) {
-		$id = $_POST ["userID_" . $i];
+		$id = $_POST ["bookingID_" . $i];
 		$attended = isset ( $_POST ["attended_" . $i] ) ? 1 : 0;
 		
 		updateAttended ( $db, $id, $attended );
@@ -82,8 +85,11 @@ if (isset ( $_POST ["view"] ) && $_POST["view"]=="add_user") {
 		$bad = true;
 	}
 
-	if(!$bad)
-		insertUser($db, $_POST["name"], $_POST["surname"], $_POST["email"], $_POST["date"]);
+	if(!$bad){
+		insertShifter($db, $_POST["name"], $_POST["surname"], $_POST["email"]);
+		$shifterID = getUserID($db, $_POST["name"], $_POST["surname"]);
+		createBooking($db, $shifterID, $_POST["date"], $_POST["name"], $_POST["surname"], $_POST["email"]);
+	}
 }/// END ADD_USER_VIEW
 
 
@@ -184,14 +190,20 @@ if (isset ( $_POST ["view"] ) && ($_POST ["view"] == "user" | $_POST ["view"] ==
 					"r2"
 					);
 			foreach ( $userList as $user ) {
-				echo "<tr class='".$css [$i % 2]."'><td><input type='hidden' name='id_" . $i . "' value='" . $user ["idshifter_training"] . "'>";
-				echo "<input type='text' name='name_" . $i . "' value='" . $user ["Name"] . "'></td>";
-				echo "<td><input type='text' name='surname_" . $i . "' value='" . $user ["Surname"] . "'></td>";
-				echo "<td><input type='text' name='email_" . $i . "' value='" . $user ["Email"] . "'></td>";
+				echo "<tr class='".$css [$i % 2]."'><td><input type='hidden' name='id_booking_" . $i . "' value='" . $user ["booking_id"] . "'>";
+				echo "<input type='hidden' name='id_shifter_" . $i . "' value='" . $user ["shifter_id"] . "'>";
+				echo "<input type='text' name='name_" . $i . "' value='" . $user ["name"] . "'></td>";
+				echo "<td><input type='text' name='surname_" . $i . "' value='" . $user ["surname"] . "'></td>";
+				$email = "";
+				if($user["email_cern"] !== NULL)
+					$email = $user["email_cern"];
+				else if($user["email_priv"] !== NULL)
+					$email = $user["email_priv"];
+				echo "<td><input type='text' name='email_" . $i . "' value='" . $email . "'></td>";
 				echo "<td><select name='date_" . $i . "'>";
-				printOptionListSlots ( $db, $slotsList, strtotime ( $user ["Date"] ), false );
+				printOptionListSlots ( $db, $slotsList, strtotime ( $user ["date"] ), false );
 				echo "</select></td>";
-				echo "<td><input type='checkbox' name='attended_" . $i . "' value='1' " . ($user ["Attended"] == 1 ? "checked" : "") . "></td>";
+				echo "<td><input type='checkbox' name='attended_" . $i . "' value='1' " . ($user ["attended"] == 1 ? "checked" : "") . "></td>";
 				echo "<td><input type='checkbox' name='delete_" . $i . "' value='1'></td>";
 				echo "</tr>";
 				$i ++;
@@ -231,10 +243,15 @@ $css = Array (
 		"r2"
 		);
 foreach($attendees as $row){
-	echo "<tr class='".$css [$i % 2]."'><td>".$row["Name"]." ".$row["Surname"]."</td><td>". 
-		$row["Email"]."</td><td>".
-		"<input type='hidden' name='userID_".$i."' value='".$row["idshifter_training"]."'>".
-		"<input type='checkbox' name='attended_" . $i . "' value='1' " . ($row ["Attended"] == 1 ? "checked" : "") . "></td></tr>";
+	$email = "";
+	if($row["email_cern"] !== NULL)
+		$email = $row["email_cern"];
+	else if($row["email_priv"] !== NULL)
+		$email = $row["email_priv"];
+	echo "<tr class='".$css [$i % 2]."'><td>".$row["name"]." ".$row["surname"]."</td><td>". 
+		$email."</td><td>".
+		"<input type='hidden' name='bookingID_".$i."' value='".$row["booking_id"]."'>".
+		"<input type='checkbox' name='attended_" . $i . "' value='1' " . ($row ["attended"] == 1 ? "checked" : "") . "></td></tr>";
 	$i++;
 }
 ?>

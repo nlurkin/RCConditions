@@ -5,9 +5,28 @@ function echoIfSet($varName){
 	}
 }
 
+function getSessionID($db, $date){
+	$db->executeGet("SELECT session_id FROM shifters.training_sessions WHERE date='".date("Y-m-d", $date) . "'");
+	if($row = $db->next()){
+		return $row["session_id"];
+	}
+	return -1;
+}
+
+function getUserID($db, $name, $surname){
+	$db->executeGet("SELECT * FROM shifters.shifter WHERE name like '" . $name . "' and surname like '" . $surname . "'");
+	if($row = $db->next()){
+		return $row["id"];
+	}
+	return -1;
+}
+
 function getAvailableSlots($db, $date){
 	$booked = 0;
-	$db->executeGet("SELECT COUNT(*) as tot FROM shifter_training WHERE Date BETWEEN '".date("Y-m-d", $date)." 00:00:00' AND '".date("Y-m-d", $date). " 23:59:59'");
+	$session_id = getSessionID($db, $date);
+	if($session_id==-1)
+		return -99;
+	$db->executeGet("SELECT COUNT(*) as tot FROM shifters.training_booking WHERE session_id=" . $session_id);
 	if($row = $db->next()){
 		$booked = $row["tot"];
 	}
@@ -16,7 +35,10 @@ function getAvailableSlots($db, $date){
 
 function getEntriesForSlots($db, $date){
 	$booked = array();
-	$db->executeGet("SELECT * FROM shifter_training WHERE Date BETWEEN '".date("Y-m-d", $date)." 00:00:00' AND '".date("Y-m-d", $date). " 23:59:59'");
+	$session_id = getSessionID($db, $date);
+	if($session_id==-1)
+		return $booked;
+	$db->executeGet("SELECT * FROM shifters.shifter_booking WHERE session_id=" . $session_id);
 	while($row = $db->next()){
 		array_push($booked, $row);
 	}
@@ -27,16 +49,16 @@ function getNamesForSlots($db, $date){
 	$booked = array();
 	$entries = getEntriesForSlots($db, $date);
 	foreach($entries as $row){
-		array_push($booked, $row["Name"]." ".$row["Surname"]);
+		array_push($booked, $row["name"]." ".$row["surname"]);
 	}
 	return $booked;
 }
 
 function getListSlots($db){
 	$slots = array();
-	$db->executeGet("SELECT * FROM shifter_sessions ORDER BY Date");
+	$db->executeGet("SELECT * FROM shifters.training_sessions ORDER BY Date");
 	while($row = $db->next()){
-		array_push($slots, array("Date"=>strtotime($row["Date"]), "Message"=>$row["Message"]));
+		array_push($slots, array("date"=>strtotime($row["date"]), "message"=>$row["message"]));
 	}
 	return $slots;
 }
@@ -45,7 +67,7 @@ function getListSlots($db){
 function findUserLike($db, $user){
 	$user = str_replace("*", "%", $user);
 	$results = array();
-	$db->executeGet("SELECT * FROM shifter_training WHERE Name LIKE '" . $user . "' OR Surname LIKE '".$user."'");
+	$db->executeGet("SELECT * FROM shifters.shifter_booking WHERE Name LIKE '" . $user . "' OR Surname LIKE '".$user."'");
 	while($row = $db->next()){
 		array_push($results, $row);
 	}
@@ -54,62 +76,101 @@ function findUserLike($db, $user){
 
 function printOptionListSlots($db, $list, $selectedDate, $freeOnly){
 	foreach($list as $slot){
-		$availSlots = getAvailableSlots($db, $slot["Date"]);
+		$availSlots = getAvailableSlots($db, $slot["date"]);
 		if($freeOnly && $availSlots<=0) continue;
 		$selected = "";
 		$message = "";
-		echo $slot["Date"]." " . $selectedDate;
-		if($slot["Date"]==$selectedDate) $selected = "selected='true'";
-		if($slot["Message"]!="") $message = " - " . $slot["Message"];
-		echo "<option value='".$slot["Date"]."' ".$selected.">".date("d/m/y", $slot["Date"])." - ".$availSlots." slots available".$message."</option>";
+		echo $slot["date"]." " . $selectedDate;
+		if($slot["date"]==$selectedDate) $selected = "selected='true'";
+		if($slot["message"]!="") $message = " - " . $slot["message"];
+		echo "<option value='".$slot["date"]."' ".$selected.">".date("d/m/y", $slot["date"])." - ".$availSlots." slots available".$message."</option>";
 	}
 }
 
-function insertUser($db, $name, $surname, $email, $date){
-	$db->executeGet("SELECT * FROM shifter_training WHERE Name LIKE '".$name."' AND Surname LIKE '". $surname."'");
+function insertShifter($db, $name, $surname, $email){
+	$shifterID = getUserID($db, $name, $surname);
+	if($shifterID!=-1){
+		return;
+	}
+	$email_cern = NULL;
+	$email_priv = NULL;
+	if(strpos($email, "@cern.ch")!=False)
+		$email_cern = $email;
+	else
+		$email_priv = $email;
+	$db->executeUpdate("INSERT INTO shifters.shifter (name, surname, email_cern, email_priv) VALUES (?,?,?,?)", "ssss", $name, $surname, $email_cern, $email_priv);
+}
+
+function createBooking($db, $shifterID, $date, $name, $surname, $email){
+	if(insertUserBooking($db, $shifterID, $date)){
+		$text = "Dear ".$name." ".$surname.",\n\nYour booking for a shifter training session on the ".date("Y-m-d", $date).
+		" has been recorded.\n\nWe remind you that the session starts at 14h on the day and is expected to finish around 17h30.".
+		"The session takes place in the conference room in building 918.\n\nBest regards,\nThe Shift Training Crew.";
+		mail($email, "Booking confirmation for shifter training session", $text,"From: na62-shiftertraining@cern.ch" );
+		echo "<script>alert('Your request has been recorded and a confirmation e-mail\\nhas been sent to the address you provided.\\nThank you')</script>";
+	}	
+}
+
+function insertUserBooking($db, $shifterID, $date){
+	$db->executeGet("SELECT * FROM shifters.training_booking WHERE shifter_id=" . $shifterID);
 	if($db->next()){
 		echo "<script>alert('A training request with this name has already been recorded. Please write us at na62-shiftertraining@cern.ch')</script>";
+		return;
 	}
-	else{
-		if(!$db->executeUpdate("INSERT INTO shifter_training (Name, Surname, Email, Date, Attended) VALUES (?,?,?,?,?)", "ssssi", $name, $surname, 
-				$email, date("Y-m-d", $date), 0)){
-			die("Error! Unable to update database");
-		}
-		else{
-			$text = "Dear ".$name." ".$surname.",\n\nYour booking for a shifter training session on the ".date("Y-m-d", $date).
-					" has been recorded.\n\nWe remind you that the session starts at 14h on the day and is expected to finish around 17h30.".
-					"The session takes place in the conference room in building 918.\n\nBest regards,\nThe Shift Training Crew.";
-			mail($email, "Booking confirmation for shifter training session", $text,"From: na62-shiftertraining@cern.ch" );
-			echo "<script>alert('Your request has been recorded and a confirmation e-mail\\nhas been sent to the address you provided.\\nThank you')</script>";
-		}
+	
+	$sessionID = getSessionID($db, $date);
+	if($sessionID==-1){
+		echo "<script>alert('You are trying to book for a session that does not exist.')</script>";
+		return;
 	}
+	if(!$db->executeUpdate("INSERT INTO shifters.training_booking (shifter_id, session_id, attended) VALUES (?,?,?)", "iii", $shifterID, $sessionID, 0)){
+		die("Error! Unable to update database");
+	}
+	return true;
 }
 
-function updateUser($db, $userID, $name, $surname, $email, $date, $attended){
-	if(!$db->executeUpdate("UPDATE shifter_training SET Name=?, Surname=?, Email=?, Date=?, Attended=? WHERE idshifter_training=?", "ssssii", $name, $surname,
-			$email, date("Y-m-d", $date), $attended, $userID)){
+function updateShifter($db, $shifterID, $name, $surname, $email){
+	$email_cern = NULL;
+	$email_priv = NULL;
+	if(strpos($email, "@cern.ch")!=False)
+		$email_cern = $email;
+	else
+		$email_priv = $email;
+	
+	if(!$db->executeUpdate("UPDATE shifters.shifter SET name=?, surname=?, email_cern=?, email_priv=? WHERE id=?", "ssssi", $name, $surname,
+			$email_cern, $email_priv, $shifterID)){
 		die("Error! Unable to update database");
 	}
 }
 
-function updateAttended($db, $userID, $attended){
-	if(!$db->executeUpdate("UPDATE shifter_training SET Attended=? WHERE idshifter_training=?", "ii", $attended, $userID)){
-		die("Error! Unable to update database");
-	}
-}
-
-function deleteUser($db, $userID){
-	if(!$db->executeUpdate("DELETE FROM shifter_training WHERE idshifter_training=?", "i", $userID)){
+function updateBooking($db, $bookingID, $date, $attended){
+	$sessionID = getSessionID($db, $date);
+	if(!$db->executeUpdate("UPDATE shifters.training_booking SET session_id=?, attended=? WHERE id=?", "iii", $sessionID, $attended, $bookingID)){
 				die("Error! Unable to update database");
 	}
-	echo "User with ID " .$userID . " was deleted"; 
+}
+
+function updateAttended($db, $bookingID, $attended){
+	if(!$db->executeUpdate("UPDATE shifters.training_booking SET attended=? WHERE id=?", "ii", $attended, $bookingID)){
+		die("Error! Unable to update database");
+	}
+}
+
+function deleteBooking($db, $bookingID){
+	if(!$db->executeUpdate("DELETE FROM shifters.training_booking WHERE id=?", "i", $bookingID)){
+				die("Error! Unable to update database");
+	}
+	echo "Booking with ID " .$bookingID . " was deleted"; 
 }
 
 function sendMailToSession($db, $date, $subject, $body){
 	$attendees = getEntriesForSlots($db, $date);
 	$listEmails = array("na62-shiftertraining@cern.ch");
 	foreach($attendees as $user){
-		array_push($listEmails, $user["Email"]);
+		if($user["email_cern"]!==NULL)
+			array_push($listEmails, $user["email_cern"]);
+		if($user["email_priv"]!==NULL)
+			array_push($listEmails, $user["email_priv"]);
 	}
 	mail(implode($listEmails, ", "), $subject, $body, "From: na62-shiftertraining@cern.ch");
 	echo "<script>alert('The email has been sent successfully')</script>";
