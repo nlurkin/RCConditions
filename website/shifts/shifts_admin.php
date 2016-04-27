@@ -57,6 +57,10 @@ function modifyID(id, institute, shifter, canceled, date, slot, type){
 	
 	document.getElementById("mod_div").style.display = "block";
 }
+
+function hideModify(){
+	document.getElementById("mod_div").style.display = "none";
+}
 </script>
 </header>
 <body>
@@ -97,6 +101,7 @@ function buildTable($db, $from, $week) {
 }
 
 if(isset($_POST["view"]) && $_POST["view"]=="mod_slot"){
+	$error = False;
 	$slotID1 = $_POST ["slot_id1"];
 	$sh1_name = $_POST ["shifter_name1"];
 	$institute1 = $_POST ["institute1"];
@@ -121,33 +126,38 @@ if(isset($_POST["view"]) && $_POST["view"]=="mod_slot"){
 		$shifterID1 = getUserID ( $db, "%", $sh1_name );
 		$shifterID2 = getUserID ( $db, "%", $sh2_name );
 		
-		if ($shifterID1 == - 1)
+		if ($shifterID1 == - 1){
 			print "<div style='color:Red'>Shifter " . $sh1_name . " was not found.</div>";
+			$error = True;
+		}
 		else {
 			if (empty ( $slotID1 )) {
 				// Create new assignment
 				$shiftID = getShiftID ( $db, $date, $slot );
 				if ($shiftID != - 1){
-					print "<div style='color:Red'>Creating Shifter " . $sh1_name . ".</div>";
 					createSlot ( $db, $shiftID, $shifterID1, $institute1, $type, $canceled );
 				}
 			} else
 				modifySlot ( $db, $slotID1, $shifterID1, $institute1, $canceled );
 		}
-		if ($shifterID2 == - 1 && ! empty ( $sh2_name ))
+		if ($shifterID2 == - 1 && ! empty ( $sh2_name )){
 			print "<div style='color:Red'>Shifter " . $sh2_name . " was not found.</div>";
+			$error = True;
+		}
 		elseif (empty($sh2_name)){}
 		else {
 			if (empty ( $slotID2 )) {
 				// Create new assignment
 				$shiftID = getShiftID ( $db, $date, $slot );
 				if ($shiftID != - 1){
-					print "<div style='color:Red'>Creating Shifter " . $sh2_name . ".</div>";
 					createSlot ( $db, $shiftID, $shifterID2, $institute2, $type, $canceled );
 				}
 			} else
 				modifySlot ( $db, $slotID2, $shifterID2, $institute2, $canceled );
 		}
+	}
+	if(!$error){
+		echo "<script type='text/javascript'>hideModify();</script>";
 	}
 }
 ?>
@@ -159,7 +169,7 @@ for($week = 1; $week <= 30; $week ++) {
 ?>
 
 <div class="search-form floating_window" style="width:450px;display:<?php echo (isset($_POST["view"])) ? 'block' : 'none'?>" id="mod_div">
-	<h3>Modify slot</h3>
+	<h3 style="display:inline">Modify slot</h3><a style="margin-left: 320px" onclick="hideModify();">hide</a>
 	<form action="shifts_admin.php" method="POST">
 	<input type="hidden" id="view" name="view" value="mod_slot">
 	<input type="hidden" id="date" name="date" value="<?php echoIfSet("date");?>">
