@@ -100,8 +100,8 @@ function buildTable($db, $from, $week) {
 	print "</tr></table>";
 }
 
+$error = False;
 if(isset($_POST["view"]) && $_POST["view"]=="mod_slot"){
-	$error = False;
 	$slotID1 = $_POST ["slot_id1"];
 	$sh1_name = $_POST ["shifter_name1"];
 	$institute1 = $_POST ["institute1"];
@@ -156,9 +156,6 @@ if(isset($_POST["view"]) && $_POST["view"]=="mod_slot"){
 				modifySlot ( $db, $slotID2, $shifterID2, $institute2, $canceled );
 		}
 	}
-	if(!$error){
-		echo "<script type='text/javascript'>hideModify();</script>";
-	}
 }
 ?>
 	<h1>Welcome to the NA62 shifts schedule administration website.</h1>
@@ -192,5 +189,10 @@ for($week = 1; $week <= 30; $week ++) {
 	</table>
 	</form>
 </div>
+<?php 
+if(!$error){
+	echo "<script type='text/javascript'>hideModify();</script>";
+}
+?>
 </body>
 </html>
