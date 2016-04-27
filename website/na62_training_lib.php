@@ -89,16 +89,17 @@ function printOptionListSlots($db, $list, $selectedDate, $freeOnly){
 
 function insertShifter($db, $name, $surname, $email){
 	$shifterID = getUserID($db, $name, $surname);
-	if($shifterID!=-1){
-		return;
-	}
 	$email_cern = NULL;
 	$email_priv = NULL;
 	if(strpos($email, "@cern.ch")!=False)
 		$email_cern = $email;
 	else
 		$email_priv = $email;
-	$db->executeUpdate("INSERT INTO shifters.shifter (name, surname, email_cern, email_priv) VALUES (?,?,?,?)", "ssss", $name, $surname, $email_cern, $email_priv);
+	if($shifterID!=-1){
+		$db->executeUpdate("UPDATE shifters.shifter SET email_cern=?, email_priv=? WHERE id=?", "ssi", $email_cern, $email_priv, $shifterID);
+	}
+	else 
+		$db->executeUpdate("INSERT INTO shifters.shifter (name, surname, email_cern, email_priv) VALUES (?,?,?,?)", "ssss", $name, $surname, $email_cern, $email_priv);
 }
 
 function createBooking($db, $shifterID, $date, $name, $surname, $email){
