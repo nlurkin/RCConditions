@@ -3,4 +3,4 @@ ShibRequireSession On
 ShibExportAssertion On
 SSLRequireSSL
 AuthType Shibboleth
-Require user "bbloch" "nlurkin" "biino"
+Require adfs-group "na62-shifts-organisers"
