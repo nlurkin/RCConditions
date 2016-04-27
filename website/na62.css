@@ -201,6 +201,20 @@ input[type=button]{
     -moz-border-radius: 3px;
 }
 
+input[type=submit].shifts,
+input[type=button].shifts{
+    border: 2px;
+    padding: 1px 1px 1px 1px;
+    background: #FF8500;
+    color: #fff;
+    box-shadow: 1px 1px 4px #DADADA;
+    -moz-box-shadow: 1px 1px 4px #DADADA;
+    -webkit-box-shadow: 1px 1px 4px #DADADA;
+    border-radius: 3px;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+}
+
 input[type=submit]:hover,
 input[type=button]:hover{
     background: #EA7B00;
@@ -258,5 +272,14 @@ input[type=button]:hover{
 	height: 40px;
 	font-weight: bold;
 	background: #FB7A31;
+}
+
+.floating_window{
+	position: fixed;
+	float:right;
+	width: 500px;
+	display: block;
+	top:100px;
+	right:20px;
 }
 </style>

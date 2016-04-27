@@ -1,0 +1,6 @@
+ShibRequireAll On
+ShibRequireSession On
+ShibExportAssertion On
+SSLRequireSSL
+AuthType Shibboleth
+Require user "bbloch" "nlurkin" "biino"
