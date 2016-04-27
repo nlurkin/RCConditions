@@ -131,7 +131,12 @@ function getShiftsFromTo($db, $from, $to) {
 }
 
 function modifySlot($db, $slotID, $shifterID, $institute, $canceled){
-	$db->executeUpdate("UPDATE shifts_assignments SET shifter_id=?, institute=?, canceled=? WHERE id=?", "isii", $shifterID, $institute, $canceled, $slotID);
+	$db->executeUpdate("UPDATE shifts_assignments SET shifter_id=?, institute=? WHERE id=?", "isi", $shifterID, $institute, $slotID);
+	$db->executeGet("SELECT shift_id FROM shifts_assignments WHERE id=" . $slotID);
+	if($row = $db->next()){
+		$id = $row["shift_id"];
+		$db->executeUpdate("UPDATE shifts_assignments SET canceled=? WHERE shift_id=?", "ii", $canceled, $id);
+	}
 }
 
 function createSlot($db, $shiftID, $shifterID, $institute, $type, $canceled){
