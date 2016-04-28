@@ -207,12 +207,12 @@ function updateWeekComment($db, $weekID, $week, $comment){
 	
 		updateLastUpdate();
 }
-function getLastUpdate(){
-	$val = stat("shifts_schedule_lastUpdate.php");
+function getLastUpdate($prefix=""){
+	$val = stat($prefix . "touchdir/shifts_schedule_lastUpdate.php");
 	$time = $val["mtime"];
 	return strftime("%Y-%m-%d %H:%M:%S", $time);
 }
 function updateLastUpdate(){
-	touch("../shifts_schedule_lastUpdate.php");
+	touch("../touchdir/shifts_schedule_lastUpdate.php");
 }
 ?>

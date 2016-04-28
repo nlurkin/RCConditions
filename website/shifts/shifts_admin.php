@@ -186,7 +186,7 @@ elseif(isset($_POST["view"]) && $_POST["view"]=="mod_comment"){
 }
 ?>
 	<h1>Welcome to the NA62 shifts schedule administration website.</h1>
-	<div style='text-align:center'>Last updated on <?php echo getLastUpdate();?></div>
+	<div style='text-align:center'>Last updated on <?php echo getLastUpdate("../");?></div>
 <?php
 for($week = 1; $week <= 30; $week ++) {
 	buildTable ( $db, "2016-04-25", $week );
