@@ -24,7 +24,7 @@ if (! $db->init ( $_na62dbHost, $_na62dbUser, $_na62dbPassword, $_na62dbShiftNam
 	<link rel="stylesheet" type="text/css" href="../collapse.css">
 
 	<script type="text/javascript">
-function modifyID(id, institute, shifter, canceled, date, slot, type){
+function modifyID(id, institute, shifter, canceled, date, slot, type, week){
 	if(id.length==0){
 		document.getElementById("slot_id1").value = "";
 		document.getElementById("shifter_name1").placeholder = "Please enter shifter surname";
@@ -56,6 +56,8 @@ function modifyID(id, institute, shifter, canceled, date, slot, type){
 	document.getElementById("type").value = type;
 	
 	document.getElementById("mod_div").style.display = "block";
+
+	document.getElementById("formModify").action = "shifts_admin.php#week" + week;
 }
 
 function hideModify(){
@@ -73,30 +75,48 @@ function buildTable($db, $from, $week) {
 	$toTS = $fromTS + (6 * 24 * 60 * 60);
 	
 	$slots = getShiftsFromTo ( $db, $fromTS, $toTS );
-	print "<h2>NA62 2016 run Shift Schedule Week " . $week . " - " . date ( "F d", $fromTS ) . " to " . date ( "F d", $toTS ) . "</h2><table style='width:1000px'><tr><th style='width:70px'>Week " . $week . "</th>";
+	print "<a name='week" . $week . "'></a>";
+	print "<h2>NA62 2016 run Shift Schedule Week " . $week . " - " . date ( "F d", $fromTS ) . 
+		" to " . date ( "F d", $toTS ) . "</h2>";
+	print "<form action='shifts_admin.php#week".$week."' method='POST'>";
+	print "<input type='text' name='week_comment' value='" . getWeekComment($db, $week, false) . "' style='width:800px'>";
+	print "<input type='hidden' name='week_num' value='" . $week . "'> ";
+	print "<input type='hidden' name='view' value='mod_comment'> ";
+	print "<input type='submit' name='submit' value='Modify'>";
+	print "</form>";
+	print "<table style='width:1000px'><tr><th style='width:70px'>Week " . $week . "</th>";
 	foreach ( $slots as $slot )
 		print "<th>" . date ( "l - F d", $slot->date ) . "</th>";
 	print "</tr><tr class='r1'><th rowspan='2'>Night Shift (00:00 to 8:00)</th>";
 	foreach ( $slots as $slot )
-		print "<td>" . $slot->printSlot ( 0, 1 ) . $slot->printModifyButton(0,1) . "</td>";
+		print "<td>" . $slot->printSlot ( 0, 1 ) . $slot->printModifyButton(0,1,$week) . "</td>";
 	print "</tr><tr class='r2'>";
 	foreach ( $slots as $slot )
-		print "<td>" . $slot->printSlot ( 0, 2 ) . $slot->printModifyButton(0,2) . "</td>";
-	
+		print "<td>" . $slot->printSlot ( 0, 2 ) . $slot->printModifyButton(0,2,$week) . "</td>";
+	print "</tr><tr class='r2'><td>Shadow</td>";
+	foreach ( $slots as $slot )
+		print "<td>" . $slot->printSlot ( 0, 3 ) . $slot->printModifyButton(0,3,$week) . "</td>";
+		
 	print "</tr><tr class='r1'><th rowspan='2'>Day Shift (8:00 to 16:00)</th>";
 	foreach ( $slots as $slot )
-		print "<td>" . $slot->printSlot ( 1, 1 ) . $slot->printModifyButton(1,1) . "</td>";
+		print "<td>" . $slot->printSlot ( 1, 1 ) . $slot->printModifyButton(1,1,$week) . "</td>";
 	print "</tr><tr class='r2'>";
 	foreach ( $slots as $slot )
-		print "<td>" . $slot->printSlot ( 1, 2 ) . $slot->printModifyButton(1,2) . "</td>";
-	
+		print "<td>" . $slot->printSlot ( 1, 2 ) . $slot->printModifyButton(1,2,$week) . "</td>";
+	print "</tr><tr class='r2'><td>Shadow</td>";
+	foreach ( $slots as $slot )
+		print "<td>" . $slot->printSlot ( 1, 3 ) . $slot->printModifyButton(1,3,$week) . "</td>";
+		
 	print "</tr><tr class='r1'><th rowspan='2'>Afternoon Shift (16:00 to 24:00)</th>";
 	foreach ( $slots as $slot )
-		print "<td>" . $slot->printSlot ( 2, 1 ) . $slot->printModifyButton(2,1) . "</td>";
+		print "<td>" . $slot->printSlot ( 2, 1 ) . $slot->printModifyButton(2,1,$week) . "</td>";
 	print "</tr><tr class='r2'>";
 	foreach ( $slots as $slot )
-		print "<td>" . $slot->printSlot ( 2, 2 ) . $slot->printModifyButton(2,2) . "</td>";
-	
+		print "<td>" . $slot->printSlot ( 2, 2 ) . $slot->printModifyButton(2,2,$week) . "</td>";
+	print "</tr><tr class='r2'><td>Shadow</td>";
+	foreach ( $slots as $slot )
+		print "<td>" . $slot->printSlot ( 2, 3 ) . $slot->printModifyButton(2,3,$week) . "</td>";
+		
 	print "</tr></table>";
 }
 
@@ -157,8 +177,16 @@ if(isset($_POST["view"]) && $_POST["view"]=="mod_slot"){
 		}
 	}
 }
+elseif(isset($_POST["view"]) && $_POST["view"]=="mod_comment"){
+	$comment = $_POST["week_comment"];
+	$week = $_POST["week_num"];
+	
+	$weekID = getWeekCommentID($db, $week);
+	updateWeekComment($db, $weekID, $week, $comment);
+}
 ?>
 	<h1>Welcome to the NA62 shifts schedule administration website.</h1>
+	<div style='text-align:center'>Last updated on <?php echo getLastUpdate();?></div>
 <?php
 for($week = 1; $week <= 30; $week ++) {
 	buildTable ( $db, "2016-04-25", $week );
@@ -167,7 +195,7 @@ for($week = 1; $week <= 30; $week ++) {
 
 <div class="search-form floating_window" style="width:450px;display:<?php echo (isset($_POST["view"])) ? 'block' : 'none'?>" id="mod_div">
 	<h3 style="display:inline">Modify slot</h3><a style="margin-left: 320px" onclick="hideModify();">hide</a>
-	<form action="shifts_admin.php" method="POST">
+	<form id='formModify' action="shifts_admin.php" method="POST">
 	<input type="hidden" id="view" name="view" value="mod_slot">
 	<input type="hidden" id="date" name="date" value="<?php echoIfSet("date");?>">
 	<input type="hidden" id="slot" name="slot" value="<?php echoIfSet("slot");?>">

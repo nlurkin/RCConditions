@@ -21,7 +21,10 @@ function buildTable($db, $from, $week) {
 	$toTS = $fromTS + (6 * 24 * 60 * 60);
 	
 	$slots = getShiftsFromTo ( $db, $fromTS, $toTS );
-	print "<h2>NA62 2016 run Shift Schedule Week " . $week . " - " . date ( "F d", $fromTS ) . " to " . date ( "F d", $toTS ) . "</h2><table style='width:1000px'><tr><th style='width:70px'>Week " . $week . "</th>";
+	print "<h2>NA62 2016 run Shift Schedule Week " . $week . " - " . date ( "F d", $fromTS ) . 
+		" to " . date ( "F d", $toTS ) . "</h2>";
+	print getWeekComment($db, $week, true);
+	print "<table style='width:1000px'><tr><th style='width:70px'>Week " . $week . "</th>";
 	foreach ( $slots as $slot )
 		print "<th>" . date ( "l - F d", $slot->date ) . "</th>";
 	print "</tr><tr class='r1'><th rowspan='2'>Night Shift (00:00 to 8:00)</th>";
@@ -30,21 +33,30 @@ function buildTable($db, $from, $week) {
 	print "</tr><tr class='r2'>";
 	foreach ( $slots as $slot )
 		print "<td>" . $slot->printSlot ( 0, 2 ) . "</td>";
-	
+	print "</tr><tr class='r2'><td>Shadow</td>";
+	foreach ( $slots as $slot )
+		print "<td>" . $slot->printSlot ( 0, 3 ) . "</td>";
+		
 	print "</tr><tr class='r1'><th rowspan='2'>Day Shift (8:00 to 16:00)</th>";
 	foreach ( $slots as $slot )
 		print "<td>" . $slot->printSlot ( 1, 1 ) . "</td>";
 	print "</tr><tr class='r2'>";
 	foreach ( $slots as $slot )
 		print "<td>" . $slot->printSlot ( 1, 2 ) . "</td>";
-	
+	print "</tr><tr class='r2'><td>Shadow</td>";
+	foreach ( $slots as $slot )
+		print "<td>" . $slot->printSlot ( 1, 3 ) . "</td>";
+		
 	print "</tr><tr class='r1'><th rowspan='2'>Afternoon Shift (16:00 to 24:00)</th>";
 	foreach ( $slots as $slot )
 		print "<td>" . $slot->printSlot ( 2, 1 ) . "</td>";
 	print "</tr><tr class='r2'>";
 	foreach ( $slots as $slot )
 		print "<td>" . $slot->printSlot ( 2, 2 ) . "</td>";
-	
+	print "</tr><tr class='r2'><td>Shadow</td>";
+	foreach ( $slots as $slot )
+		print "<td>" . $slot->printSlot ( 2, 3 ) . "</td>";
+		
 	print "</tr></table>";
 }
 ?>
@@ -58,7 +70,7 @@ function buildTable($db, $from, $week) {
 </header>
 <body>
 	<h1>Welcome to the NA62 shifts schedule website.</h1>
-
+<div style='text-align:center'>Last updated on <?php echo getLastUpdate();?></div>
 <?php
 for($week = 1; $week <= 30; $week ++) {
 	buildTable ( $db, "2016-04-25", $week );

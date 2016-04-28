@@ -13,6 +13,9 @@ class Slot {
 	public $sh2 = Array ();
 	public $institute2 = Array ();
 	public $sh2_id = Array ();
+	public $sh3 = Array();
+	public $sh3_id = Array();
+	
 	function __construct($canceled) {
 		$this->canceled = $canceled;
 	}
@@ -25,6 +28,9 @@ class Slot {
 			array_push ( $this->sh2, $sh );
 			array_push ( $this->institute2, $institute );
 			array_push ( $this->sh2_id, $id );
+		} elseif( $num ==3 ) {
+			array_push ( $this->sh3, $sh );
+			array_push ( $this->sh3_id, $id );
 		}
 	}
 	public function printShifter($sh) {
@@ -44,11 +50,15 @@ class Slot {
 				foreach ( $this->sh2 as $index => $shifter )
 					$retString = $retString . $this->institute2 [$index] . " " . $shifter . "<br>";
 			}
+		} elseif ($sh == 3) {
+			if(sizeof($this->sh3)>0){
+				$retString = implode(", ", $this->sh3);
+			}
 		}
 		return $retString;
 	}
 	
-	public function printModifyButton($sh, $date, $slot){
+	public function printModifyButton($sh, $date, $slot, $week){
 		$sh_id = "";
 		$sh_inst = "";
 		$sh_name = "";
@@ -61,22 +71,31 @@ class Slot {
 			$type = 1;
 			if(sizeof($this->sh1_id)==0) $empty= true;
 		}
-		elseif( $sh==2){
+			elseif( $sh==2){
 			$sh_id = "[\"" . implode("\",\"",$this->sh2_id) . "\"]";
 			$sh_inst = "[\"" . implode("\",\"",$this->institute2) . "\"]";
 			$sh_name = "[\"" . implode("\",\"",$this->sh2) . "\"]";
 			$type = 2;
 			if(sizeof($this->sh2_id)==0) $empty= true;
 		}
+		elseif( $sh==3){
+			$sh_id = "[\"" . implode("\",\"",$this->sh3_id) . "\"]";
+			$sh_inst = "[\"\",\"\"]";
+			$sh_name = "[\"" . implode("\",\"",$this->sh3) . "\"]";
+			$type = 3;
+			if(sizeof($this->sh3_id)==0) $empty= true;
+		}
 		if(!$empty){
-			return "<input class='shifts' type='button' value='Modify' onClick='modifyID(" . $sh_id 
+			$buttonString = "<input class='shifts' type='button' value='Modify' onClick='modifyID(" . $sh_id 
 					. ",". $sh_inst . "," . $sh_name . ",". $this->canceled . ",\"". $date . "\"," 
-					. $slot . ",\"" . $type . "\")'>";
+					. $slot . ",\"" . $type . "\", " . $week . ")'>";
 		}
 		else{
-			return "<input class='shifts' type='button' value='Create' onClick='modifyID([],[],"
-					. "[],false,\"". $date . "\"," . $slot . ",\"" . $type . "\")'>";
+			$buttonString = "<input class='shifts' type='button' value='Create' onClick='modifyID([],[],"
+					. "[],false,\"". $date . "\"," . $slot . ",\"" . $type . "\", " . $week . ")'>";
 		}
+		
+		return $buttonString;
 	}
 }
 class ShiftDay {
@@ -97,11 +116,11 @@ class ShiftDay {
 			return $this->slots [$num]->printShifter ( $sh );
 	}
 	
-	public function printModifyButton($num, $sh){
+	public function printModifyButton($num, $sh, $week){
 		if (array_key_exists ( $num, $this->slots ))
-			return $this->slots [$num]->printModifyButton ( $sh , $this->date, $num);
+			return $this->slots [$num]->printModifyButton ( $sh , $this->date, $num, $week);
 		else 
-			return "<input class='shifts' type='button' value='Create' onClick='modifyID([], [], [], false, \"" . $this->date . "\", ". $num . ", \"" . $sh . "\")'>";
+			return "<input class='shifts' type='button' value='Create' onClick='modifyID([], [], [], false, \"" . $this->date . "\", ". $num . ", \"" . $sh . "\", " . $week . ")'>";
 	}
 }
 function getShiftsFromTo($db, $from, $to) {
@@ -123,6 +142,8 @@ function getShiftsFromTo($db, $from, $to) {
 			$currentDay->addShifterToSlot ( $row ["slot"], 1, $row ["surname"], $row ["institute"], $row ["id"] );
 		} elseif ($row ["shift_type"] == 2) {
 			$currentDay->addShifterToSlot ( $row ["slot"], 2, $row ["surname"], $row ["institute"], $row ["id"] );
+		} elseif ($row ["shift_type"] == 3) {
+			$currentDay->addShifterToSlot ( $row ["slot"], 3, $row ["surname"], "", $row ["id"] );
 		}
 	}
 	
@@ -137,14 +158,17 @@ function modifySlot($db, $slotID, $shifterID, $institute, $canceled){
 		$id = $row["shift_id"];
 		$db->executeUpdate("UPDATE shifts_assignments SET canceled=? WHERE shift_id=?", "ii", $canceled, $id);
 	}
+	updateLastUpdate();
 }
 
 function createSlot($db, $shiftID, $shifterID, $institute, $type, $canceled){
 	$db->executeUpdate("INSERT INTO shifts_assignments (shift_id, shifter_id, shift_type, institute, canceled) VALUES (?,?,?,?,?)", "iiisi", $shiftID, $shifterID, $type, $institute, $canceled);
+	updateLastUpdate();
 }
 
 function deleteSlot($db, $slotID){
 	$db->executeUpdate("DELETE FROM shifts_assignments WHERE id=?", "i", $slotID);
+	updateLastUpdate();
 }
 
 function getShiftID($db, $date, $slot){
@@ -155,4 +179,40 @@ function getShiftID($db, $date, $slot){
 	return -1;
 }
 
+function getWeekCommentID($db, $week){
+	$db->executeGet("SELECT id FROM week_comments WHERE week_num=".$week);
+	if($row = $db->next()){
+		return $row["id"];
+	}
+	return -1;
+}
+
+function getWeekComment($db, $week, $format){
+	$db->executeGet("SELECT comment FROM week_comments WHERE week_num=" . $week);
+	if($row = $db->next()){
+		if($format)
+			return "<div style='color:Red'>" . $row["comment"] . "</div>";
+		else 
+			return $row["comment"];
+	}
+	return "";
+}
+
+function updateWeekComment($db, $weekID, $week, $comment){
+	if($weekID==-1)
+		$db->executeUpdate("INSERT INTO week_comments (week_num, comment) VALUES (?,?)", "is", $week, $comment);
+	else{
+		$db->executeUpdate("UPDATE week_comments SET comment=? WHERE id=?", "si", $comment, $weekID);
+	}
+	
+		updateLastUpdate();
+}
+function getLastUpdate(){
+	$val = stat("shifts_schedule_lastUpdate.php");
+	$time = $val["mtime"];
+	return strftime("%Y-%m-%d %H:%M:%S", $time);
+}
+function updateLastUpdate(){
+	touch("../shifts_schedule_lastUpdate.php");
+}
 ?>
