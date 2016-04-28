@@ -29,7 +29,8 @@ if __name__ == '__main__':
         sys.exit()
     
     myconn = DBConnector(True)
-    myconn.connectDB(passwd=sys.argv[1], host=DB.host, db="shifters", user=DB.userName, port=DB.port)
+    myconn.initConnection(passwd=sys.argv[1], host=DB.host, db="shifters", user=DB.userName, port=DB.port)
+    myconn.openConnection()
     
     
     firstShift = datetime.strptime(sys.argv[2], "%Y-%m-%d")

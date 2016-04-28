@@ -13,7 +13,7 @@ import NA62DB
 from NA62DB.DBConfig import ProcessingConfig as DBConf
 
 
-class dimReceiver(object):
+class DBDimConnector(object):
     '''
     classdocs
     '''
@@ -23,6 +23,12 @@ class dimReceiver(object):
         Constructor
         '''
         self.myconn = NA62DB.DBConnector(False)
+    
+    def execute_callback(self, sql, params):
+        self.myconn.connectDB(passwd=DBConf.passwd, host=DBConf.host, db=DBConf.dbName, user=DBConf.userName, port=DBConf.port)
+    
+    
+    
     
     def runProcess_callback(self, runNumber, revision):
         #Consistency checks

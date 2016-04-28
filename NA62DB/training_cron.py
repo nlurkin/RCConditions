@@ -59,7 +59,8 @@ def next_weekday(d, weekday):
 
 if __name__ == '__main__':
     myconn = DBConnector()
-    myconn.connectDB(passwd=sys.argv[1], host=DB.host, db=DB.dbName, user=DB.userName, port=DB.port)
+    myconn.initConnection(passwd=sys.argv[1], host=DB.host, db=DB.dbName, user=DB.userName, port=DB.port)
+    myconn.openConnection()
     
     first_date = datetime.datetime.now()
     if first_date < datetime.datetime(2016,04,15):

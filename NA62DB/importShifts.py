@@ -164,7 +164,8 @@ if __name__ == '__main__':
     print len(dates), len(night_sh1), len(night_sh2), len(night_sh3), len(day_sh1), len(day_sh2), len(day_sh3), len(eve_sh1), len(eve_sh2), len(eve_sh3)
     eve_sh3.extend([""]*203)
     myconn = DBConnector(True)
-    myconn.connectDB(passwd=sys.argv[1], host=DB.host, db="shifters", user=DB.userName, port=DB.port)
+    myconn.initConnection(passwd=sys.argv[1], host=DB.host, db="shifters", user=DB.userName, port=DB.port)
+    myconn.openConnection()
 
     for (d, n_sh1, n_sh2, n_sh3, d_sh1, d_sh2, d_sh3, e_sh1, e_sh2, e_sh3) in zip(dateList, night_sh1, night_sh2, night_sh3, day_sh1, day_sh2, day_sh3, eve_sh1, eve_sh2, eve_sh3):
         print d

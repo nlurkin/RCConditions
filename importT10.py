@@ -46,7 +46,8 @@ if __name__ == '__main__':
     
     #myconn = None
     myconn = DBConnector(False)
-    myconn.connectDB(passwd=sys.argv[-1:][0])
+    myconn.initConnection(passwd=sys.argv[-1:][0])
+    myconn.openConnection()
 
     filePath = sys.argv[1:]
     
