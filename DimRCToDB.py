@@ -1,61 +1,140 @@
 #!/usr/bin/env python
-
 '''
 Created on Apr 26, 2016
-
 @author: nlurkin
 '''
 
+import sys
 import time
 
 import pydim
+
 import NA62DB
-from NA62DB.DBConfig import ProcessingConfig as DBConf
+from NA62DB.DBConfig import DBNamedConfig
 
 
-class DBDimConnector(object):
+class DBDimObject(object):
     '''
     classdocs
     '''
 
-    def __init__(self):
+    def __init__(self, dbName, user, passwd, service):
         '''
         Constructor
         '''
-        self.myconn = NA62DB.DBConnector(False)
-    
-    def execute_callback(self, sql, params):
-        self.myconn.connectDB(passwd=DBConf.passwd, host=DBConf.host, db=DBConf.dbName, user=DBConf.userName, port=DBConf.port)
-    
-    
-    
-    
-    def runProcess_callback(self, runNumber, revision):
-        #Consistency checks
-        if revision[0]!='r':
-            print "Revision number not valid: {0}".format(revision)
-            return
-        if runNumber<0:
-            print "Run number not valid: {0}".format(runNumber)
-            return
+        print "creating DimObject"
+        dbConf = DBNamedConfig(dbName)
+        self.myconn = NA62DB.DBConnector(dry_run=False, exitOnFailure=False)
+        self.myconn.initConnection(passwd=passwd, host=dbConf.host, db=dbConf.dbName, user=user, port=dbConf.port)
         
-        self.myconn.connectDB(passwd=DBConf.passwd, host=DBConf.host, db=DBConf.dbName, user=DBConf.userName, port=DBConf.port)
-        res = self.myconn.executeGet("SELECT COUNT(*) FROM Run WHERE ID=%s AND Version=%s", [runNumber, revision])
-        if res[0]["COUNT(*)"]==0:
-            self.myconn.executeInsert("INSERT INTO Run (ID, Version, Status) VALUES (%s,%s,'OnlinePending')", [runNumber, revision])
-        else:
-            self.myconn.executeInsert("UPDATE Run SET Status='OnlinePending' WHERE Id=%s AND Version=%s", [runNumber, revision])
+        self.serverName = dbName
+        self.serviceName = service
+        
+        self.query_success = 0
+        self.resultString = " "
+        self.ignoreFirstSet = True
+        self.ignoreFirstGet = True
+        
+    def parseParameters(self, description, params):
+        paramsList = params.split("$")
+        transformedParams = []
+        for desc_letter, param_val in zip(description, paramsList):
+            if desc_letter=="s":
+                transformedParams.append(param_val)
+            elif desc_letter=="i":
+                transformedParams.append(int(param_val))
+            elif desc_letter=="f":
+                transformedParams.append(float(param_val))
+        
+        return transformedParams
+            
+    ###########################
+    #    Query Execution
+    ###########################
+    def execute_set_callback(self, *args):
+        if self.ignoreFirstSet:
+            self.ignoreFirstSet = False
+            return
+        print "set received", args
+        [sql, params_desc, params] = args[0].split(";")
+        params = self.parseParameters(params_desc, params)
+        
+        self.myconn.openConnection()
+        self.query_success = self.myconn.executeInsert(sql, params)
         self.myconn.close()
+        pydim.dis_update_service(self.success_service)
+        
+    def execute_get_callback(self, *args):
+        if self.ignoreFirstGet:
+            self.ignoreFirstGet = False
+            return
+        print "get received", args
+        [sql, params_desc, params] = args[0].split(";")
+        params = self.parseParameters(params_desc, params)
+        self.myconn.openConnection()
+        rows = self.myconn.executeGet(sql, params)
+        self.myconn.close()
+        
+        if rows==-1:
+            self.query_success = -1
+        else:
+            rows[:] = ["$".join(str(row[val]) for val in row) for row in rows]
+            self.resultString = "|".join(rows) 
+            pydim.dis_update_service(self.result_service)
+        
+        pydim.dis_update_service(self.success_service)
+
+    ###########################
+    #    Services callbacks
+    ###########################    
+    def send_success_callback(self, tag):
+        return (self.query_success, self.myconn.getLastError() + " ")
     
+    def send_result_callback(self, tag):
+        print self.resultString
+        return [self.resultString]
+    
+    ###########################
+    #    DIM execution
+    ###########################
     def start(self):
-        self.runProcess = pydim.dic_info_service("RunControl/StartProcessing", "L:1;C", self.runProcess_callback)
+        print "Adding service {serverName}/sql_success L:1;C".format(**self.__dict__)
+        self.success_service = pydim.dis_add_service("{serverName}/sql_success".format(**self.__dict__), "L:1;C", self.send_success_callback, 1)
+        print "Adding service {serverName}/sql_result C".format(**self.__dict__)
+        self.result_service = pydim.dis_add_service("{serverName}/sql_result".format(**self.__dict__), "C", self.send_result_callback, 1)
+        
+        pydim.dis_update_service(self.success_service)
+        pydim.dis_update_service(self.result_service)
+        
+        print "Connecting to service {serviceName}/sql_set C".format(**self.__dict__)
+        self.set_command = pydim.dic_info_service("{serviceName}/sql_set".format(**self.__dict__), "C", self.execute_set_callback)
+        print "Connecting to service {serviceName}/sql_get C".format(**self.__dict__)
+        self.get_command = pydim.dic_info_service("{serviceName}/sql_get".format(**self.__dict__), "C", self.execute_get_callback)
+        pydim.dis_start_serving()
+        print ""
         
     def stop(self):
-        pydim.dic_release_service(self.runProcess)
+        pydim.dic_release_service(self.result_service)
+        pydim.dic_release_service(self.success_service)
+
+
+add_connector_service = None
+list_connectors = {}
+def add_connector_callback(cmd, tag):
+    global list_connectors
+    print "add_connector receiving ", cmd
+    [dbName, user, passwd, service] = cmd[0].split(";")
+    list_connectors[dbName] = DBDimObject(dbName, user, passwd, service)
+    list_connectors[dbName].start()
+    
+
+def start(serverName):
+    global add_connector_service
+    add_connector_service = pydim.dis_add_cmnd("{0}/add_connector".format(serverName), "C", add_connector_callback, 1)
+    
+    pydim.dis_start_serving(serverName)
+    while True:
+        time.sleep(1)
 
 if __name__ == '__main__':
-    b = dimReceiver();
-    
-    b.start()
-    while True:
-        time.sleep(10)
+    start(sys.args[0])
