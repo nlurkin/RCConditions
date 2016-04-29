@@ -13,7 +13,8 @@ from DBConfig import DBConfig as DB
 
 if __name__ == '__main__':
     myconn = DBConnector()
-    myconn.connectDB(passwd=sys.argv[1], host=DB.host, db=DB.dbName, user=DB.userName, port=DB.port)
+    myconn.initConnection(passwd=sys.argv[1], host=DB.host, db=DB.dbName, user=DB.userName, port=DB.port)
+    myconn.openConnection()
     
     
     res = myconn.executeGet("SELECT totalMerger, timestop, totalL2, totalL0, totalL1, number  FROM run WHERE timestart>'2015-06-22T00:00:00.000' ORDER BY number")

@@ -49,7 +49,8 @@ def printTable(myconn, table, order="", where=""):
 
 if __name__ == '__main__':
     myconn = DBConnector()
-    myconn.connectDB(passwd=sys.argv[1], host=DB.host, db=DB.dbName, user=DB.userName, port=DB.port)
+    myconn.initConnection(passwd=sys.argv[1], host=DB.host, db=DB.dbName, user=DB.userName, port=DB.port)
+    myconn.openConnection()
     
     
     res = myconn.executeGet("SELECT table_name FROM information_schema.tables WHERE table_schema='testRC' AND table_type='BASE TABLE'")

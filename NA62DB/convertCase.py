@@ -14,7 +14,8 @@ import re
 
 if __name__ == '__main__':
     myconn = DBConnector(True)
-    myconn.connectDB(passwd=sys.argv[1], host=DB.host, db="shifters", user=DB.userName, port=DB.port)
+    myconn.initConnection(passwd=sys.argv[1], host=DB.host, db="shifters", user=DB.userName, port=DB.port)
+    myconn.openConnection()
     
     list = myconn.executeGet("SELECT id, surname FROM shifter", [])
     

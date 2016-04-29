@@ -18,11 +18,27 @@ class DBConnector(object):
     '''
     wrapper = textwrap.TextWrapper(initial_indent=" --->", width=150, subsequent_indent='     ')
     
-    def __init__(self, dry_run=True):
+    def __init__(self, dry_run=True, exitOnFailure=True):
         self.db = None
         self.cursor = None
         self.dryRun = dry_run
+        
+        self.host = ""
+        self.user = ""
+        self.passwd = ""
+        self.db = ""
+        self.port = -1
+        
+        self.exitOnFailure = exitOnFailure
+        self.lastError = "";
     
+    def initConnection(self, host="nlurkinsql.cern.ch", user="nlurkin", passwd="", db="testRC", port=3307):
+        self.host = host
+        self.user = user
+        self.passwd = passwd
+        self.db = db
+        self.port = port
+        
     def close(self):
         if self.db and self.db.open:
             self.db.close()
@@ -32,46 +48,55 @@ class DBConnector(object):
         
     def indent(self, txt, stops=1):
         return self.wrapper.fill(txt)
+    
+    def getLastError(self):
+        return self.lastError
+    
     ##---------------------------------------
     #    Utility functions for DB actions
     ##---------------------------------------
-    def connectDB(self, host="nlurkinsql.cern.ch", user="nlurkin", passwd="", db="testRC", port=3307):
+    def openConnection(self):
         '''Create Database connection and cursor for SQL requests'''
         
         try:
-            self.db = MySQLdb.connect(host=host, user=user, passwd=passwd, db=db, port=port)
+            self.db = MySQLdb.connect(host=self.host, user=self.user, passwd=self.passwd, db=self.db, port=self.port)
             self.cursor = self.db.cursor()
         except MySQLdb.Error, e:
-            print "Unable to initiate connection with database " + db + " at " + user + "@" + host
-            print e
-            sys.exit()
+            self.lastError =  "Unable to initiate connection with database " + self.db + " at " + self.user + "@" + self.host + "\n" + str(e)
+            print self.lastError
+            if self.exitOnFailure:
+                sys.exit()
     
     def executeInsert(self, sqlCommand, params=[]):
         print self.indent(sqlCommand % tuple(params))
         if self.dryRun:
-            return
+            return -1
         try:
             self.cursor.execute(sqlCommand, params)
             self.db.commit()
             return self.cursor.lastrowid
         except MySQLdb.Error, e:
-            print "Unable to execute insert statement: " + (sqlCommand % tuple(params))
-            print e
+            self.lastError =  "Unable to execute insert statement: " + (sqlCommand % tuple(params)) + "\n" + str(e)
+            print self.lastError
             self.db.rollback()
-            sys.exit()
+            if self.exitOnFailure:
+                sys.exit()
+        
+        return -1
     
     def executeGet(self, sqlCommand, params=[]):
         if self.db==None:
             return ()
-        res = ()
+        res = -1
         try:
             self.cursor.execute(sqlCommand, params)
             fields = map(lambda x:x[0], self.cursor.description)
             res = [dict(zip(fields,row)) for row in self.cursor.fetchall()]
         except MySQLdb.Error, e:
-            print "Unable to execute select statement: " + (sqlCommand % tuple(params))
-            print e
-            sys.exit()
+            self.lastError =  "Unable to execute select statement: " + (sqlCommand % tuple(params)) + "\n" + str(e)
+            print self.lastError
+            if self.exitOnFailure:
+                sys.exit()
         return res
     
     def getResultSingle(self, sqlCommand, params=[]):

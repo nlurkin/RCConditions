@@ -19,7 +19,8 @@ if __name__ == '__main__':
     wb = load_workbook("participants-list.xlsx")
 
     myconn = DBConnector(True)
-    myconn.connectDB(passwd=sys.argv[1], host=DB.host, db="shifters", user=DB.userName, port=DB.port)
+    myconn.initConnection(passwd=sys.argv[1], host=DB.host, db="shifters", user=DB.userName, port=DB.port)
+    myconn.openConnection()
     
     # search name
     for row in range(8,1000):

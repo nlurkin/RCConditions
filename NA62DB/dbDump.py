@@ -47,7 +47,8 @@ if __name__ == '__main__':
         sys.exit()
     
     myconn = DBConnector()
-    myconn.connectDB(passwd=sys.argv[1], host=DB.host, db=DB.dbName, user=DB.userName, port=DB.port)
+    myconn.initConnection(passwd=sys.argv[1], host=DB.host, db=DB.dbName, user=DB.userName, port=DB.port)
+    myconn.openConnection()
     
     print "#################################  Run Info  ################################"
     printTable(myconn, "run", "number")
