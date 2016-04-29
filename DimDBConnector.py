@@ -137,4 +137,4 @@ def start(serverName):
         time.sleep(1)
 
 if __name__ == '__main__':
-    start(sys.args[0])
+    start(sys.argv[0])
