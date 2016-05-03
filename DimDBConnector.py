@@ -56,7 +56,7 @@ class DBDimObject(object):
             self.ignoreFirstSet = False
             return
         print "set received", args
-        [sql, params_desc, params] = args[0].split(";")
+        [sql, params_desc, params] = args[0].strip('\x00').split(";")
         params = self.parseParameters(params_desc, params)
         
         self.myconn.openConnection()
@@ -69,7 +69,7 @@ class DBDimObject(object):
             self.ignoreFirstGet = False
             return
         print "get received", args
-        [sql, params_desc, params] = args[0].split(";")
+        [sql, params_desc, params] = args[0].strip('\x00').split(";")
         params = self.parseParameters(params_desc, params)
         self.myconn.openConnection()
         rows = self.myconn.executeGet(sql, params)
@@ -123,7 +123,7 @@ list_connectors = {}
 def add_connector_callback(cmd, tag):
     global list_connectors
     print "add_connector receiving ", cmd
-    [dbName, user, passwd, service] = cmd[0].split(";")
+    [dbName, user, passwd, service] = cmd[0].strip('\x00').split(";")
     list_connectors[dbName] = DBDimObject(dbName, user, passwd, service)
     list_connectors[dbName].start()
     
@@ -133,6 +133,7 @@ def start(serverName):
     add_connector_service = pydim.dis_add_cmnd("{0}/add_connector".format(serverName), "C", add_connector_callback, 1)
     
     pydim.dis_start_serving(serverName)
+    #add_connector_callback(("conditions;na62user;mysql4na62;RC_Cond",), 0)
     while True:
         time.sleep(1)
 
