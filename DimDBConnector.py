@@ -114,16 +114,34 @@ class DBDimObject(object):
         print ""
         
     def stop(self):
-        pydim.dic_release_service(self.result_service)
-        pydim.dic_release_service(self.success_service)
+        pydim.dis_remove_service(self.result_service)
+        pydim.dis_remove_service(self.success_service)
+        pydim.dic_release_service(self.set_command)
+        pydim.dic_release_service(self.get_command)
+        print "Connector {serverName} terminated".format(**self.__dict__)
 
 
 add_connector_service = None
 list_connectors = {}
 def add_connector_callback(cmd, tag):
+    '''
+    Callback for the add_connector command.
+    Expected string to add a new connector is: dbName;userName;password;client_service_prefix
+    Expected string to remove an existing connector is: dbName;;;
+    '''
     global list_connectors
     print "add_connector receiving ", cmd
     [dbName, user, passwd, service] = cmd[0].strip('\x00').split(";")
+    if(list_connectors.has_key(dbName)):
+        if(service==""):
+            print "Removing connector {0}".format(dbName)
+            list_connectors[dbName].stop()
+            del list_connectors[dbName]
+            return
+        else:
+            print "{0} connector already exists ... Aborting".format(dbName)
+            return
+    
     list_connectors[dbName] = DBDimObject(dbName, user, passwd, service)
     list_connectors[dbName].start()
     
@@ -133,7 +151,6 @@ def start(serverName):
     add_connector_service = pydim.dis_add_cmnd("{0}/add_connector".format(serverName), "C", add_connector_callback, 1)
     
     pydim.dis_start_serving(serverName)
-    #add_connector_callback(("conditions;na62user;mysql4na62;RC_Cond",), 0)
     while True:
         time.sleep(1)
 
