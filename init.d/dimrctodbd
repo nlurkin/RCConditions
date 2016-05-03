@@ -1,0 +1,64 @@
+#!/bin/bash
+#
+
+. /etc/init.d/functions
+
+EXEC=/home/nlurkin/RCConditions/DimDBConnector.py
+NAME=dimrctodbd
+PID=/var/run/${NAME}.pid
+ARGS=na62dimConnector
+LOGFILE=/var/log/${NAME}.log
+
+export OS=Linux
+export DIMDIR=/home/nlurkin/dim
+export LD_LIBRARY_PATH=$DIMDIR/linux:$LD_LIBRARY_PATH
+export DIM_DNS_NODE=lkrpn2
+
+start() {
+	echo -n "Starting DimRCToDB Server: "
+	${EXEC} ${ARGS} 2>&1 >> ${LOGFILE} &
+	pid=$!
+	retval=$?
+	if [ $retval -eq 0 ]; then
+		echo $pid > ${PID}
+		success $"DimRCToDB server startup"
+	fi
+	return $retval
+}
+
+stop() {
+	echo -n "Starting DimRCToDB Server: "
+	retval=1
+	if [ -e ${PID} ]; then
+		pid=`cat ${PID}`
+		kill $pid
+	fi
+	retval=$?
+	if [ $retval -eq 0 ]; then
+		success $"DimRCToDB server stopped"
+		rm -f ${PID}
+	else
+		failure $"Unable to stop DimRCToDB server"
+	fi
+}
+
+case "$1" in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	status)
+		status DimDBConnector.py
+		;;
+	restart|reload|condrestart)
+		stop
+		start
+		;;
+	*)
+		echo $"Usage: $0 {start|stop|restart|reload|status}"
+		exit 1
+esac
+exit 0
+

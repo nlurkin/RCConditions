@@ -1,0 +1,2 @@
+10 * * * * /home/nlurkin/RCConditions/importBookKeeping.py /home/lkrpn0/XMLReport/* password >> /home/nlurkin/crontab.log
+0 09 * * 1 /home/nlurkin/RCConditions/NA62DB/training_cron.py password >> /home/nlurkin/crontab.log
