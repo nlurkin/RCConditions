@@ -32,6 +32,7 @@ class DBDimObject(object):
         
         self.query_success = 0
         self.resultString = " "
+        self.resultFIelds = " "
         self.ignoreFirstSet = True
         self.ignoreFirstGet = True
         
@@ -56,8 +57,11 @@ class DBDimObject(object):
             self.ignoreFirstSet = False
             return
         print "set received", args
-        [sql, params_desc, params] = args[0].strip('\x00').split(";")
-        params = self.parseParameters(params_desc, params)
+        try:
+            [sql, params_desc, params] = args[0].strip('\x00').split(";")
+            params = self.parseParameters(params_desc, params)
+        except ValueError as e:
+            self.error = str(e)
         
         self.myconn.openConnection()
         self.query_success = self.myconn.executeInsert(sql, params)
@@ -69,18 +73,24 @@ class DBDimObject(object):
             self.ignoreFirstGet = False
             return
         print "get received", args
-        [sql, params_desc, params] = args[0].strip('\x00').split(";")
-        params = self.parseParameters(params_desc, params)
+        try:
+            [sql, params_desc, params] = args[0].strip('\x00').split(";")
+            params = self.parseParameters(params_desc, params)
+        except ValueError as e:
+            self.error = str(e)
+            
         self.myconn.openConnection()
         rows = self.myconn.executeGet(sql, params)
         self.myconn.close()
-        
+
         if rows==-1:
             self.query_success = -1
         else:
             rows[:] = ["$".join(str(row[val]) for val in row) for row in rows]
-            self.resultString = "|".join(rows) 
+            self.resultString = "|".join(rows)
+            self.resultFields = "|".join(rows)
             pydim.dis_update_service(self.result_service)
+            pydim.dis_update_service(self.fields_service)
         
         pydim.dis_update_service(self.success_service)
 
@@ -88,11 +98,16 @@ class DBDimObject(object):
     #    Services callbacks
     ###########################    
     def send_success_callback(self, tag):
-        return (self.query_success, self.myconn.getLastError() + " ")
+        return (self.query_success, "{0}|{1}".format(self.myconn.getLastError(), self.error))
+        self.error = ""
     
     def send_result_callback(self, tag):
         print self.resultString
         return [self.resultString]
+    
+    def send_fields_callback(self, tag):
+        print self.resultFields
+        return [self.resultFields]
     
     ###########################
     #    DIM execution
@@ -102,9 +117,12 @@ class DBDimObject(object):
         self.success_service = pydim.dis_add_service("{serverName}/sql_success".format(**self.__dict__), "L:1;C", self.send_success_callback, 1)
         print "Adding service {serverName}/sql_result C".format(**self.__dict__)
         self.result_service = pydim.dis_add_service("{serverName}/sql_result".format(**self.__dict__), "C", self.send_result_callback, 1)
+        print "Adding service {serverName}/sql_fields C".format(**self.__dict__)
+        self.fields_service = pydim.dis_add_service("{serverName}/sql_fields".format(**self.__dict__), "C", self.send_fields_callback, 1)
         
         pydim.dis_update_service(self.success_service)
         pydim.dis_update_service(self.result_service)
+        pydim.dis_update_service(self.fields_service)
         
         print "Connecting to service {serviceName}/sql_set C".format(**self.__dict__)
         self.set_command = pydim.dic_info_service("{serviceName}/sql_set".format(**self.__dict__), "C", self.execute_set_callback)
@@ -115,6 +133,7 @@ class DBDimObject(object):
         
     def stop(self):
         pydim.dis_remove_service(self.result_service)
+        pydim.dis_remove_service(self.fields_service)
         pydim.dis_remove_service(self.success_service)
         pydim.dic_release_service(self.set_command)
         pydim.dic_release_service(self.get_command)
