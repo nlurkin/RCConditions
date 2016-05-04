@@ -32,9 +32,10 @@ class DBDimObject(object):
         
         self.query_success = 0
         self.resultString = " "
-        self.resultFIelds = " "
+        self.resultFields = " "
         self.ignoreFirstSet = True
         self.ignoreFirstGet = True
+	self.error = ""
         
     def parseParameters(self, description, params):
         paramsList = params.split("$")
@@ -88,7 +89,7 @@ class DBDimObject(object):
         else:
             rows[:] = ["$".join(str(row[val]) for val in row) for row in rows]
             self.resultString = "|".join(rows)
-            self.resultFields = "|".join(rows)
+            self.resultFields = "|".join(row)
             pydim.dis_update_service(self.result_service)
             pydim.dis_update_service(self.fields_service)
         
@@ -98,16 +99,16 @@ class DBDimObject(object):
     #    Services callbacks
     ###########################    
     def send_success_callback(self, tag):
-        return (self.query_success, "{0}|{1}".format(self.myconn.getLastError(), self.error))
+        return (self.query_success, "{0}|{1}\x00".format(self.myconn.getLastError(), self.error))
         self.error = ""
     
     def send_result_callback(self, tag):
         print self.resultString
-        return [self.resultString]
+        return [self.resultString + "\x00"]
     
     def send_fields_callback(self, tag):
         print self.resultFields
-        return [self.resultFields]
+        return [self.resultFields + "\x00"]
     
     ###########################
     #    DIM execution
