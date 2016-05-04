@@ -26,7 +26,7 @@ class DBConnector(object):
         self.host = ""
         self.user = ""
         self.passwd = ""
-        self.db = ""
+        self.dbName = ""
         self.port = -1
         
         self.exitOnFailure = exitOnFailure
@@ -36,7 +36,7 @@ class DBConnector(object):
         self.host = host
         self.user = user
         self.passwd = passwd
-        self.db = db
+        self.dbName = db
         self.port = port
         
     def close(self):
@@ -59,10 +59,10 @@ class DBConnector(object):
         '''Create Database connection and cursor for SQL requests'''
         
         try:
-            self.db = MySQLdb.connect(host=self.host, user=self.user, passwd=self.passwd, db=self.db, port=self.port)
+            self.db = MySQLdb.connect(host=self.host, user=self.user, passwd=self.passwd, db=self.dbName, port=self.port)
             self.cursor = self.db.cursor()
         except MySQLdb.Error, e:
-            self.lastError =  "Unable to initiate connection with database " + self.db + " at " + self.user + "@" + self.host + "\n" + str(e)
+            self.lastError =  "Unable to initiate connection with database " + self.dbName + " at " + self.user + "@" + self.host + "\n" + str(e)
             print self.lastError
             if self.exitOnFailure:
                 sys.exit()
@@ -85,6 +85,7 @@ class DBConnector(object):
         return -1
     
     def executeGet(self, sqlCommand, params=[]):
+        print self.indent(sqlCommand % tuple(params))
         if self.db==None:
             return ()
         res = -1
