@@ -54,7 +54,7 @@ if __name__ == '__main__':
         d = {}
         shift_date = datetime.datetime.combine(tomorrow, datetime.time(r["slot"]*8, 0, 0))
         d["date"] = shift_date.strftime("%d-%m-%Y at %H:%M:%S")
-        d["in"] = int((shift_date-datetime.datetime.now()).total_seconds()/(60*60))
+        d["in"] = int((shift_date-datetime.datetime.now()).seconds/(60*60))
         d["name"] = r["name"]
         d["surname"] = r["surname"]
         d["emails"] = []
