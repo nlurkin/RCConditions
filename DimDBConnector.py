@@ -83,13 +83,19 @@ class DBDimObject(object):
         self.myconn.openConnection()
         rows = self.myconn.executeGet(sql, params)
         self.myconn.close()
-
+        
+        print rows
         if rows==-1:
+            print "Query result -1"
             self.query_success = -1
         else:
-            rows[:] = ["$".join(str(row[val]) for val in row) for row in rows]
-            self.resultString = "|".join(rows)
-            self.resultFields = "|".join(row)
+            print "Query result success, creating return string"
+            jrows = ["$".join(str(row[val]) for val in row) for row in rows]
+            self.resultString = "|".join(jrows)
+            if len(rows)>0:
+               self.resultFields = "|".join(rows[0].keys())
+            else:
+               self.resultFields = ""
             pydim.dis_update_service(self.result_service)
             pydim.dis_update_service(self.fields_service)
         
@@ -104,10 +110,14 @@ class DBDimObject(object):
     
     def send_result_callback(self, tag):
         print self.resultString
+        if self.resultString=="":
+           self.resultString = " " 
         return [self.resultString + "\x00"]
     
     def send_fields_callback(self, tag):
         print self.resultFields
+        if self.resultFields=="":
+           self.resultFields = " " 
         return [self.resultFields + "\x00"]
     
     ###########################
