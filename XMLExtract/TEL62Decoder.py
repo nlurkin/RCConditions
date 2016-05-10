@@ -223,19 +223,20 @@ class TDC(object):
         
     def replaceOffset(self, value):
         self.Offset = value
+        self.OffsetNS = slotBin*value
+
         if hasattr(self._xml, "tdcoff"):
             saveElement(self._xml.tdcoff)
         self._xml.tdcoff = "{0:#x}".format(self.Offset)
         objectify.deannotate(self._xml.tdcoff, xsi_nil=True)
         etree.cleanup_namespaces(self._xml.tdcoff)
 
-
-        self.OffsetNS = slotBin*value
         self.Modify = True
 
     def replaceOffsetNS(self, valueNS):
         self.OffsetNS = valueNS
         value = int(valueNS/slotBin + 0.5) 
+        self.Offset = value
 
         if hasattr(self._xml, "tdcoff"):
             saveElement(self._xml.tdcoff)
@@ -268,6 +269,7 @@ class TDC(object):
         
     def replaceChannelOffset(self, channel, value):
         self.channelOffset[channel] = value
+        self.channelOffsetNS[channel] = value*fineBin
         
         index = self.getChannelOffsetIndex(channel)
         if index==-1:
@@ -281,13 +283,12 @@ class TDC(object):
         objectify.deannotate(self._xml.choff[index], xsi_nil=True)
         etree.cleanup_namespaces(self._xml.choff[index])
 
-
-        self.channelOffsetNS[channel] = fineBin*value
         self.channelModify[channel] = True
 
     def replaceChannelOffsetNS(self, channel, valueNS):
         self.channelOffsetNS[channel] = valueNS
         value = int(valueNS/fineBin + 0.5)
+        self.channelOffset[channel] = value
         
         index = self.getChannelOffsetIndex(channel)
         if index==-1:
@@ -320,6 +321,26 @@ class TDC(object):
             prevValueNS = self.channelOffsetNS[channel]
         
         self.replaceChannelOffsetNS(channel, prevValueNS+valueNS)
+        
+    def getLowestOffset(self):
+        return min(self.channelOffset.values())
+    
+    def getAverageOffset(self):
+        return sum(self.channelOffset.values())/len(self.channelOffset)
+    
+    def fixT0Offset(self):
+        lowest = self.getLowestOffset()
+        average = self.getAverageOffset()
+        move = max(-lowest, 127-average)
+        if abs(move)>127:
+            tdcoffset = (move)/256
+            self.addToOffset(-tdcoffset)
+            move -= tdcoffset*256
+            for ch in range(0,32):
+                self.addToChannelOffset(ch, 256*tdcoffset)
+        
+        for ch in range(0,32):
+            self.addToChannelOffset(ch, move)
                 
 class TDCB(object):
     '''
@@ -767,3 +788,8 @@ class TEL62Decoder(xmlDocument):
             print "{0} not found. Ignoring".format(path)
         else:
             xmlEl._setText(value)
+        
+    def fixT0Offset(self):
+        for tdcb in self.tdcb:
+            for tdc in self.tdcb[tdcb].tdc:
+                self.tdcb[tdcb].tdc[tdc].fixT0Offset()
