@@ -85,8 +85,8 @@ def retrieveAllRunInfos(nodeList, runNumber):
         runNumber: the run number for which the info should be extracted
     """
     runInfoMap = {'RunType':'', 'RunNumber':'', 'RunStartTime':None, 'RunStopTime':None, 'StartRunComment':'', 'EndRunComment':'', 'TotalBurst':'', 'totalL0':'', 'totalL1':'', 'totalL2':''};
-    goodInfo = False
     for node in nodeList:
+        goodInfo = False
         runNumberNode = node.getElementsByTagName("RunNumber")
         if goodInfo==False:
             runTypeNode = node.getElementsByTagName("RunType")
