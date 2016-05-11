@@ -548,6 +548,14 @@ else if ($_GET ['view'] == "details") {
 		
 		echo $_GET ['run_id']?>"
 		class="back">Back</a>
+	<a href="na62_runlist.php?view=details&run_id=<?php
+		
+		echo $_GET ['run_id']-1?>"
+		class="back">Previous</a>
+	<a href="na62_runlist.php?view=details&run_id=<?php
+		
+		echo $_GET ['run_id']+1?>"
+		class="back">Next</a>
 	<br>
 	<div class="subtitle">Click on the arrow on the right of a box to
 		collapse/expand it.</div>
