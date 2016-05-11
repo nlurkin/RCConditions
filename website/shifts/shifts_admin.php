@@ -151,14 +151,10 @@ if(isset($_POST["view"]) && $_POST["view"]=="mod_slot"){
 			$error = True;
 		}
 		else {
-			if (empty ( $slotID1 )) {
-				// Create new assignment
-				$shiftID = getShiftID ( $db, $date, $slot );
-				if ($shiftID != - 1){
-					createSlot ( $db, $shiftID, $shifterID1, $institute1, $type, $canceled );
-				}
-			} else
-				modifySlot ( $db, $slotID1, $shifterID1, $institute1, $canceled );
+			$shiftID = getShiftID ( $db, $date, $slot );
+			if ($shiftID != - 1){
+				createSlot ( $db, $shiftID, $shifterID1, $institute1, $type, $canceled );
+			}
 		}
 		if ($shifterID2 == - 1 && ! empty ( $sh2_name )){
 			print "<div style='color:Red'>Shifter " . $sh2_name . " was not found.</div>";
@@ -166,14 +162,10 @@ if(isset($_POST["view"]) && $_POST["view"]=="mod_slot"){
 		}
 		elseif (empty($sh2_name)){}
 		else {
-			if (empty ( $slotID2 )) {
-				// Create new assignment
-				$shiftID = getShiftID ( $db, $date, $slot );
-				if ($shiftID != - 1){
-					createSlot ( $db, $shiftID, $shifterID2, $institute2, $type, $canceled );
-				}
-			} else
-				modifySlot ( $db, $slotID2, $shifterID2, $institute2, $canceled );
+			$shiftID = getShiftID ( $db, $date, $slot );
+			if ($shiftID != - 1){
+				createSlot ( $db, $shiftID, $shifterID2, $institute2, $type, $canceled );
+			}
 		}
 	}
 }

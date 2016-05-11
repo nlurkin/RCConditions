@@ -151,13 +151,9 @@ function getShiftsFromTo($db, $from, $to) {
 	return $slots;
 }
 
-function modifySlot($db, $slotID, $shifterID, $institute, $canceled){
-	$db->executeUpdate("UPDATE shifts_assignments SET shifter_id=?, institute=? WHERE id=?", "isi", $shifterID, $institute, $slotID);
-	$db->executeGet("SELECT shift_id FROM shifts_assignments WHERE id=" . $slotID);
-	if($row = $db->next()){
-		$id = $row["shift_id"];
-		$db->executeUpdate("UPDATE shifts_assignments SET canceled=? WHERE shift_id=?", "ii", $canceled, $id);
-	}
+function modifySlot($db, $shiftID, $shifterID, $institute, $type, $canceled){
+	$db->executeUpdate("INSERT INTO shifts_assignments (shift_id, shifter_id, shift_type, institute, canceled) VALUES (?,?,?,?,?)", "iiisi", $shiftID, $shifterID, $type, $institute, $canceled);
+	$db->executeUpdate("UPDATE shifts_assignments SET canceled=? WHERE shift_id=?", "ii", $canceled, $shiftID);
 	updateLastUpdate();
 }
 
@@ -188,7 +184,7 @@ function getWeekCommentID($db, $week){
 }
 
 function getWeekComment($db, $week, $format){
-	$db->executeGet("SELECT comment FROM week_comments WHERE week_num=" . $week);
+	$db->executeGet("SELECT comment FROM week_comments WHERE week_num=" . $week . " ORDER BY version_date DESC");
 	if($row = $db->next()){
 		if($format)
 			return "<div style='color:Red'>" . $row["comment"] . "</div>";
@@ -199,13 +195,8 @@ function getWeekComment($db, $week, $format){
 }
 
 function updateWeekComment($db, $weekID, $week, $comment){
-	if($weekID==-1)
-		$db->executeUpdate("INSERT INTO week_comments (week_num, comment) VALUES (?,?)", "is", $week, $comment);
-	else{
-		$db->executeUpdate("UPDATE week_comments SET comment=? WHERE id=?", "si", $comment, $weekID);
-	}
-	
-		updateLastUpdate();
+	$db->executeUpdate("INSERT INTO week_comments (week_num, comment) VALUES (?,?)", "is", $week, $comment);
+	updateLastUpdate();
 }
 function getLastUpdate($prefix=""){
 	$val = stat($prefix . "touchdir/shifts_schedule_lastUpdate.php");
