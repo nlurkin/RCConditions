@@ -156,7 +156,7 @@ class DBConnector(object):
         return False, rid
 
     def _getPrimitiveTriggerTypeID(self, masks):
-        return self.getResultSingle("SELECT id FROM triggerprimitivetype WHERE maskA=%s AND maskB=%s AND maskC=%s AND maskD=%s AND maskE=%s AND maskF=%s AND maskF=%s", 
+        return self.getResultSingle("SELECT id FROM triggerprimitivetype WHERE maskA=%s AND maskB=%s AND maskC=%s AND maskD=%s AND maskE=%s AND maskF=%s AND maskG=%s", 
                                     [masks.detA, masks.detB, masks.detC, masks.detD, masks.detE, masks.detF, masks.detG])
     
     def _getPrimitiveTriggerID(self, triggerID, typeID, downscaling, reference):
