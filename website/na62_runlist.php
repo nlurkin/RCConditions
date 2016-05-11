@@ -544,18 +544,20 @@ else if ($_GET ['view'] == "details") {
 		$runDetails = fetch_run_details ( $db, $_GET ['run_id'] );
 		?>
 	<h1>Details for Run# <?php echo $runDetails['number']?></h1>
+	<div class="back">
 	<a href="na62_runlist.php#<?php
 		
 		echo $_GET ['run_id']?>"
-		class="back">Back</a>
+		>Back</a>
 	<a href="na62_runlist.php?view=details&run_id=<?php
 		
 		echo $_GET ['run_id']-1?>"
-		class="back">Previous</a>
+		>Previous</a>
 	<a href="na62_runlist.php?view=details&run_id=<?php
 		
 		echo $_GET ['run_id']+1?>"
-		class="back">Next</a>
+		>Next</a>
+	</div>
 	<br>
 	<div class="subtitle">Click on the arrow on the right of a box to
 		collapse/expand it.</div>
