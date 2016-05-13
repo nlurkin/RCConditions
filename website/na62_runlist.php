@@ -737,6 +737,35 @@ else if ($_GET ['view'] == "details") {
 				</table>
 			</div>
 		</div>
+		<div class="dragbox">
+			<h2>
+				Control Trigger
+				<p>*EOR=End Of Run</p>
+			</h2>
+			<div class="collapsep" style="display: inline;">&#x25C0</div>
+			<div class="collapsem" style="display: none;">&#9660</div>
+			<div class="dragbox-content" style="display: none;">
+				<table style="table-layout: fixed; width: 100%"
+					class="autoalternate">
+					<tr>
+						<th width="60px">Mask</th>
+						<th width="120px">Detector</th>
+						<th width="60px">Downs.</th>
+						<th width="*">From</th>
+						<th width="*">Until*</th>
+					</tr>
+				<?php
+		foreach ( $runDetails ["control"] as $ctrl ) {
+			if ($ctrl ["validityend"] == "")
+				$end = "EOR";
+			else
+				$end = $ctrl ["validityend"];
+			echo "<tr><td>" . $ctrl ["mask"] . "</td><td>" . $ctrl["det_id"] . "</td><td>" . $ctrl ["downscaling"] . "</td><td>" . $prim ["validitystart"] . "</td><td>" . $end . "</td></tr>";
+		}
+		?>
+				</table>
+			</div>
+		</div>
 	</div>
 	<div class="column" id="col2">
 		<div class="dragbox" id="boxCollected">

@@ -34,6 +34,8 @@ function fetch_all($db, $from=0, $max=10) {
 			$jsonArray[$i]["sync"] = $sync;
 			$calib = fetch_calib($db, $el["id"], $el["timestart"], $el["timestop"]);
 			$jsonArray[$i]["calibration"] = $calib;
+			$control = fetch_control($db, $el["id"], $el["timestart"], $el["timestop"]);
+			$jsonArray[$i]["control"] = $control;
 			$nim = fetch_nim($db, $el["id"], $el["timestart"], $el["timestop"]);
 			$jsonArray[$i]["NIM"] = $nim;
 			$prim = fetch_primitives($db, $el["id"], $el["timestart"], $el["timestop"]);
@@ -123,6 +125,24 @@ function fetch_sync($db, $runID, $tsStart, $tsStop) {
 	else
 		return False;
 }
+
+function fetch_control($db, $runID, $tsStart, $tsStop) {
+	$sql = "SELECT viewcontrol.det_id, viewcontrol.mask, viewcontrol.downscaling
+		FROM viewcontrol
+		WHERE viewcontrol.run_id = " . $runID . "
+		AND (viewcontrol.validityend > '" . $tsStart . "'
+		OR viewcontrol.validityend is NULL)";
+	if (! empty ( $tsStop ))
+		$sql = $sql . " AND viewcontrol.validitystart < '" . $tsStop . "'";
+	$db->executeGet ( $sql );
+	
+	$controlArray = Array ();
+	while ( $row = $db->next () ) {
+		array_push ( $controlArray, $row );
+	}
+	return $controlArray;
+}
+
 function fetch_nim($db, $runID, $tsStart, $tsStop) {
 	$sql = "SELECT DISTINCT viewnimname.triggernimdownscaling, viewnimname.triggernimreference, viewnimname.det_0,
 		viewnimname.det_1, viewnimname.det_2, viewnimname.det_3, viewnimname.det_4
@@ -284,7 +304,7 @@ function fetch_run_details($db, $runID) {
 	if ($db->executeGet ( $sql ) > 0) {
 		$mainrow = $db->next ();
 		
-		$sql = "SELECT DISTINCT viewperiodic.validitystart, viewperiodic.validityend, viewperiodic.frequency
+			$sql = "SELECT DISTINCT viewperiodic.validitystart, viewperiodic.validityend, viewperiodic.frequency
 						FROM viewperiodic WHERE run_id=" . $runID . " ORDER BY validitystart";
 		// Fill the array with data
 		$mainrow ["periodic"] = Array ();
@@ -320,6 +340,18 @@ function fetch_run_details($db, $runID) {
 					array_push ( $mainrow ["nim"], $row );
 			}
 		}
+		
+		$sql = "SELECT DISTINCT viewcontrol.validitystart, viewcontrol.validityend, viewcontrol.mask, viewcontrol.det_id, viewcontrol.downscaling
+						FROM viewcontrol WHERE run_id=" . $runID . " ORDER BY validitystart";
+		// Fill the array with data
+		$mainrow ["control"] = Array ();
+		if ($db->executeGet ( $sql ) > 0) {
+			while ( $row = $db->next () ) {
+				if(date_create($row["validityend"])->getTimestamp() -date_create($mainrow["timestart"])->getTimestamp()>5)
+					array_push ( $mainrow ["control"], $row );
+			}
+		}
+		
 		
 		$sql = "SELECT DISTINCT viewprimitivetype.run_id, viewprimitivetype.triggerprimitivedownscaling,
 			viewprimitivetype.triggerprimitivereference, viewprimitivetype.validitystart,
@@ -392,6 +424,14 @@ function prepare_trigger($type, $record) {
 			// Synchronisation trigger
 		if ($record ["sync"] == True)
 			array_push ( $trigger, "Sync" );
+		//Control trigger
+		$ControlArray = Array ();
+		foreach ( $record ['control'] as $value ) {
+			$detArray = Array ();
+			array_push ( $ControlArray, $value["mask"] . "(" . $value["det_id"] . ")/" . $value["downscaling"] );
+		}
+		if (sizeof ( $ControlArray ) > 0)
+			array_push ( $trigger, "Control:" . implode ( "<br>", $ControlArray ) );
 			// NIM trigger
 		$NIMArray = Array ();
 		foreach ( $record ['NIM'] as $value ) {
