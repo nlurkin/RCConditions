@@ -122,6 +122,14 @@ class NIMInfo(TriggerInfo):
     
     def __str__(self):
         return self.Mask + ":" + str(self.Downscaling)    
+
+class ControlInfo(TriggerInfo):
+    def __init__(self):
+        self.Mask = None
+        self.Detector = None
+    
+    def __str__(self):
+        return self.Mask + "(" + str(self.Detector) + "):" + str(self.Downscaling)    
         
 def readValue(node):
     if hasattr(node,"hex"):
@@ -359,6 +367,16 @@ class L0TPDecoder(xmlDocument):
                     
                     masksList.append(prim)
         return masksList
+    
+    def getControlMask(self):
+        if self._runNumber > 4800:
+            control = ControlInfo()
+            control.Downscaling = int(readValue(self._xml.global_parameters.controlDownscaling), 0)
+            control.Mask = readValue(self._xml.global_parameters.maskControlTrigger)
+            control.Detector = int(readValue(self._xml.global_parameters.controlDetector), 0)
+            return control
+        return None
+            
     
     @staticmethod
     def getPrimitiveMeaning(detector, mask):

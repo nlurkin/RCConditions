@@ -119,7 +119,7 @@ def getTriggerEnabled(listNodes):
     """
     events = {'Periodic':Timeline(TriggerObject), 
               'NIM':Timeline(TriggerObject), 'Primitive':Timeline(TriggerObject), 
-              'Calib':Timeline(TriggerObject), 'Sync':Timeline(TriggerObject)}
+              'Calib':Timeline(TriggerObject), 'Sync':Timeline(TriggerObject), 'Control':Timeline(TriggerObject)}
     for node in listNodes:
         eventNode = node.parentNode
         timestamp = int(getAttribute(eventNode, "Timestamp"))
@@ -146,7 +146,7 @@ def getTriggerProperties(listNode):
 
     events = {'Periodic':Timeline(TriggerObject), 
               'NIM':Timeline(TriggerObject), 'Primitive':Timeline(TriggerObject), 
-              'Calib':Timeline(TriggerObject), 'Sync':Timeline(TriggerObject)}
+              'Calib':Timeline(TriggerObject), 'Sync':Timeline(TriggerObject), 'Control':Timeline(TriggerObject)}
     for node in listNode:
         fileContentNodeList = node.getElementsByTagName(param.configFileTagName)
         eventNode = node.parentNode
@@ -158,14 +158,19 @@ def getTriggerProperties(listNode):
             if not l0tpConfig._bad:
                 tobject = events['Periodic'].addTS(timestamp)
                 tobject.Propertie = l0tpConfig.getPeriodicPeriod()
+                
                 #tobject = events['NIM'].addTS(timestamp)
                 #tobject.Propertie = l0tpConfig.getNIMMasks()
                 #tobject.RefDetector = l0tpConfig.getNIMRefDetector()
+                
                 tobject = events['Primitive'].addTS(timestamp)
                 tobject.Propertie = l0tpConfig.getPrimitiveMasks()
                 tobject.RefDetector = l0tpConfig.getPrimitiveRefDetector()
                 for prim in tobject.Propertie:
                     setPrimitivesReferences(prim)
+                
+                tobject = events['Control'].addTS(timestamp)
+                tobject.Propertie = l0tpConfig.getControlMask()
     
     return events
 
@@ -237,6 +242,7 @@ def exportFile(myconn, filePath):
     mergeTriggers(triggerDict['Periodic'], triggerProp['Periodic'], startTS, endTS)
     #mergeTriggers(triggerDict['NIM'], triggerProp['NIM'], startTS, endTS)
     mergeTriggers(triggerDict['Primitive'], triggerProp['Primitive'], startTS, endTS)
+    mergeTriggers(triggerDict['Control'], triggerProp['Control'], startTS, endTS)
     triggerDict['Calib'].simplify(refTriggerObject)
     triggerDict['Sync'].simplify(refTriggerObject)
     
@@ -269,6 +275,9 @@ def exportFile(myconn, filePath):
         print "Primitive triggers"
         print triggerDict['Primitive'].getList()
         
+        print "Control triggers"
+        print triggerDict['Control'].getList()
+        
         print "Enabled detectors"
         for det in detEnabled:
             print det
@@ -283,6 +292,7 @@ def exportFile(myconn, filePath):
         myconn.setPeriodicTriggerList(triggerDict['Periodic'], runNumber)
         #myconn.setNIMTriggerList(triggerDict['NIM'], runNumber)
         myconn.setPrimitiveTriggerList(triggerDict['Primitive'], runNumber)
+        myconn.setControlTriggerList(triggerDict['Control'], runNumber)
         
         myconn.setSyncTriggerList(triggerDict['Sync'], runNumber)
         myconn.setCalibTriggerList(triggerDict['Calib'], runNumber)

@@ -166,6 +166,9 @@ class DBConnector(object):
             return True, rid
         return False, rid
 
+    def _getControlTriggerID(self, triggerID, downscaling, mask, detector):
+        return self.getResultSingle("SELECT id FROM triggercontrol WHERE runtrigger_id=%s AND det_id=%s AND mask=%s AND downscaling=%s", [triggerID, detector, mask, downscaling])
+
     def _getSyncTriggerID(self, triggerID):
         return self.getResultSingle("SELECT id FROM triggersync WHERE runtrigger_id=%s", [triggerID])
 
@@ -285,6 +288,13 @@ class DBConnector(object):
             return self.executeInsert("INSERT INTO triggercalib (runtrigger_id) VALUES (%s)", [triggerID])
         return calibID 
 
+    def _setControlTrigger(self, triggerID, downscaling, mask, detector):
+        controlID = self._getControlTriggerID(triggerID, downscaling, mask, detector)
+        
+        if controlID==False:
+            return self.executeInsert("INSERT INTO triggercontrol (runtrigger_id, det_id, mask, downscaling) VALUES (%s,%s,%s,%s)", [triggerID, detector, mask, downscaling])
+        return controlID 
+
     def _setTrigger(self, runID, startTS, endTS, triggerList):
         triggerID = self._getTriggerID(runID, startTS, endTS)
         
@@ -312,6 +322,8 @@ class DBConnector(object):
             self._setSyncTrigger(triggerID)
         if triggerList[0]=='Calib':
             self._setCalibTrigger(triggerID)
+        if triggerList[0]=='Control':
+            self._setControlTrigger(triggerID, Down, triggerList[1].Mask, triggerList[1].Detector)
 
         return triggerID
                         
@@ -451,6 +463,18 @@ class DBConnector(object):
                 else:
                     endTS = None
                 self._setTrigger(runID, startTS, endTS, ['Calib'])
+
+    def setControlTriggerList(self, trigger, runNumber):
+        runID = self._getRunID(runNumber)
+        
+        triggList = trigger.getList()
+        for index, (startTS, trigg) in enumerate(triggList, 1):
+            if trigg.Enabled==True and not trigg.Propertie is None:
+                if index<len(triggList):
+                    endTS = triggList[index][0]
+                else:
+                    endTS = None
+                self._setTrigger(runID, startTS, endTS, ['Control', trigg.Propertie])
     
     def setEnabledDetectorList(self, enabled, runNumber):
         runID = self._getRunID(runNumber)
