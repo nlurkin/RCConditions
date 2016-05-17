@@ -279,7 +279,8 @@ class LUT(object):
     def _decode(self, xml):
         listMask = xmlDocument.getTagRefsStatic("item", xml)
         for el in listMask:
-            self.masks.append(tryint(el.hex))
+            if hasattr(el,"hex"): 
+                self.masks.append(tryint(el.hex))
 
     def __str__(self):
         return ""
