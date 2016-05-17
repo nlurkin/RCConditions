@@ -249,7 +249,7 @@ def dumpAllInit(filePath, runNumber):
         for dev in devList:
             filesList = listAllFiles(xml, dev)
             for i,fileContent in enumerate(filesList):
-                path = fileContent["node"].tag
+                path = fileContent["node"].tag.replace("TELL_", "")
                 _, xmlDoc = XMLDoc.parseSplitElementText(fileContent["node"])
                 with open("/afs/cern.ch/user/n/na62prod/offline/XML/Run{run}/INIT_{devName}_{index}.xml".format(devName=path, run=runNumber, index=i), "w") as fd:
                     fd.write(etree.tostring(xmlDoc._xml, pretty_print=True))
