@@ -223,3 +223,39 @@ def startReading(filePath):
             except abortException:
                 pass
 
+def listAllDevices(xml, pattern):
+    devList = xml.getMatchingDevs(replace(pattern, "*", ".*"))
+
+    return devList
+
+def listAllFiles(xml, device):
+    listTs = xml.getTagsRefsWithTS(device)
+    XMLDoc.checkElementsXMLValidity(listTs)
+
+    retList = []
+    for ts in sorted(listTs):
+        if listTs[ts]["bad"] or ts>xml._runEnd:
+            continue    # Skip corrupted XML
+        if listTs[ts]["cmd"] == "I" and listTs[ts]["type"] == "S":
+            retList.append(listTs[ts])
+    return retList
+
+def dumpAllInit(filePath, runNumber):
+    xml = XMLDoc.rcXML(filePath)
+    if not xml._bad:
+        xml.extractInfo()
+        devList = listAllDevices(xml, "TELL*")
+        
+        for dev in devList:
+            filesList = listAllFiles(xml, dev)
+            for i,fileContent in enumerate(filesList):
+                path = fileContent["node"].tag
+                _, xmlDoc = XMLDoc.parseSplitElementText(fileContent["node"])
+                with open("/afs/cern.ch/user/n/na62prod/offline/XML/Run{run}/INIT_{devName}_{index}.xml".format(devName=path, run=runNumber, index=i), "w") as fd:
+                    fd.write(etree.tostring(xmlDoc._xml, pretty_print=True))
+                
+            
+        
+        
+    
+    

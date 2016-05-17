@@ -38,6 +38,7 @@ def main(argv=None):
     group.add_argument("-r", "--run", dest="run", help="Run number to extract", type=int)
     parser.add_argument("-g", "--get", action="store_true", dest="get", help="Get the file locally")
     parser.add_argument('-V', '--version', action='version', version=program_version_message)
+    parser.add_argument("-d", "--dumpinit", action="store_true", dest="dumpinit", help="Dump all INIT files for TEL62")
 
     # Process arguments
     args = parser.parse_args()
@@ -55,6 +56,8 @@ def main(argv=None):
         if args.get == True:
             with open("run_%i.xml" % args.run, "w") as fd:
                 fd.write(data)
+        elif args.dumpinit == True:
+            Extractor.dumpAllInit(data, args.run)
         else:
             Extractor.startReading(data)
     return 0
