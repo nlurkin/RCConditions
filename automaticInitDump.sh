@@ -1,11 +1,13 @@
 #!/bin/sh
+cd /home/nlurkin/RCConditions
 
 lastExport=`cat .lastExport`
 lastRun=`ls -1v /afs/cern.ch/user/n/nlurkin/www/NA62/XMLProcessed/ | tail -n 1 | cut -d "." -f 1`
 
-cd /home/nlurkin/RCConditions
 for run in $(seq $lastExport $lastRun); do
-	mkdir /afs/cern.ch/user/n/na62prod/offline/XML/Run$run
+	if [ ! -d "/afs/cern.ch/user/n/na62prod/offline/XML/Run$run" ]; then
+		mkdir /afs/cern.ch/user/n/na62prod/offline/XML/Run$run
+	fi
 	./configRead.py -r $run --dumpinit
 	echo $run > .lastExport
 done
