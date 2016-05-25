@@ -16,9 +16,10 @@ from DBConfig import DBConfig as DB
 body_normal="""
 Dear {name} {surname},
 
-This is a kind reminder that you have a shift foreseen tomorrow (on {date}). 
-Your shift is starting in {in} hours.
-We thank you in advance for attending.
+This is a kind reminder that you have a shift assignment tomorrow (on {date}). 
+Your shift is starting in {in} hours. If you are covering the night shift, 
+be well aware that it concerns the night from the {prev} to the {curr}.
+We thank you for your attention.
 
 Best regards,
 The shift database. 
@@ -51,10 +52,14 @@ if __name__ == '__main__':
     normal_shifter = []
     shadow_shifter = []
     for r in res:
+        if r["canceled"]:
+            continue
         d = {}
         shift_date = datetime.datetime.combine(tomorrow, datetime.time(r["slot"]*8, 0, 0))
         d["date"] = shift_date.strftime("%d-%m-%Y at %H:%M:%S")
         d["in"] = int((shift_date-datetime.datetime.now()).seconds/(60*60))
+        d["prev"] = today.strftime("%d-%m")
+        d["curr"] = shift_date.strftime("%d-%m")
         d["name"] = r["name"]
         d["surname"] = r["surname"]
         d["emails"] = []
@@ -83,7 +88,8 @@ if __name__ == '__main__':
         server.sendmail("na62-shiftertraining@cern.ch", d["emails"], msg.as_string())
         server.quit()
         print "Message sent"
-      
+    
+    sys.exit(0)
     for shifter in shadow_shifter:
         msg_body =  body_shadow.format(**shifter)
     
