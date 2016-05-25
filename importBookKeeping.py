@@ -117,7 +117,7 @@ def getTriggerEnabled(listNodes):
     Input: 
         listNodes: list of <L0TP> nodes
     """
-    events = {'Periodic':Timeline(TriggerObject), 
+    events = {'Periodic':Timeline(TriggerObject), 'Periodic1':Timeline(TriggerObject), 
               'NIM':Timeline(TriggerObject), 'Primitive':Timeline(TriggerObject), 
               'Calib':Timeline(TriggerObject), 'Sync':Timeline(TriggerObject), 'Control':Timeline(TriggerObject)}
     for node in listNodes:
@@ -144,7 +144,7 @@ def getTriggerProperties(listNode):
         listNodes: list of <na62L0TP_Torino> nodes
     """
 
-    events = {'Periodic':Timeline(TriggerObject), 
+    events = {'Periodic':Timeline(TriggerObject), 'Periodic1':Timeline(TriggerObject),
               'NIM':Timeline(TriggerObject), 'Primitive':Timeline(TriggerObject), 
               'Calib':Timeline(TriggerObject), 'Sync':Timeline(TriggerObject), 'Control':Timeline(TriggerObject)}
     for node in listNode:
@@ -158,6 +158,9 @@ def getTriggerProperties(listNode):
             if not l0tpConfig._bad:
                 tobject = events['Periodic'].addTS(timestamp)
                 tobject.Propertie = l0tpConfig.getPeriodicPeriod()
+                
+                tobject = events['Periodic1'].addTS(timestamp)
+                tobject.Propertie = l0tpConfig.getPeriodic1Period()
                 
                 #tobject = events['NIM'].addTS(timestamp)
                 #tobject.Propertie = l0tpConfig.getNIMMasks()
@@ -240,6 +243,7 @@ def exportFile(myconn, filePath):
     refTriggerObject = TriggerObject()
     refTriggerObject.Propertie = -1;
     mergeTriggers(triggerDict['Periodic'], triggerProp['Periodic'], startTS, endTS)
+    mergeTriggers(triggerDict['Periodic1'], triggerProp['Periodic1'], startTS, endTS)
     #mergeTriggers(triggerDict['NIM'], triggerProp['NIM'], startTS, endTS)
     mergeTriggers(triggerDict['Primitive'], triggerProp['Primitive'], startTS, endTS)
     mergeTriggers(triggerDict['Control'], triggerProp['Control'], startTS, endTS)
@@ -268,6 +272,7 @@ def exportFile(myconn, filePath):
         
         print "Periodic triggers"
         print triggerDict['Periodic'].getList()
+        print triggerDict['Periodic1'].getList()
 
         #print "NIM triggers"
         #print triggerDict['NIM'].getList()
@@ -290,6 +295,7 @@ def exportFile(myconn, filePath):
         
         ## Insert triggers into DB
         myconn.setPeriodicTriggerList(triggerDict['Periodic'], runNumber)
+        myconn.setPeriodicTriggerList(triggerDict['Periodic1'], runNumber)
         #myconn.setNIMTriggerList(triggerDict['NIM'], runNumber)
         myconn.setPrimitiveTriggerList(triggerDict['Primitive'], runNumber)
         myconn.setControlTriggerList(triggerDict['Control'], runNumber)

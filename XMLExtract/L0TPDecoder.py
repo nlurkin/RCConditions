@@ -314,6 +314,9 @@ class L0TPDecoder(xmlDocument):
     def getPeriodicPeriod(self):
         return int(readValue(self._xml.global_parameters.periodicTrgTime), 0)
     
+    def getPeriodic1Period(self):
+        return int(readValue(self._xml.global_parameters.periodicTrgTime1), 0)
+    
     def getNIMMasks(self):
         masksList = []
         if self._runNumber<1307:
