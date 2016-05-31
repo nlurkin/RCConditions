@@ -58,8 +58,15 @@ def next_weekday(d, weekday):
     return d + datetime.timedelta(days_ahead)
 
 if __name__ == '__main__':
+    if hasattr(DB, 'passwd'):
+        password = DB.passwd
+    elif len(sys.argv)!=2:
+        print "Please provide DB password"
+    else
+        password = sys.argv[1]
+
     myconn = DBConnector()
-    myconn.initConnection(passwd=sys.argv[1], host=DB.host, db=DB.dbName, user=DB.userName, port=DB.port)
+    myconn.initConnection(passwd=password, host=DB.host, db=DB.dbName, user=DB.userName, port=DB.port)
     myconn.openConnection()
     
     first_date = datetime.datetime.now()
