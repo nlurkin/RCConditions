@@ -1,5 +1,5 @@
 #!/bin/sh
-cd /home/nlurkin/RCConditions
+cd /home/softwareRepo/RCConditions
 
 lastExport=`cat .lastExport`
 lastRun=`ls -1v /afs/cern.ch/user/n/nlurkin/www/NA62/XMLProcessed/ | tail -n 1 | cut -d "." -f 1`
