@@ -78,7 +78,7 @@ if __name__ == '__main__':
         msg_body =  body_normal.format(**shifter)
     
         msg = MIMEText(msg_body)
-        d["emails"] = ["nicolas.lurkin@cern.ch", "nicolas.lurkin@gmail.com"]
+        #d["emails"] = ["nicolas.lurkin@cern.ch", "nicolas.lurkin@gmail.com"]
         msg['Subject'] = "You shift tomorrow"
         msg['From'] = "na62-shiftertraining@cern.ch"
         msg['To'] = ", ".join(d["emails"])
@@ -94,7 +94,7 @@ if __name__ == '__main__':
         msg_body =  body_shadow.format(**shifter)
     
         msg = MIMEText(msg_body)
-        d["emails"] = ["nicolas.lurkin@cern.ch", "nicolas.lurkin@gmail.com"]
+        #d["emails"] = ["nicolas.lurkin@cern.ch", "nicolas.lurkin@gmail.com"]
         msg['Subject'] = "You shift tomorrow"
         msg['From'] = "na62-shiftertraining@cern.ch"
         msg['To'] = ", ".join(d["emails"])
