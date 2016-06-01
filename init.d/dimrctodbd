@@ -3,14 +3,14 @@
 
 . /etc/init.d/functions
 
-EXEC=/home/nlurkin/RCConditions/DimDBConnector.py
+EXEC=/home/softwareRepo/RCConditions/DimDBConnector.py
 NAME=dimrctodbd
 PID=/var/run/${NAME}.pid
 ARGS=na62dimConnector
 LOGFILE=/var/log/${NAME}.log
 
 export OS=Linux
-export DIMDIR=/home/nlurkin/dim
+export DIMDIR=/home/softwareRepo/dim
 export LD_LIBRARY_PATH=$DIMDIR/linux:$LD_LIBRARY_PATH
 export DIM_DNS_NODE=lkrpn2
 
