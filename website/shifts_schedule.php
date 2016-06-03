@@ -21,6 +21,7 @@ function buildTable($db, $from, $week) {
 	$toTS = $fromTS + (6 * 24 * 60 * 60);
 	
 	$slots = getShiftsFromTo ( $db, $fromTS, $toTS );
+	print "<a id='a_week" . $week . "' name='week" . $week . "'></a>";
 	print "<h2>NA62 2016 run Shift Schedule Week " . $week . " - " . date ( "F d", $fromTS ) . 
 		" to " . date ( "F d", $toTS ) . "</h2>";
 	print getWeekComment($db, $week, true);
@@ -67,6 +68,21 @@ function buildTable($db, $from, $week) {
 	<title>NA62 Shifts Schedule</title>
 	<link rel="stylesheet" type="text/css" href="na62.css">
 	<link rel="stylesheet" type="text/css" href="collapse.css">
+	
+	<script type="text/javascript">
+
+	function weeks_between(date1, date2) {
+		// The number of milliseconds in one week
+		var ONE_WEEK = 1000 * 60 * 60 * 24 * 7;
+		// Convert both dates to milliseconds
+		var date1_ms = date1.getTime();
+		var date2_ms = date2.getTime();
+		// Calculate the difference in milliseconds
+		var difference_ms = Math.abs(date1_ms - date2_ms);
+		// Convert back to weeks and return hole weeks
+		return Math.floor(difference_ms / ONE_WEEK);
+	}
+</script>
 </header>
 <body>
 	<h1>Welcome to the NA62 shifts schedule website.</h1>
@@ -76,5 +92,10 @@ for($week = 1; $week <= 30; $week ++) {
 	buildTable ( $db, "2016-04-25", $week );
 }
 ?>
+<script type="text/javascript">
+var week = weeks_between(new Date(Date.UTC(2016, 3, 25, 0, 0, 0,0)), new Date());
+var el_top = document.getElementById("a_week"+week).offsetTop; //Getting Y of target element
+window.scrollTo(0, el_top);
+</script>
 </body>
 </html>
