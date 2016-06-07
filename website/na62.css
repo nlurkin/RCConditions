@@ -47,6 +47,18 @@ h1 {
 	margin:0px;
 }
 
+h3 {
+	text-align:left;
+	padding:5px;
+	margin:0px;
+	margin-left:25px;
+	font: 16px Verdana, Arial, Helvetica, sans-serif;
+	border: 1px solid #FB7A31;
+	background-color: #FFC;
+	max-width: 300px;
+	
+}
+
 .back {
 	position:absolute;
 	top:20px;
