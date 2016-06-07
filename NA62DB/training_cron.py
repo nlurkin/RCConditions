@@ -62,7 +62,8 @@ if __name__ == '__main__':
         password = DB.passwd
     elif len(sys.argv)!=2:
         print "Please provide DB password"
-    else
+        sys.exit(0)
+    else:
         password = sys.argv[1]
 
     myconn = DBConnector()
