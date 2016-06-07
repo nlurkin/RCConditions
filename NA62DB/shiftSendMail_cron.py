@@ -37,11 +37,16 @@ The shift database.
 """
 
 if __name__ == '__main__':
-    if len(sys.argv)<2:
-        print "Missing database password"
+    if hasattr(DB, 'passwd'):
+        password = DB.passwd
+    elif len(sys.argv)!=2:
+        print "Please provide DB password"
         sys.exit(0)
+    else:
+        password = sys.argv[1]
+    
     myconn = DBConnector()
-    myconn.initConnection(passwd=sys.argv[1], host=DB.host, db=DB.dbName, user=DB.userName, port=DB.port)
+    myconn.initConnection(passwd=password, host=DB.host, db=DB.dbName, user=DB.userName, port=DB.port)
     myconn.openConnection()
     
     today = datetime.date.today()
@@ -63,11 +68,11 @@ if __name__ == '__main__':
         d["name"] = r["name"]
         d["surname"] = r["surname"]
         d["emails"] = []
-        if not r["email_cern"] is None and not r["email_cern"].strip():
+        if not r["email_cern"] is None and not r["email_cern"].strip()=="":
             d["emails"].append(r["email_cern"])
-        if not r["email_priv"] is None and not r["email_priv"].strip():
+        if not r["email_priv"] is None and not r["email_priv"].strip()=="":
             d["emails"].append(r["email_priv"])
-            
+        
         if r["shift_type"]==3:
             shadow_shifter.append(d)
         else:
@@ -75,33 +80,39 @@ if __name__ == '__main__':
     
     
     for shifter in normal_shifter:
+        print shifter
+        if len(shifter["emails"])==0:
+            continue
         msg_body =  body_normal.format(**shifter)
     
         msg = MIMEText(msg_body)
-        #d["emails"] = ["nicolas.lurkin@cern.ch", "nicolas.lurkin@gmail.com"]
+        #shifter["emails"] = ["nicolas.lurkin@cern.ch", "nicolas.lurkin@gmail.com"]
         msg['Subject'] = "You shift tomorrow"
         msg['From'] = "na62-shiftertraining@cern.ch"
-        msg['To'] = ", ".join(d["emails"])
+        msg['To'] = ", ".join(shifter["emails"])
      
         print "Ready to send shifter message"
         server = smtplib.SMTP("localhost")
-        server.sendmail("na62-shiftertraining@cern.ch", d["emails"], msg.as_string())
+        server.sendmail("na62-shiftertraining@cern.ch", shifter["emails"], msg.as_string())
         server.quit()
         print "Message sent"
     
     sys.exit(0)
     for shifter in shadow_shifter:
+        print shifter
+        if len(shifter["emails"])==0:
+            continue
         msg_body =  body_shadow.format(**shifter)
     
         msg = MIMEText(msg_body)
-        #d["emails"] = ["nicolas.lurkin@cern.ch", "nicolas.lurkin@gmail.com"]
+        #shifter["emails"] = ["nicolas.lurkin@cern.ch", "nicolas.lurkin@gmail.com"]
         msg['Subject'] = "You shift tomorrow"
         msg['From'] = "na62-shiftertraining@cern.ch"
-        msg['To'] = ", ".join(d["emails"])
+        msg['To'] = ", ".join(shifter["emails"])
      
         print "Ready to send shifter message"
         server = smtplib.SMTP("localhost")
-        server.sendmail("na62-shiftertraining@cern.ch", d["emails"], msg.as_string())
+        server.sendmail("na62-shiftertraining@cern.ch", shifter["emails"], msg.as_string())
         server.quit()
         print "Message sent"
       
