@@ -60,9 +60,12 @@ if __name__ == '__main__':
         if r["canceled"]:
             continue
         d = {}
+        if r["slot"]!=2:
+            continue
         shift_date = datetime.datetime.combine(tomorrow, datetime.time(r["slot"]*8, 0, 0))
         d["date"] = shift_date.strftime("%d-%m-%Y at %H:%M:%S")
-        d["in"] = int((shift_date-datetime.datetime.now()).seconds/(60*60))
+	t_delta = (shift_date-datetime.datetime.now())
+        d["in"] = int((t_delta.seconds + t_delta.days * 24 * 3600)/(60*60))
         d["prev"] = today.strftime("%d-%m")
         d["curr"] = shift_date.strftime("%d-%m")
         d["name"] = r["name"]
