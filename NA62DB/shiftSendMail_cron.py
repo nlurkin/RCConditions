@@ -60,8 +60,6 @@ if __name__ == '__main__':
         if r["canceled"]:
             continue
         d = {}
-        if r["slot"]!=2:
-            continue
         shift_date = datetime.datetime.combine(tomorrow, datetime.time(r["slot"]*8, 0, 0))
         d["date"] = shift_date.strftime("%d-%m-%Y at %H:%M:%S")
 	t_delta = (shift_date-datetime.datetime.now())
@@ -90,7 +88,7 @@ if __name__ == '__main__':
     
         msg = MIMEText(msg_body)
         #shifter["emails"] = ["nicolas.lurkin@cern.ch", "nicolas.lurkin@gmail.com"]
-        msg['Subject'] = "You shift tomorrow"
+        msg['Subject'] = "Your shift tomorrow"
         msg['From'] = "na62-shiftertraining@cern.ch"
         msg['To'] = ", ".join(shifter["emails"])
      
@@ -109,7 +107,7 @@ if __name__ == '__main__':
     
         msg = MIMEText(msg_body)
         #shifter["emails"] = ["nicolas.lurkin@cern.ch", "nicolas.lurkin@gmail.com"]
-        msg['Subject'] = "You shift tomorrow"
+        msg['Subject'] = "Your shift tomorrow"
         msg['From'] = "na62-shiftertraining@cern.ch"
         msg['To'] = ", ".join(shifter["emails"])
      
