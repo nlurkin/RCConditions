@@ -176,9 +176,10 @@ class Timeline(object):
 
     def cutBefore(self, ts, nKeep=0):
         listDel = sorted([x for x in self._tl.keys() if x<ts])
-        
+
         if len(listDel)>=nKeep:
-            listDel = listDel[:-nKeep]
+            if nKeep>0:
+                listDel = listDel[:-nKeep]
         else:
             return
         for t in listDel:

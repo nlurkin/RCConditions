@@ -16,7 +16,7 @@ import sys
 from lxml import etree
 import XMLDoc
 from XMLExtract import BufferPrint
-from XMLExtract import TEL62Decoder, L0TPDecoder, CREAMDecoder
+from XMLExtract import TEL62Decoder, L0TPDecoder, CREAMDecoder, HLTDecoder
 
 def generateSystemSpecificDecoder(xmlDoc):
     if xmlDoc._type==None:
@@ -27,6 +27,8 @@ def generateSystemSpecificDecoder(xmlDoc):
         return L0TPDecoder(xmlDoc)
     elif xmlDoc._type=="CREAM":
         return CREAMDecoder(xmlDoc)
+    elif xmlDoc._type=="L1":
+        return HLTDecoder(xmlDoc)
     else:
         return xmlDoc
 

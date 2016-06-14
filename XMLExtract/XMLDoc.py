@@ -179,6 +179,9 @@ class xmlDocument(object):
         elif self._xml.tag == "Lkr":
             self._type = "CREAM"
             self._cmd = "I"
+        elif self._xml.tag == "HLTStruct":
+            self._type = "L1"
+            self._cmd = "S"
         else:
             self._type = "Other"
             self._cmd = "U"    
@@ -265,8 +268,8 @@ class rcXML(xmlDocument):
         for ts in listStartRun:
             if abs(ts-self._runStart)<5:
                 listRunNumber = self.getTagRefs("RunNumber", listStartRun[ts]["node"])
-		if len(listRunNumber)>0:
-	                self._runNumber = listRunNumber[0]
+                if len(listRunNumber)>0:
+                    self._runNumber = listRunNumber[0]
     
     def __str__(self):
         ret =  "RunNumber: " + str(self._runNumber) + "\n"
