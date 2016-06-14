@@ -182,7 +182,7 @@ class DBConnector(object):
         if endTS==None:
             return self.getResultSingle("SELECT id FROM runtrigger WHERE run_id=%s AND validitystart=%s AND validityend IS NULL", [runID, startT])
         else:
-            return self.getResultSingle("SELECT id FROM runtrigger WHERE run_id=%s AND validitystart=%s AND validityend=%s", [runID, startT, endT])
+            return self.getResultSingle("SELECT id FROM runtrigger WHERE run_id=%s AND validitystart=%s AND (validityend=%s OR validityend IS NULL) ORDER BY validityend DESC", [runID, startT, endT])
     
     def _getEnabledDetectorID(self, runID, detectorName, startTS, endTS):
         startT = self.toSQLTime(startTS)
@@ -307,7 +307,9 @@ class DBConnector(object):
                 triggerID = self.executeInsert("INSERT INTO runtrigger (run_id, validitystart) VALUES (%s, %s)", [runID, self.toSQLTime(startTS)])
             else:
                 triggerID = self.executeInsert("INSERT INTO runtrigger (run_id, validitystart, validityend) VALUES (%s, %s, %s)", [runID, self.toSQLTime(startTS), self.toSQLTime(endTS)])
-        
+        elif not endTS is None:
+            self.executeInsert("UPDATE runtrigger SET validityend=%s WHERE id=%s", [self.toSQLTime(endTS), triggerID])
+            
         if triggerList[0]=='Periodic':
             periodicType = self._setPeriodicTriggerType(triggerList[1])
             self._setPeriodicTrigger(triggerID, periodicType)
