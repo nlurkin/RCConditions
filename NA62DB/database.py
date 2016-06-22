@@ -167,7 +167,11 @@ class DBConnector(object):
         return False, rid
 
     def _getControlTriggerID(self, triggerID, downscaling, mask, detector):
-        return self.getResultSingle("SELECT id FROM triggercontrol WHERE runtrigger_id=%s AND det_id=%s AND mask=%s AND downscaling=%s", [triggerID, detector, mask, downscaling])
+        params = [triggerID, detector, downscaling]
+        mask2 = mask[:]
+        mask2.extend([None]*(7-len(mask2)))
+        params.extend(mask2)
+        return self.getResultSingle("SELECT id FROM triggercontrol WHERE runtrigger_id=%s AND det_id=%s AND downscaling=%s AND mask=%s AND maskB=%s AND maskC=%s AND maskD=%s AND maskE=%s AND maskF=%s and MASKG=%s", params)
 
     def _getSyncTriggerID(self, triggerID):
         return self.getResultSingle("SELECT id FROM triggersync WHERE runtrigger_id=%s", [triggerID])
@@ -292,7 +296,11 @@ class DBConnector(object):
         controlID = self._getControlTriggerID(triggerID, downscaling, mask, detector)
         
         if controlID==False:
-            return self.executeInsert("INSERT INTO triggercontrol (runtrigger_id, det_id, mask, downscaling) VALUES (%s,%s,%s,%s)", [triggerID, detector, mask, downscaling])
+            params = [triggerID, detector, downscaling]
+            mask2 = mask[:]
+            mask2.extend([None]*(7-len(mask2)))
+            params.extend(mask2)
+            return self.executeInsert("INSERT INTO triggercontrol (runtrigger_id, det_id, downscaling, mask, maskB, maskC, maskD, maskE, maskF, maskG) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)", params)
         return controlID 
 
     def _setTrigger(self, runID, startTS, endTS, triggerList):
