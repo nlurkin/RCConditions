@@ -275,6 +275,9 @@ function fetch_search($db, $offset, $limits, $sqlwhere) {
 			// Fetch NIM triggers
 			$jsonArray [$key] ["NIM"] = fetch_nim ( $db, $value ["id"], $value ["timestart"], $value ["timestop"] );
 			
+			// Fetch NIM triggers
+			$jsonArray [$key] ["control"] = fetch_control ( $db, $value ["id"], $value ["timestart"], $value ["timestop"] );
+			
 			// Fetch Primitive triggers
 			$jsonArray [$key] ["Primitive"] = fetch_primitives ( $db, $value ["id"], $value ["timestart"], $value ["timestop"] );
 			foreach($jsonArray[$key]["Primitive"] as &$p){
