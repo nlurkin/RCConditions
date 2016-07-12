@@ -148,6 +148,7 @@ function initWindow(){
 	        	$('#tbl_lst_runs >tbody > tr:last').remove();
 	        	$('#tbl_lst_runs > tbody > tr:last').after(data);
 	        	i += max;
+	        	currentLast += max;
 	        	loading = false;
 	        },
 	        error : function() {
