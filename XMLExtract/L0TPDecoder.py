@@ -129,7 +129,7 @@ class ControlInfo(TriggerInfo):
         self.Detector = None
     
     def __str__(self):
-        return self.Mask + "(" + str(self.Detector) + "):" + str(self.Downscaling)    
+        return "$".join(str(x) for x in self.Mask) + "(" + str(self.Detector) + "):" + str(self.Downscaling)    
         
 def readValue(node):
     if hasattr(node,"hex"):
@@ -153,7 +153,7 @@ class Global(object):
         self.downscalMask = []
         self.enableMask = None
         self.fixLatency = None
-        self.maskControlTrigger = None
+	self.maskControlTrigger = []
         self.max_delay_detector = None
         self.nimCalib_triggerword = None
         self.numEvtMEP = None
@@ -187,10 +187,10 @@ class Global(object):
             self.calibTriggerWord = tryint(xml.CalibTriggerWord.hex)
         if hasattr(xml, "ChokeErrorMask"):
             self.chokeErrorMask = tryint(xml.ChokeErrorMask.hex)
-        if hasattr(xml, "ControlDetector"):
-            self.controlDetector = tryint(xml.ControlDetector.hex)
-        if hasattr(xml, "ControlDownscaling"):
-            self.controlDownscaling = tryint(xml.ControlDownscaling.hex)
+        if hasattr(xml, "controlDetector"):
+            self.controlDetector = tryint(xml.controlDetector.hex)
+        if hasattr(xml, "controlDownscaling"):
+            self.controlDownscaling = tryint(xml.controlDownscaling.hex)
         if hasattr(xml, "DeltaPacket"):
             self.DeltaPacket = tryint(xml.DeltaPacket.hex)
         if hasattr(xml, "downScal_mask"):
@@ -201,8 +201,22 @@ class Global(object):
             self.enableMask = tryint(xml.enableMask.hex)
         if hasattr(xml, "fixLatency"):
             self.fixLatency = tryint(xml.fixLatency.hex)
-        if hasattr(xml, "MaskControltrigger"):
-            self.maskControltrigger = tryint(xml.MaskControltrigger.hex)
+        if hasattr(xml, "maskControlTrigger"):
+            self.maskControlTrigger.append(tryint(xml.maskControlTrigger.hex))
+        if hasattr(xml, "maskControlTriggerA"):
+            self.maskControlTrigger.append(tryint(xml.maskControlTriggerA.hex))
+        if hasattr(xml, "maskControlTriggerB"):
+            self.maskControlTrigger.append(tryint(xml.maskControlTriggerB.hex))
+        if hasattr(xml, "maskControlTriggerC"):
+            self.maskControlTrigger.append(tryint(xml.maskControlTriggerC.hex))
+        if hasattr(xml, "maskControlTriggerD"):
+            self.maskControlTrigger.append(tryint(xml.maskControlTriggerD.hex))
+        if hasattr(xml, "maskControlTriggerE"):
+            self.maskControlTrigger.append(tryint(xml.maskControlTriggerE.hex))
+        if hasattr(xml, "maskControlTriggerF"):
+            self.maskControlTrigger.append(tryint(xml.maskControlTriggerF.hex))
+        if hasattr(xml, "maskControlTriggerG"):
+            self.maskControlTrigger.append(tryint(xml.maskControlTriggerG.hex))
         if hasattr(xml, "max_delay_detector"):
             self.max_delay_detector = tryint(xml.max_delay_detector.hex)
         if hasattr(xml, "nimCalib_triggerword"):
@@ -375,9 +389,12 @@ class L0TPDecoder(xmlDocument):
     def getControlMask(self):
         if self._runNumber > 4800:
             control = ControlInfo()
-            control.Downscaling = int(readValue(self._xml.global_parameters.controlDownscaling), 0)
-            control.Mask = readValue(self._xml.global_parameters.maskControlTrigger)
-            control.Detector = int(readValue(self._xml.global_parameters.controlDetector), 0)
+            #control.Downscaling = int(readValue(self._xml.global_parameters.controlDownscaling), 0)
+            control.Downscaling = self.globalParam.controlDownscaling
+            control.Mask = [hex(x) for x in self.globalParam.maskControlTrigger]
+#            control.Mask = readValue(self._xml.global_parameters.maskControlTrigger)
+            #control.Detector = int(readValue(self._xml.global_parameters.controlDetector), 0)
+            control.Detector = self.globalParam.controlDetector
             return control
         return None
             
