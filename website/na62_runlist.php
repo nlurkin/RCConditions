@@ -137,7 +137,10 @@ function initWindow(){
 	i=0;
 	intervalID = setInterval(function(){
 		if(loading) return;
-		if(i>=currentLast) clearInterval(intervalID);
+		if(i>=currentLast){
+			clearInterval(intervalID);
+			currentLast = i;
+		}
 		$('#tbl_lst_runs > tbody > tr:last').after("<tr><td colspan='9' class='loading'><img alt='loader' src='ajax-loader.gif'>Loading more runs</td></tr>");
 		loading = true
 		$.ajax({
@@ -148,7 +151,6 @@ function initWindow(){
 	        	$('#tbl_lst_runs >tbody > tr:last').remove();
 	        	$('#tbl_lst_runs > tbody > tr:last').after(data);
 	        	i += max;
-	        	currentLast += max;
 	        	loading = false;
 	        },
 	        error : function() {
