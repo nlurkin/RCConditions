@@ -11,6 +11,9 @@ table.big {
 table.autoalternate tr:nth-child(even){ background-color: #b8d1f3; }
 table.autoalternate tr:nth-child(odd){ background-color: #dae5f4; }
 
+table.autoalternateb tr:nth-child(4n-1), tr:nth-child(4n){ background-color: #b8d1f3; }
+table.autoalternateb tr:nth-child(4n+1), tr:nth-child(4n+2){ background-color: #dae5f4; }
+
 th {
     border-top: 1px solid #FB7A31;
     border-bottom: 1px solid #FB7A31;

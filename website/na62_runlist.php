@@ -137,7 +137,10 @@ function initWindow(){
 	i=0;
 	intervalID = setInterval(function(){
 		if(loading) return;
-		if(i>=currentLast) clearInterval(intervalID);
+		if(i>=currentLast){
+			clearInterval(intervalID);
+			currentLast = i;
+		}
 		$('#tbl_lst_runs > tbody > tr:last').after("<tr><td colspan='9' class='loading'><img alt='loader' src='ajax-loader.gif'>Loading more runs</td></tr>");
 		loading = true
 		$.ajax({
@@ -267,9 +270,9 @@ function initWindow(){
 		echo "<script>";
 		echo "var triggers = [";
 		$triggCombs = array ();
-		foreach ( $primTypes as $type ) {
-			array_push ( $triggCombs, "\"" . implode ( ",", $type ) . "\"" );
-		}
+//		foreach ( $primTypes as $type ) {
+//			array_push ( $triggCombs, "\"" . implode ( ",", $type ) . "\"" );
+//		}
 		echo implode ( ",\n", $triggCombs );
 		echo "];\n";
 		echo "var primSelected = '" . $selectedPrimitive . "';\n";
@@ -700,14 +703,17 @@ else if ($_GET ['view'] == "details") {
 			<div class="collapsem" style="display: none;">&#9660</div>
 			<div class="dragbox-content" style="display: none;">
 				<table style="table-layout: fixed; width: 100%"
-					class="autoalternate">
+					class="autoalternateb">
 					<tr>
 						<th width="60px">Mask #</th>
-						<th width="120px">Trigger</th>
+						<th colspan="3">Trigger</th>
 						<th width="60px">Downs.</th>
+					</tr>
+					<tr>
+						<th>&nbsp;</th>
 						<th width="60px">Ref. Det.</th>
 						<th width="*">From</th>
-						<th width="*">Until*</th>
+						<th colspan="2" width="*">Until*</th>
 					</tr>
 				<?php
 		foreach ( $runDetails ["primitive"] as $prim ) {
@@ -731,7 +737,10 @@ else if ($_GET ['view'] == "details") {
 				array_push ( $primNameArr, $prim ["maskF"] );
 			if (! is_null ( $prim ["maskG"] ))
 				array_push ( $primNameArr, $prim ["maskG"] );
-			echo "<tr><td>" . $prim ["masknumber"] . "</td><td>" . implode ( "x", $primNameArr ) . "</td><td>" . $prim ["triggerprimitivedownscaling"] . "</td><td>" . $prim ["triggerprimitivereference"] . "</td><td>" . $prim ["validitystart"] . "</td><td>" . $end . "</td></tr>";
+			echo "<tr><td>" . $prim ["masknumber"] . "</td><td colspan='3'>" . implode ( "x", $primNameArr ) . "</td>";
+			echo "<td>" . $prim ["triggerprimitivedownscaling"] . "</td></tr>";
+			echo "<tr><td>&nbsp;</td><td>" . $prim ["triggerprimitivereference"] . "</td>";
+			echo "<td>" . $prim ["validitystart"] . "</td><td colspan='2'>" . $end . "</td></tr>";
 		}
 		?>
 				</table>
