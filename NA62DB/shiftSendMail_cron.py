@@ -16,7 +16,7 @@ from DBConfig import DBConfig as DB
 body_normal="""
 Dear {name} {surname},
 
-This is a kind reminder that you have a shift assignment tomorrow (on {date}). 
+This is a reminder that you have a shift assignment tomorrow (on {date}). 
 Your shift is starting in {in} hours. If you are covering the night shift, 
 be well aware that it concerns the night from the {prev} to the {curr}.
 We thank you for your attention.
@@ -28,7 +28,7 @@ The shift database.
 body_shadow="""
 Dear {name} {surname},
 
-This is a kind reminder that you have booked a shadow shift tomorrow (on {date}). 
+This is a reminder that you have booked a shadow shift tomorrow (on {date}). 
 Your shift is starting in {in} hours.
 We thank you in advance for attending.
 
