@@ -256,7 +256,7 @@ def exportFile(myconn, filePath):
     ## Get detector enabled info
     enabledList = doc.getElementsByTagName("Enabled")
     detEnabled = getDetectorEnabled(enabledList)
-    detMap = {"KTAG":4, "GTK":8, "CHANTI":12, "LAV":16, "STRAW": 20, "CHOD":24, "RICH":28, "IRC_SAC":32, "LKR":36, "MUV1":40, "MUV2":44, "MUV3":48, "SAC":52, "L0TP":64}
+    detMap = {"KTAG":4, "GTK":8, "CHANTI":12, "LAV":16, "STRAW": 20, "CHOD":24, "RICH":28, "IRC_SAC":32, "LKR":36, "MUV1":40, "MUV2":44, "MUV3":48, "SAC":52, "HAC": 60, "L0TP":64}
     for det in detEnabled:
         detID = getDetectorID(doc.getElementsByTagName(det))
         if detID==None:
