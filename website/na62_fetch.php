@@ -597,7 +597,7 @@ function na62_primToName($db, &$prim, $mask, $detNumber){
 		$prim[$mask] = NULL;
 		return;
 	}
-	$sql = "SELECT detname FROM primitivedetname WHERE detnumber=" . $detNumber . " AND detmask='" . $prim[$mask] . "' AND validitystart<'" . $prim["validitystart"] . 
+	$sql = "SELECT detname FROM primitivedetname WHERE detnumber=" . $detNumber . " AND detmask='" . $prim[$mask] . "' AND validitystart<'" . $prim["validitystart"] .
 			"' AND (validityend>'" . $prim["validityend"] . "' OR validityend IS NULL)";
 	// Fill the array with data
 	$mainrow ["primitive"] = Array ();

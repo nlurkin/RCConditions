@@ -266,7 +266,7 @@ function initWindow(){
 <?php
 		}
 		// Prepare primitive triggers array
-		$primTypes = fetch_PrimitivesTypes ( $db );
+		$primTypes = Array();//fetch_PrimitivesTypes ( $db );
 		echo "<script>";
 		echo "var triggers = [";
 		$triggCombs = array ();
