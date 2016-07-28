@@ -30,7 +30,8 @@ class DBConnector(object):
         self.port = -1
         
         self.exitOnFailure = exitOnFailure
-        self.lastError = "";
+        self.lastError = ""
+        self.silent = False
     
     def initConnection(self, host="nlurkinsql.cern.ch", user="nlurkin", passwd="", db="testRC", port=3307):
         self.host = host
@@ -52,6 +53,8 @@ class DBConnector(object):
     def getLastError(self):
         return self.lastError
     
+    def setSilent(self, flag):
+        self.silent = flag
     ##---------------------------------------
     #    Utility functions for DB actions
     ##---------------------------------------
@@ -85,7 +88,8 @@ class DBConnector(object):
         return -1
     
     def executeGet(self, sqlCommand, params=[]):
-        print self.indent(sqlCommand % tuple(params))
+        if not self.silent:
+            print self.indent(sqlCommand % tuple(params))
         if self.db==None:
             return ()
         res = -1
@@ -211,10 +215,10 @@ class DBConnector(object):
         startT = self.toSQLTime(startTS)
         endT = self.toSQLTime(endTS)
         
-        if endTS==None:
-            return self.getResultSingle("SELECT id FROM primitivedetname WHERE detnumber=%s AND detmask=%s AND validitystart=%s AND validityend IS NULL", [detector, mask, startT])
-        else:
-            return self.getResultSingle("SELECT id FROM primitivedetname WHERE detnumber=%s AND detmask=%s AND validitystart=%s AND validityend=%s", [detector, mask, startT, endT])
+        #if endTS==None:
+        return self.getResultSingle("SELECT id FROM primitivedetname WHERE detnumber=%s AND detmask=%s AND validitystart<%s AND (validityend>%s OR validityend IS NULL)", [detector, mask, startT, startT])
+        #else:
+        #    return self.getResultSingle("SELECT id FROM primitivedetname WHERE detnumber=%s AND detmask=%s AND validitystart=%s AND validityend=%s", [detector, mask, startT, endT])
     
     def _getIntensityID(self, startTS):
         startT = self.toSQLTime(startTS)

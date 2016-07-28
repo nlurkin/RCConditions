@@ -170,7 +170,7 @@ def getTriggerProperties(listNode):
                 tobject.Propertie = l0tpConfig.getPrimitiveMasks()
                 tobject.RefDetector = l0tpConfig.getPrimitiveRefDetector()
                 for prim in tobject.Propertie:
-                    setPrimitivesReferences(prim)
+                    setPrimitivesReferences(prim, timestamp)
                 
                 tobject = events['Control'].addTS(timestamp)
                 tobject.Propertie = l0tpConfig.getControlMask()
@@ -307,11 +307,12 @@ def exportFile(myconn, filePath):
         
         return True
 
-def setPrimitivesReferences(prim):
+def setPrimitivesReferences(prim, ts):
     if myconn is None:
         return
     l0 = L0TPDecoder
-    startTS = 1435701600
+    #startTS = 1435701600
+    startTS = ts
     
     primDef = PrimitiveInfo()
     
