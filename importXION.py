@@ -64,7 +64,7 @@ if __name__ == '__main__':
     for f in fileList:
         if os.path.isfile(f):
             print "\nImport " + f + "\n---------------------"
-            if not exportFile(myconn, f):
-                continue
+            if exportFile(myconn, f):
+                os.remove(f)
     if not myconn is None:
         myconn.close()
