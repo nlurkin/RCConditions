@@ -40,15 +40,19 @@ def exportFile(myconn, filePath):
         return True
 
 if __name__ == '__main__':
-    if len(sys.argv)<3:
+    if hasattr(DB, 'passwd'):
+        password = DB.passwd
+    elif len(sys.argv)<3:
         print "Please provide path and database password"
         sys.exit()
-
+    else:
+        password = sys.argv[-1:][0]
     
     #myconn = None
     myconn = DBConnector(False)
-    myconn.initConnection(passwd=sys.argv[-1:][0], db=DB.dbName, user=DB.userName, host=DB.host, port=DB.port)
+    myconn.initConnection(passwd=password, db=DB.dbName, user=DB.userName, host=DB.host, port=DB.port)
     myconn.openConnection()
+    myconn.setSilent(True)
 
     filePath = sys.argv[1:]
     
