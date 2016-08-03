@@ -223,7 +223,7 @@ class DBConnector(object):
     def _getTVID(self, table, timestamp):
         sqlTime = self.toSQLTime(timestamp)
         
-        return self.getResultSingle("SELECT id FROM %s WHERE time=%s", [table, sqlTime])
+        return self.getResultSingle("SELECT id FROM {0} WHERE timeval=%s".format(table), [sqlTime])
           
     ##---------------------------------------
     #    Get INDEX ID from database table, create the entry if does not exist
@@ -396,7 +396,7 @@ class DBConnector(object):
     def _setTV(self, table, timestamp, value):
         tvID = self._getTVID(table, timestamp)
         if tvID==False:
-                return self.executeInsert("INSERT INTO %s (time, value) VALUES (%s, %s)", [table, self.toSQLTime(timestamp), value])
+                return self.executeInsert("INSERT INTO {0} (timeval, value) VALUES (%s, %s)".format(table), [self.toSQLTime(timestamp), value])
         
         return tvID
     ##---------------------------------------

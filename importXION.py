@@ -27,7 +27,7 @@ def exportFile(myconn, filePath):
     with open(filePath, "r") as fd:
         for line in fd:
             dateVal, val = line.split(";")
-            TS = dateVal#int(time.mktime(datetime.strptime(dateVal, "%Y-%m-%d %H:%M:%S").timetuple()))
+            TS = int(dateVal)#int(time.mktime(datetime.strptime(dateVal, "%Y-%m-%d %H:%M:%S").timetuple()))
             intensities.append([TS, val])
     
     if myconn is None:
@@ -36,7 +36,7 @@ def exportFile(myconn, filePath):
         return False
     else:
         ## Insert runinfo into DB
-        myconn.setTVList("T10_intensity", intensities)
+        myconn.setTVList("XION_intensity", intensities)
         return True
 
 if __name__ == '__main__':
@@ -49,6 +49,7 @@ if __name__ == '__main__':
     myconn = DBConnector(False)
     myconn.initConnection(passwd=sys.argv[-1:][0], db=DB.dbName, user=DB.userName, host=DB.host, port=DB.port)
     myconn.openConnection()
+    myconn.setSilent(True)
 
     filePath = sys.argv[1:]
     
