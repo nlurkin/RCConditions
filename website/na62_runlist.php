@@ -824,7 +824,17 @@ else if ($_GET ['view'] == "details") {
 			<div class="collapsep" style="display: inline;">&#x25C0</div>
 			<div class="collapsem" style="display: none;">&#9660</div>
 			<div class="dragbox-content" style="display: none;">
-				<img src="na62_plot.php?tstart=<?php echo $runDetails["timestart"]; ?>&tstop=<?php echo $runDetails["timestop"]; ?>" />
+				<img src="na62_plot.php?which=T10&tstart=<?php echo $runDetails["timestart"]; ?>&tstop=<?php echo $runDetails["timestop"]; ?>" />
+			</div>
+		</div>
+		<div class="dragbox" id="boxXIONIntensity">
+			<h2>
+				Argonion Counts
+			</h2>
+			<div class="collapsep" style="display: inline;">&#x25C0</div>
+			<div class="collapsem" style="display: none;">&#9660</div>
+			<div class="dragbox-content" style="display: none;">
+				<img src="na62_plot.php?which=XION&tstart=<?php echo $runDetails["timestart"]; ?>&tstop=<?php echo $runDetails["timestop"]; ?>" />
 			</div>
 		</div>
 		<div class="dragbox" id="boxDetector">
