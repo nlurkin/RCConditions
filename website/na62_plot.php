@@ -11,14 +11,22 @@ include ("config.php");
 include ("na62_helper.php");
 include ("na62_fetch.php");
 
-function doT10Plot($db, $tstart, $tstop, $width){
-	$t10Array = fetch_RunT10($db, $tstart, $tstop);
+abstract class TVType{
+	const WT10  = 0;
+	const WXION = 1;
+}
+
+function doPlot($db, $tstart, $tstop, $which, $width){
+	if( $which == TVType::WT10 )
+		$tvArray = fetch_RunTV($db, $tstart, $tstop, "T10_intensity");
+	elseif( $which == TVType::WXION)
+		$tvArray = fetch_RunTV($db, $tstart, $tstop, "XION_intensity");
 
 	$datay1 = array();
 	$lArray = array();
-	foreach ($t10Array as $line){
+	foreach ($tvArray as $line){
 		array_push($datay1, $line["value"]);
-		array_push($lArray, $line["time"]);
+		array_push($lArray, $line["timeval"]);
 	}
 	// Setup the graph
 	$graph = new Graph($width,250);
@@ -28,7 +36,10 @@ function doT10Plot($db, $tstart, $tstop, $width){
 
 	$graph->SetTheme($theme_class);
 	$graph->img->SetAntiAliasing(false);
-	$graph->title->Set('T10 Intensity during run [E11]');
+	if( $which == TVType::WT10 )
+		$graph->title->Set('T10 Intensity during run [E11]');
+	elseif( $which == TVType::WXION)
+		$graph->title->Set('Argonion counts during run');
 	$graph->SetBox(false);
 
 	$graph->img->SetAntiAliasing();
@@ -61,6 +72,9 @@ if (! $db->init ( $_na62dbHost, $_na62dbUser, $_na62dbPassword, $_na62dbName, $_
 	die ( "Connection failed: " . $db->getError () . "<br>" );
 }
 
-doT10Plot($db, $_GET["tstart"], $_GET["tstop"], 600);
+if($_GET["which"]=="T10")
+	doPlot($db, $_GET["tstart"], $_GET["tstop"], TVType::WT10, 600);
+else if($_GET["which"]=="XION")
+	doPlot($db, $_GET["tstart"], $_GET["tstop"], TVType::WXION, 600);
 ?>
 
