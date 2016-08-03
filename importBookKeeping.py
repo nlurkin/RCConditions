@@ -335,7 +335,6 @@ if __name__ == '__main__':
     else:
         password = sys.argv[-1:][0]
 
-    
     #myconn = None
     myconn = DBConnector(False)
     myconn.initConnection(passwd=password, db=DB.dbName, user=DB.userName, host=DB.host, port=DB.port)
@@ -357,7 +356,7 @@ if __name__ == '__main__':
     
     fileList.sort(key=alphanum_key)
     for f in fileList:
-        if os.path.isfile(f):
+        if os.path.isfile(f) and os.path.splitext(f)[1]==".xml":
             print "\nImport " + f + "\n---------------------"
             if not exportFile(myconn, f):
                 continue

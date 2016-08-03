@@ -35,7 +35,7 @@ def exportFile(myconn, filePath):
         return False
     else:
         ## Insert runinfo into DB
-        myconn.setTVList("XION_intensity", intensities)
+        myconn.setTVList("T10_intensity", intensities)
         return True
 
 if __name__ == '__main__':
@@ -46,7 +46,7 @@ if __name__ == '__main__':
     
     #myconn = None
     myconn = DBConnector(False)
-    myconn.initConnection(passwd=sys.argv[-1:][0])
+    myconn.initConnection(passwd=sys.argv[-1:][0], db=DB.dbName, user=DB.userName, host=DB.host, port=DB.port)
     myconn.openConnection()
 
     filePath = sys.argv[1:]
