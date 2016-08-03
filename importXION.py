@@ -12,6 +12,7 @@ import sys
 from  datetime import datetime
 import time
 from NA62DB import DBConnector
+from NA62DB.DBConfig import DBConfig as DB
 from XMLExtract import tryint
 
 def alphanum_key(s):
