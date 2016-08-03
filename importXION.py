@@ -35,7 +35,7 @@ def exportFile(myconn, filePath):
         return False
     else:
         ## Insert runinfo into DB
-        myconn.setTVList("T10_intensity", intensities)
+        myconn.setTVList("XION_intensity", intensities)
         return True
 
 if __name__ == '__main__':

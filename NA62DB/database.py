@@ -220,10 +220,10 @@ class DBConnector(object):
         #else:
         #    return self.getResultSingle("SELECT id FROM primitivedetname WHERE detnumber=%s AND detmask=%s AND validitystart=%s AND validityend=%s", [detector, mask, startT, endT])
     
-    def _getIntensityID(self, startTS):
-        startT = self.toSQLTime(startTS)
+    def _getTVID(self, table, timestamp):
+        sqlTime = self.toSQLTime(timestamp)
         
-        return self.getResultSingle("SELECT id FROM T10_intensity WHERE time=%s", [startT])
+        return self.getResultSingle("SELECT id FROM %s WHERE time=%s", [table, sqlTime])
           
     ##---------------------------------------
     #    Get INDEX ID from database table, create the entry if does not exist
@@ -393,12 +393,12 @@ class DBConnector(object):
                                           [detector, mask, meaning, self.toSQLTime(startTS), self.toSQLTime(endTS)])
         return detID
     
-    def _setT10Intensity(self, startTS, value):
-        intensityID = self._getIntensityID(startTS)
-        if intensityID==False:
-                return self.executeInsert("INSERT INTO T10_intensity (time, value) VALUES (%s, %s)", [self.toSQLTime(startTS), value])
+    def _setTV(self, table, timestamp, value):
+        tvID = self._getTVID(table, timestamp)
+        if tvID==False:
+                return self.executeInsert("INSERT INTO %s (time, value) VALUES (%s, %s)", [table, self.toSQLTime(timestamp), value])
         
-        return intensityID
+        return tvID
     ##---------------------------------------
     #    Create new run entries in database
     ##---------------------------------------
@@ -516,7 +516,7 @@ class DBConnector(object):
         self._setPrimitiveDetName(startTS, endTS, "F", mask.detF, detNames.detF)
         self._setPrimitiveDetName(startTS, endTS, "G", mask.detG, detNames.detG)
     
-    def setT10IntensityList(self, intensity):
-        for startTS, value in intensity:
-            self._setT10Intensity(startTS, value)
+    def setTVList(self, table, tvList):
+        for timestamp, value in tvList:
+            self._setTV(table, timestamp, value)
             
