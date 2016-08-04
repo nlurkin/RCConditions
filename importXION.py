@@ -28,7 +28,7 @@ def exportFile(myconn, filePath):
         for line in fd:
             dateVal, val = line.split(";")
             TS = int(dateVal)  #int(time.mktime(datetime.strptime(dateVal, "%Y-%m-%d %H:%M:%S").timetuple()))
-            intensities.append([TS, val])
+            intensities.append([TS, int(val)])
     
     if myconn is None:
         #Print everything
