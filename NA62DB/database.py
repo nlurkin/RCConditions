@@ -71,25 +71,24 @@ class DBConnector(object):
                 sys.exit()
     
     def executeInsert(self, sqlCommand, params=[]):
-        print self.indent(sqlCommand % tuple(params))
         if self.dryRun:
             return -1
         try:
             self.cursor.execute(sqlCommand, params)
             self.db.commit()
-            return self.cursor.lastrowid
         except MySQLdb.Error, e:
-            self.lastError =  "Unable to execute insert statement: " + (sqlCommand % tuple(params)) + "\n" + str(e)
+            self.lastError =  "Unable to execute insert statement: " + (self.cursor._last_executed) + "\n" + str(e)
             print self.lastError
             self.db.rollback()
             if self.exitOnFailure:
                 sys.exit()
+        else:
+            print self.indent(self.cursor._last_executed)
+            return self.cursor.lastrowid
         
         return -1
     
     def executeGet(self, sqlCommand, params=[]):
-        if not self.silent:
-            print self.indent(sqlCommand % tuple(params))
         if self.db==None:
             return ()
         res = -1
@@ -98,10 +97,14 @@ class DBConnector(object):
             fields = map(lambda x:x[0], self.cursor.description)
             res = [dict(zip(fields,row)) for row in self.cursor.fetchall()]
         except MySQLdb.Error, e:
-            self.lastError =  "Unable to execute select statement: " + (sqlCommand % tuple(params)) + "\n" + str(e)
+            self.lastError =  "Unable to execute select statement: " + (self.cursor._last_executed) + "\n" + str(e)
             print self.lastError
             if self.exitOnFailure:
                 sys.exit()
+        else:
+            if not self.silent:
+                print self.indent(self.cursor._last_executed)
+            
         return res
     
     def getResultSingle(self, sqlCommand, params=[]):
