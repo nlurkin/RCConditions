@@ -13,14 +13,14 @@ import re
 import shutil
 import sys
 
-import xml.dom.minidom as xmld
-
-from XMLExtract import Timeline, L0TPDecoder, tryint
-from XMLExtract.Timeline import TriggerObject, DetectorObject
 from NA62DB import DBConnector
 from NA62DB.DBConfig import DBConfig as DB
-from runConfig import runParam
+from XMLExtract import Timeline, L0TPDecoder, tryint, HLTDecoder
 from XMLExtract.L0TPDecoder import PrimitiveInfo
+from XMLExtract.Timeline import TriggerObject, DetectorObject
+from runConfig import runParam
+import xml.dom.minidom as xmld
+from XMLExtract.L1Decoder import L1Trigger
 
 
 def alphanum_key(s):
@@ -204,6 +204,48 @@ def setDetectorID(detList, detID):
     for el in detList.getList():
         el[1].Name = detID
 
+def getL1Trigger(l1NodeList):
+    """Return a map of triggers (enabled fields only).
+    
+    Each map element is a map of timestamp whose element are a 3 elements list. The second and third is always None
+    {123456:[True|False, None, None]}
+    
+    Input: 
+        listNodes: list of <L1> nodes
+    """
+    events = {'L1':Timeline(TriggerObject)}
+    for node in l1NodeList:
+        fileContentNodeList = node.getElementsByTagName(param.configFileTagName)
+        eventNode = node.parentNode
+        timestamp = int(getAttribute(eventNode, "Timestamp"))
+        if fileContentNodeList.length>0:
+            fileContentNode = fileContentNodeList[0]
+            val = getValue(fileContentNode.childNodes)
+            l1Config = HLTDecoder(val) 
+            if not l1Config._bad:
+                l1Masks = l1Config.getL1EnabledMasks()
+                tobject = events["L1"].addTS(timestamp)
+                tobject.Enabled = (len(l1Masks)>0)
+                tobject.Propertie = []
+                
+                for mask in l1Masks:
+                    tobject.Propertie.append(mask.getEnabledAlgos())
+                
+    return events
+
+def removeUnusedL1Masks(l1Triggers, l0Masks):
+    enMasks = []
+    for prim in l0Masks.getList():
+        for p in prim[1].Propertie:
+            enMasks.append(int(p.MaskNumber))
+    
+    for trig in l1Triggers["L1"].getList():
+        newProp = []
+        for mask in trig[1].Propertie:
+            if mask["id"] in enMasks:
+                newProp.append(mask)
+        trig[1].Propertie = newProp
+    
 def exportFile(myconn, filePath):
     global param
     ## Import config file
@@ -239,6 +281,9 @@ def exportFile(myconn, filePath):
     l0tpFileList = doc.getElementsByTagName("na62L0TP_Torino")
     triggerProp = getTriggerProperties(l0tpFileList)
     
+    l1FileList = doc.getElementsByTagName("L1")
+    l1Trigger = getL1Trigger(l1FileList)
+    
     ## Process triggers into a coherent timeline
     refTriggerObject = TriggerObject()
     refTriggerObject.Propertie = -1;
@@ -252,6 +297,9 @@ def exportFile(myconn, filePath):
     
     triggerDict['Calib'].cutAfter(endTS)
     triggerDict['Sync'].cutAfter(endTS)
+    l1Trigger["L1"].cutAfter(endTS)
+    l1Trigger["L1"].cutBefore(startTS)
+    removeUnusedL1Masks(l1Trigger, triggerDict['Primitive'])
 
     ## Get detector enabled info
     enabledList = doc.getElementsByTagName("Enabled")
@@ -282,6 +330,9 @@ def exportFile(myconn, filePath):
         
         print "Control triggers"
         print triggerDict['Control'].getList()
+
+        print "L1 triggers"
+        print l1Trigger['L1'].getList()
         
         print "Enabled detectors"
         for det in detEnabled:
@@ -336,11 +387,9 @@ if __name__ == '__main__':
 
     
     #myconn = None
-    myconn = DBConnector(False)
+    myconn = DBConnector(True)
     myconn.initConnection(passwd=password, db=DB.dbName, user=DB.userName, host=DB.host, port=DB.port)
     myconn.openConnection()
-    #myconn.setNIMNames(1409529600, None, [[0,'Q1'], [1,'NHOD'], [2,'MUV2'], [3,'MUV3'], [4,'']])
-    #myconn.setPrimitivesNames(1409529600, None, [[0,'Q1'], [1,'NHOD'], [2,'MUV2'], [3,'MUV3'], [4,'']])
 
     if len(sys.argv)>1:
         filePath = sys.argv[1:]
