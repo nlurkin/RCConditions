@@ -35,13 +35,13 @@ function modifyID(id, institute, shifter, canceled, date, slot, type, week){
 	}
 	if(id.length>=1){
 		document.getElementById("slot_id1").value = id[0];
-		document.getElementById("shifter_name1").value = shifter[0];
+		document.getElementById("shifter_name1").value = shifter[0].replace("$", "'");
 		document.getElementById("institute1").value = institute[0];
 		document.getElementById("delete").style.display = "inline";
 	}
 	if(id.length>1){
 		document.getElementById("slot_id2").value = id[1];
-		document.getElementById("shifter_name2").value = shifter[1];
+		document.getElementById("shifter_name2").value = shifter[1].replace("$", "'");
 		document.getElementById("institute2").value = institute[1];
 	}
 	else{

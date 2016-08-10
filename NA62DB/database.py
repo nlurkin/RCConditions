@@ -30,7 +30,8 @@ class DBConnector(object):
         self.port = -1
         
         self.exitOnFailure = exitOnFailure
-        self.lastError = "";
+        self.lastError = ""
+        self.silent = False
     
     def initConnection(self, host="nlurkinsql.cern.ch", user="nlurkin", passwd="", db="testRC", port=3307):
         self.host = host
@@ -52,6 +53,8 @@ class DBConnector(object):
     def getLastError(self):
         return self.lastError
     
+    def setSilent(self, flag):
+        self.silent = flag
     ##---------------------------------------
     #    Utility functions for DB actions
     ##---------------------------------------
@@ -68,24 +71,24 @@ class DBConnector(object):
                 sys.exit()
     
     def executeInsert(self, sqlCommand, params=[]):
-        print self.indent(sqlCommand % tuple(params))
         if self.dryRun:
             return -1
         try:
             self.cursor.execute(sqlCommand, params)
             self.db.commit()
-            return self.cursor.lastrowid
         except MySQLdb.Error, e:
-            self.lastError =  "Unable to execute insert statement: " + (sqlCommand % tuple(params)) + "\n" + str(e)
+            self.lastError =  "Unable to execute insert statement: " + (self.cursor._last_executed) + "\n" + str(e)
             print self.lastError
             self.db.rollback()
             if self.exitOnFailure:
                 sys.exit()
+        else:
+            print self.indent(self.cursor._last_executed)
+            return self.cursor.lastrowid
         
         return -1
     
     def executeGet(self, sqlCommand, params=[]):
-        print self.indent(sqlCommand % tuple(params))
         if self.db==None:
             return ()
         res = -1
@@ -94,10 +97,14 @@ class DBConnector(object):
             fields = map(lambda x:x[0], self.cursor.description)
             res = [dict(zip(fields,row)) for row in self.cursor.fetchall()]
         except MySQLdb.Error, e:
-            self.lastError =  "Unable to execute select statement: " + (sqlCommand % tuple(params)) + "\n" + str(e)
+            self.lastError =  "Unable to execute select statement: " + (self.cursor._last_executed) + "\n" + str(e)
             print self.lastError
             if self.exitOnFailure:
                 sys.exit()
+        else:
+            if not self.silent:
+                print self.indent(self.cursor._last_executed)
+            
         return res
     
     def getResultSingle(self, sqlCommand, params=[]):
@@ -211,15 +218,15 @@ class DBConnector(object):
         startT = self.toSQLTime(startTS)
         endT = self.toSQLTime(endTS)
         
-        if endTS==None:
-            return self.getResultSingle("SELECT id FROM primitivedetname WHERE detnumber=%s AND detmask=%s AND validitystart=%s AND validityend IS NULL", [detector, mask, startT])
-        else:
-            return self.getResultSingle("SELECT id FROM primitivedetname WHERE detnumber=%s AND detmask=%s AND validitystart=%s AND validityend=%s", [detector, mask, startT, endT])
+        #if endTS==None:
+        return self.getResultSingle("SELECT id FROM primitivedetname WHERE detnumber=%s AND detmask=%s AND validitystart<%s AND (validityend>%s OR validityend IS NULL)", [detector, mask, startT, startT])
+        #else:
+        #    return self.getResultSingle("SELECT id FROM primitivedetname WHERE detnumber=%s AND detmask=%s AND validitystart=%s AND validityend=%s", [detector, mask, startT, endT])
     
-    def _getIntensityID(self, startTS):
-        startT = self.toSQLTime(startTS)
+    def _getTVID(self, table, timestamp):
+        sqlTime = self.toSQLTime(timestamp)
         
-        return self.getResultSingle("SELECT id FROM T10_intensity WHERE time=%s", [startT])
+        return self.getResultSingle("SELECT id FROM {0} WHERE timeval=%s".format(table), [sqlTime])
           
     ##---------------------------------------
     #    Get INDEX ID from database table, create the entry if does not exist
@@ -389,12 +396,12 @@ class DBConnector(object):
                                           [detector, mask, meaning, self.toSQLTime(startTS), self.toSQLTime(endTS)])
         return detID
     
-    def _setT10Intensity(self, startTS, value):
-        intensityID = self._getIntensityID(startTS)
-        if intensityID==False:
-                return self.executeInsert("INSERT INTO T10_intensity (time, value) VALUES (%s, %s)", [self.toSQLTime(startTS), value])
+    def _setTV(self, table, timestamp, value):
+        tvID = self._getTVID(table, timestamp)
+        if tvID==False:
+                return self.executeInsert("INSERT INTO {0} (timeval, value) VALUES (%s, %s)".format(table), [self.toSQLTime(timestamp), value])
         
-        return intensityID
+        return tvID
     ##---------------------------------------
     #    Create new run entries in database
     ##---------------------------------------
@@ -512,7 +519,7 @@ class DBConnector(object):
         self._setPrimitiveDetName(startTS, endTS, "F", mask.detF, detNames.detF)
         self._setPrimitiveDetName(startTS, endTS, "G", mask.detG, detNames.detG)
     
-    def setT10IntensityList(self, intensity):
-        for startTS, value in intensity:
-            self._setT10Intensity(startTS, value)
+    def setTVList(self, table, tvList):
+        for timestamp, value in tvList:
+            self._setTV(table, timestamp, value)
             

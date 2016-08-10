@@ -170,7 +170,7 @@ def getTriggerProperties(listNode):
                 tobject.Propertie = l0tpConfig.getPrimitiveMasks()
                 tobject.RefDetector = l0tpConfig.getPrimitiveRefDetector()
                 for prim in tobject.Propertie:
-                    setPrimitivesReferences(prim)
+                    setPrimitivesReferences(prim, timestamp)
                 
                 tobject = events['Control'].addTS(timestamp)
                 tobject.Propertie = l0tpConfig.getControlMask()
@@ -304,7 +304,7 @@ def exportFile(myconn, filePath):
     ## Get detector enabled info
     enabledList = doc.getElementsByTagName("Enabled")
     detEnabled = getDetectorEnabled(enabledList)
-    detMap = {"KTAG":4, "GTK":8, "CHANTI":12, "LAV":16, "STRAW": 20, "CHOD":24, "RICH":28, "IRC_SAC":32, "LKR":36, "MUV1":40, "MUV2":44, "MUV3":48, "SAC":52, "L0TP":64}
+    detMap = {"KTAG":4, "GTK":8, "CHANTI":12, "LAV":16, "STRAW": 20, "CHOD":24, "RICH":28, "IRC_SAC":32, "LKR":36, "MUV1":40, "MUV2":44, "MUV3":48, "SAC":52, "HAC": 60, "L0TP":64}
     for det in detEnabled:
         detID = getDetectorID(doc.getElementsByTagName(det))
         if detID==None:
@@ -358,11 +358,12 @@ def exportFile(myconn, filePath):
         
         return True
 
-def setPrimitivesReferences(prim):
+def setPrimitivesReferences(prim, ts):
     if myconn is None:
         return
     l0 = L0TPDecoder
-    startTS = 1435701600
+    #startTS = 1435701600
+    startTS = ts
     
     primDef = PrimitiveInfo()
     
@@ -385,7 +386,6 @@ if __name__ == '__main__':
     else:
         password = sys.argv[-1:][0]
 
-    
     #myconn = None
     myconn = DBConnector(True)
     myconn.initConnection(passwd=password, db=DB.dbName, user=DB.userName, host=DB.host, port=DB.port)
@@ -405,7 +405,7 @@ if __name__ == '__main__':
     
     fileList.sort(key=alphanum_key)
     for f in fileList:
-        if os.path.isfile(f):
+        if os.path.isfile(f) and os.path.splitext(f)[1]==".xml":
             print "\nImport " + f + "\n---------------------"
             if not exportFile(myconn, f):
                 continue

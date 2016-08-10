@@ -87,7 +87,7 @@ class Slot {
 		}
 		if(!$empty){
 			$buttonString = "<input class='shifts' type='button' value='Modify' onClick='modifyID(" . $sh_id 
-					. ",". $sh_inst . "," . $sh_name . ",". $this->canceled . ",\"". $date . "\"," 
+					. ",". $sh_inst . "," . str_replace("'", "$", $sh_name) . ",". $this->canceled . ",\"". $date . "\"," 
 					. $slot . ",\"" . $type . "\", " . $week . ")'>";
 		}
 		else{

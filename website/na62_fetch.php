@@ -597,7 +597,8 @@ function na62_primToName($db, &$prim, $mask, $detNumber){
 		$prim[$mask] = NULL;
 		return;
 	}
-	$sql = "SELECT detname FROM primitivedetname WHERE detnumber=" . $detNumber . " AND detmask='" . $prim[$mask] . "' AND validitystart<'" . $prim["validitystart"] . "'";
+	$sql = "SELECT detname FROM primitivedetname WHERE detnumber=" . $detNumber . " AND detmask='" . $prim[$mask] . "' AND validitystart<'" . $prim["validitystart"] .
+			"' AND (validityend>'" . $prim["validityend"] . "' OR validityend IS NULL)";
 	// Fill the array with data
 	$mainrow ["primitive"] = Array ();
 	if ($db->executeGet ( $sql ) > 0) {
@@ -674,7 +675,7 @@ function na62_nameToPrim($db, &$primList){
 }
 
 function fetch_RunT10Max($db, $tStart, $tStop){
-	$sql = "SELECT max(value) as value FROM T10_intensity WHERE time > '" . $tStart . "' AND time < '" . $tStop . "'";
+	$sql = "SELECT max(value) as value FROM T10_intensity WHERE timeval > '" . $tStart . "' AND timeval < '" . $tStop . "'";
 	if($db->executeGet( $sql ) > 0) {
 		if ( $row = $db->next() ) {
 			return round($row["value"], 2);
@@ -683,8 +684,8 @@ function fetch_RunT10Max($db, $tStart, $tStop){
 	return -1;
 }
 
-function fetch_RunT10($db, $tStart, $tStop){
-	$sql = "SELECT UNIX_TIMESTAMP(time) as time, value FROM T10_intensity WHERE time > '" . $tStart . "' AND time < '" . $tStop . "'";
+function fetch_RunTV($db, $tStart, $tStop, $table){
+	$sql = "SELECT UNIX_TIMESTAMP(timeval) as timeval, value FROM " . $table . " WHERE timeval > '" . $tStart . "' AND timeval < '" . $tStop . "'";
 	$rArray = array();
 	if($db->executeGet( $sql ) > 0) {
 		while( $row = $db->next() ) {
@@ -693,3 +694,4 @@ function fetch_RunT10($db, $tStart, $tStop){
 	}
 	return $rArray;
 }
+

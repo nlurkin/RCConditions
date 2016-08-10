@@ -9,9 +9,10 @@ Created on Nov 4, 2014
 import os
 import re
 import sys
-from  datetime import datetime
-import time
+#from  datetime import datetime
+#import time
 from NA62DB import DBConnector
+from NA62DB.DBConfig import DBConfig as DB
 from XMLExtract import tryint
 
 def alphanum_key(s):
@@ -26,8 +27,8 @@ def exportFile(myconn, filePath):
     with open(filePath, "r") as fd:
         for line in fd:
             dateVal, val = line.split(";")
-            TS = int(time.mktime(datetime.strptime(dateVal, "%Y-%m-%d %H:%M:%S").timetuple()))
-            intensities.append([TS, val])
+            TS = int(dateVal) #time.mktime(datetime.strptime(dateVal, "%Y-%m-%d %H:%M:%S").timetuple()))
+            intensities.append([TS, float(val)])
     
     if myconn is None:
         #Print everything
@@ -35,19 +36,23 @@ def exportFile(myconn, filePath):
         return False
     else:
         ## Insert runinfo into DB
-        myconn.setT10IntensityList(intensities)
+        myconn.setTVList("T10_intensity", intensities)
         return True
 
 if __name__ == '__main__':
-    if len(sys.argv)<3:
+    if hasattr(DB, 'passwd'):
+        password = DB.passwd
+    elif len(sys.argv)<3:
         print "Please provide path and database password"
         sys.exit()
-
+    else:
+        password = sys.argv[-1:][0]
     
     #myconn = None
     myconn = DBConnector(False)
-    myconn.initConnection(passwd=sys.argv[-1:][0])
+    myconn.initConnection(passwd=password, db=DB.dbName, user=DB.userName, host=DB.host, port=DB.port)
     myconn.openConnection()
+    myconn.setSilent(True)
 
     filePath = sys.argv[1:]
     
@@ -59,7 +64,7 @@ if __name__ == '__main__':
     for f in fileList:
         if os.path.isfile(f):
             print "\nImport " + f + "\n---------------------"
-            if not exportFile(myconn, f):
-                continue
+            if exportFile(myconn, f):
+                os.remove(f)
     if not myconn is None:
         myconn.close()
